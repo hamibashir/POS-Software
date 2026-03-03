@@ -1,0 +1,467 @@
+📄 Product Requirements Document (PRD)
+Project: Hardware Store POS + Online Catalog
+Version: 1.0
+Type: Web-based (Laravel + MySQL on cPanel)
+Scope: Single Shop, Single Cashier, Online Catalog (No Checkout)
+1. 🎯 Product Overview
+1.1 Purpose
+
+Build a web-based Point of Sale (POS) system integrated with a public online catalog for a local hardware and sanitary store.
+
+The system will:
+
+Handle in-store billing
+
+Manage inventory
+
+Track purchases and stock
+
+Provide basic sales reports
+
+Display products online (catalog only, no checkout)
+
+2. 🏪 Business Context
+
+Store Type: Hardware & Sanitary
+
+Counters: 1
+
+Cashiers: 1
+
+Branches: 1
+
+Online Orders: ❌ No
+
+Delivery: ❌ No
+
+Payments: Cash / Card (manual entry)
+
+Hosting: cPanel Shared Hosting
+
+Technology: Laravel + MySQL
+
+3. 🎯 Goals & Objectives
+Primary Goals
+
+Fast and simple POS billing
+
+Real-time stock deduction
+
+Simple product management
+
+Public product visibility online
+
+Non-Goals
+
+Multi-branch support
+
+Offline support
+
+Online payment gateway
+
+Delivery management
+
+Accounting system
+
+Customer loyalty system
+
+4. 👥 User Roles
+4.1 Admin
+
+Full system access
+
+Manage products
+
+Manage categories
+
+View reports
+
+Manage purchases
+
+Adjust stock
+
+4.2 Cashier
+
+Access POS screen
+
+Create sales
+
+View daily sales
+
+Print receipts
+
+(No customer login required)
+
+5. 🧩 System Modules
+MODULE 1: Authentication
+Requirements:
+
+Secure login system
+
+Role-based access (admin / cashier)
+
+Password reset
+
+Logout
+
+MODULE 2: Product Management
+Features:
+
+Create product
+
+Edit product
+
+Delete product (soft delete recommended)
+
+Activate / deactivate product
+
+Product Fields:
+
+Name
+
+SKU (unique)
+
+Barcode (optional, unique)
+
+Category
+
+Unit (pc, meter, kg, box, etc.)
+
+Cost price
+
+Sale price
+
+Stock quantity
+
+Low stock alert level
+
+Status (active/inactive)
+
+Product image (optional for catalog)
+
+MODULE 3: Category Management
+
+Create category
+
+Edit category
+
+Delete category
+
+Slug auto-generation
+
+Parent category (optional, future)
+
+MODULE 4: POS (Core System)
+Functional Requirements:
+4.1 Product Search
+
+Search by name
+
+Search by SKU
+
+Search by barcode
+
+Auto-suggest dropdown
+
+Fast (< 500ms response)
+
+4.2 Cart System
+
+Add product
+
+Increase/decrease quantity
+
+Remove product
+
+Manual price edit (admin only optional)
+
+Optional discount (invoice level)
+
+4.3 Checkout
+
+Payment type:
+
+Cash
+
+Card
+
+Calculate:
+
+Subtotal
+
+Discount
+
+Total
+
+Generate invoice number (auto increment)
+
+Save sale
+
+Deduct stock automatically
+
+4.4 Receipt
+
+Printable 80mm format
+
+Includes:
+
+Store name
+
+Date/time
+
+Invoice number
+
+Items
+
+Total
+
+Payment method
+
+MODULE 5: Sales Management
+
+View sales history
+
+Filter by:
+
+Date
+
+Invoice number
+
+View sale details
+
+Reprint invoice
+
+(No returns in v1 unless required)
+
+MODULE 6: Purchase / Stock In
+Features:
+
+Create purchase record
+
+Add products with:
+
+Quantity
+
+Unit cost
+
+Increase stock
+
+Record supplier name (optional text field)
+
+MODULE 7: Stock Management
+
+Manual stock adjustment
+
+Stock increase/decrease
+
+Stock movement tracking (recommended)
+
+Stock movement types:
+
+Sale
+
+Purchase
+
+Adjustment
+
+MODULE 8: Reports
+Required Reports:
+
+Daily sales summary
+
+Date range sales
+
+Low stock products
+
+Top selling products
+
+Optional (future):
+
+Profit estimation (cost vs sale)
+
+MODULE 9: Public Online Catalog
+Purpose:
+
+Display products publicly (no ordering)
+
+Pages:
+9.1 Home Page
+
+Categories list
+
+Featured products (optional)
+
+9.2 Category Page
+
+Product listing
+
+Pagination
+
+Search
+
+9.3 Product Detail Page
+
+Name
+
+Price
+
+Stock status (In stock / Out of stock)
+
+Image
+
+Description
+
+WhatsApp / Call button
+
+9.4 Search
+
+Keyword search
+
+Return matching products
+
+6. 🗄 Database Schema Overview
+Tables:
+
+users
+
+categories
+
+products
+
+sales
+
+sale_items
+
+purchases
+
+purchase_items
+
+stock_movements (recommended)
+
+7. ⚙️ Non-Functional Requirements
+Performance
+
+POS page must load under 2 seconds
+
+Search response under 500ms
+
+Support up to 10,000 products
+
+Security
+
+CSRF protection
+
+Role-based middleware
+
+Input validation
+
+Prevent SQL injection
+
+Backup
+
+Daily database backup via cPanel
+
+Scalability
+
+Designed for up to 20,000 products
+
+Single branch only
+
+8. 🖥 Technical Stack
+Backend
+
+Laravel 10/11
+
+PHP 8+
+
+MySQL 5.7+
+
+Frontend
+
+Blade templates
+
+Bootstrap or Tailwind
+
+Vanilla JS / Alpine.js for interactivity
+
+Hosting
+
+cPanel shared hosting
+
+SSL enabled
+
+9. 🔁 System Flow
+Sale Flow:
+
+Search → Add to cart → Checkout → Save → Deduct stock → Print receipt
+
+Purchase Flow:
+
+Create purchase → Add items → Save → Increase stock
+
+Catalog Flow:
+
+Visitor → Browse → View product → Call/WhatsApp store
+
+10. 🚀 MVP Development Phases
+Phase 1
+
+Auth
+
+Products
+
+Categories
+
+POS sale
+
+Receipt print
+
+Phase 2
+
+Purchases
+
+Reports
+
+Stock adjustments
+
+Phase 3
+
+Public catalog
+
+SEO optimization
+
+11. 📊 Success Metrics
+
+POS transaction time < 60 seconds per bill
+
+Zero stock mismatch
+
+No system crashes
+
+Page load < 2 seconds
+
+12. ⚠ Risks
+
+Shared hosting performance limits
+
+No offline fallback
+
+Internet dependency
+
+No real-time multi-user handling (not needed currently)
+
+13. 🔮 Future Enhancements (Optional)
+
+Multi-branch support
+
+Customer management
+
+Returns system
+
+Expense tracking
+
+Basic accounting
+
+Online ordering
+
+Barcode label printing
