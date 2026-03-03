@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Add/Edit Product - Hardware Store POS</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1e6d8a",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#121c20",
+                        "neutral-light": "#e0e7ea", /* Derived from primary hue */
+                        "neutral-dark": "#1a2428", /* Derived from primary hue */
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+</head>
+<body class="font-display bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 antialiased overflow-hidden h-screen w-full relative">
+<!-- Blurred Background Content (Simulating Product List) -->
+<div aria-hidden="true" class="absolute inset-0 z-0 p-8 flex flex-col gap-6 blur-sm pointer-events-none opacity-50">
+<div class="flex justify-between items-center">
+<h1 class="text-3xl font-bold">Inventory</h1>
+<div class="flex gap-4">
+<button class="bg-primary text-white px-4 py-2 rounded-lg">Export</button>
+<button class="bg-primary text-white px-4 py-2 rounded-lg flex items-center gap-2">
+<span class="material-symbols-outlined">add</span> Add Product
+                </button>
+</div>
+</div>
+<div class="bg-white dark:bg-neutral-dark rounded-xl shadow-sm border border-neutral-light dark:border-slate-700 h-full overflow-hidden">
+<table class="w-full text-left text-sm">
+<thead class="bg-neutral-light/30 dark:bg-slate-800">
+<tr>
+<th class="p-4">Product</th>
+<th class="p-4">SKU</th>
+<th class="p-4">Stock</th>
+<th class="p-4">Price</th>
+<th class="p-4">Status</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-neutral-light dark:divide-slate-700">
+<tr class="opacity-70">
+<td class="p-4">Power Drill 20V</td>
+<td class="p-4">PD-2001</td>
+<td class="p-4">45</td>
+<td class="p-4">$129.99</td>
+<td class="p-4"><span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">Active</span></td>
+</tr>
+<tr class="opacity-70">
+<td class="p-4">Hammer Set Premium</td>
+<td class="p-4">HM-5521</td>
+<td class="p-4">12</td>
+<td class="p-4">$45.50</td>
+<td class="p-4"><span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs">Low Stock</span></td>
+</tr>
+<tr class="opacity-70">
+<td class="p-4">Safety Goggles</td>
+<td class="p-4">SG-9900</td>
+<td class="p-4">150</td>
+<td class="p-4">$15.00</td>
+<td class="p-4"><span class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">Active</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Modal Overlay -->
+<div class="relative z-10 flex h-full w-full items-center justify-center bg-black/40 backdrop-blur-[2px] p-4">
+<!-- Modal Container -->
+<div class="flex flex-col w-full max-w-[1000px] max-h-[90vh] bg-white dark:bg-[#1a2327] rounded-xl shadow-2xl border border-neutral-light dark:border-slate-700 overflow-hidden">
+<!-- Modal Header -->
+<div class="flex items-center justify-between border-b border-neutral-light dark:border-slate-700 px-6 py-5 bg-white dark:bg-[#1a2327]">
+<div>
+<h2 class="text-xl font-bold text-slate-900 dark:text-white leading-tight">Add New Product</h2>
+<p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Enter details to add an item to the catalog.</p>
+</div>
+<button class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<!-- Modal Body (Scrollable) -->
+<div class="overflow-y-auto p-6 lg:p-8 flex-1">
+<form class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+<!-- Left Column: Form Fields -->
+<div class="lg:col-span-8 flex flex-col gap-6">
+<!-- General Info Section -->
+<div class="space-y-4">
+<h3 class="text-sm font-semibold uppercase tracking-wider text-primary dark:text-primary/90 flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">inventory_2</span>
+                                General Information
+                            </h3>
+<div class="grid grid-cols-1 gap-4">
+<label class="flex flex-col gap-2">
+<span class="text-sm font-medium text-slate-700 dark:text-slate-300">Product Name <span class="text-red-500">*</span></span>
+<input class="form-input w-full rounded-lg border-neutral-light dark:border-slate-600 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-primary focus:ring-1 focus:ring-primary h-11 px-3 text-sm" placeholder="e.g., Heavy Duty Impact Driver" type="text"/>
+</label>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<label class="flex flex-col gap-2">
+<span class="text-sm font-medium text-slate-700 dark:text-slate-300">Category</span>
+<div class="relative">
+<select class="form-select w-full rounded-lg border-neutral-light dark:border-slate-600 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary h-11 pl-3 pr-10 text-sm appearance-none">
+<option disabled="" selected="" value="">Select category</option>
+<option value="powertools">Power Tools</option>
+<option value="handtools">Hand Tools</option>
+<option value="plumbing">Plumbing</option>
+<option value="electrical">Electrical</option>
+<option value="paint">Paint &amp; Supplies</option>
+</select>
+<span class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
+<span class="material-symbols-outlined text-lg">expand_more</span>
+</span>
+</div>
+</label>
+<label class="flex flex-col gap-2">
+<span class="text-sm font-medium text-slate-700 dark:text-slate-300">Unit Type</span>
+<div class="relative">
+<select class="form-select w-full rounded-lg border-neutral-light dark:border-slate-600 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white focus:border-primary focus:ring-1 focus:ring-primary h-11 pl-3 pr-10 text-sm appearance-none">
+<option value="pcs">Pieces (pcs)</option>
+<option value="kg">Kilograms (kg)</option>
+<option value="m">Meters (m)</option>
+<option value="box">Box</option>
+<option value="set">Set</option>
+</select>
+<span class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
+<span class="material-symbols-outlined text-lg">expand_more</span>
+</span>
+</div>
+</label>
+</div>
+</div>
+<hr class="border-neutral-light dark:border-slate-700/50"/>
+<!-- Inventory Details -->
+<div class="space-y-4">
+<h3 class="text-sm font-semibold uppercase tracking-wider text-primary dark:text-primary/90 flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">barcode_reader</span>
+                                Identification &amp; Stock
+                            </h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<label class="flex flex-col gap-2">
+<span class="text-sm font-medium text-slate-700 dark:text-slate-300">SKU</span>
+<input class="form-input w-full rounded-lg border-neutral-light dark:border-slate-600 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-primary focus:ring-1 focus:ring-primary h-11 px-3 text-sm" placeholder="e.g. TL-2938" type="text"/>
+</label>
+<label class="flex flex-col gap-2">
+<span class="text-sm font-medium text-slate-700 dark:text-slate-300">Barcode / UPC</span>
+<div class="relative flex items-center">
+<input class="form-input w-full rounded-lg border-neutral-light dark:border-slate-600 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-primary focus:ring-1 focus:ring-primary h-11 pl-3 pr-10 text-sm" placeholder="Scan or type..." type="text"/>
+<button class="absolute right-2 text-slate-400 hover:text-primary p-1" type="button">
+<span class="material-symbols-outlined text-xl">qr_code_scanner</span>
+</button>
+</div>
+</label>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<label class="flex flex-col gap-2">
+<span class="text-sm font-medium text-slate-700 dark:text-slate-300">Current Stock</span>
+<input class="form-input w-full rounded-lg border-neutral-light dark:border-slate-600 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-primary focus:ring-1 focus:ring-primary h-11 px-3 text-sm" placeholder="0" type="number"/>
+</label>
+<label class="flex flex-col gap-2">
+<div class="flex items-center justify-between">
+<span class="text-sm font-medium text-slate-700 dark:text-slate-300">Low Stock Alert</span>
+<span class="text-xs text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">Threshold</span>
+</div>
+<input class="form-input w-full rounded-lg border-neutral-light dark:border-slate-600 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-primary focus:ring-1 focus:ring-primary h-11 px-3 text-sm" placeholder="e.g. 10" type="number"/>
+</label>
+</div>
+</div>
+<hr class="border-neutral-light dark:border-slate-700/50"/>
+<!-- Pricing -->
+<div class="space-y-4">
+<h3 class="text-sm font-semibold uppercase tracking-wider text-primary dark:text-primary/90 flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">payments</span>
+                                Pricing
+                            </h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<label class="flex flex-col gap-2">
+<span class="text-sm font-medium text-slate-700 dark:text-slate-300">Cost Price</span>
+<div class="relative">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">$</span>
+<input class="form-input w-full rounded-lg border-neutral-light dark:border-slate-600 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-primary focus:ring-1 focus:ring-primary h-11 pl-7 pr-3 text-sm" placeholder="0.00" step="0.01" type="number"/>
+</div>
+</label>
+<label class="flex flex-col gap-2">
+<span class="text-sm font-medium text-slate-700 dark:text-slate-300">Sale Price</span>
+<div class="relative">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">$</span>
+<input class="form-input w-full rounded-lg border-neutral-light dark:border-slate-600 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-primary focus:ring-1 focus:ring-primary h-11 pl-7 pr-3 text-sm" placeholder="0.00" step="0.01" type="number"/>
+</div>
+</label>
+</div>
+</div>
+</div>
+<!-- Right Column: Image Upload -->
+<div class="lg:col-span-4 flex flex-col gap-6">
+<div class="bg-slate-50 dark:bg-slate-800/30 rounded-xl p-5 border border-neutral-light dark:border-slate-700 flex flex-col gap-4 h-full">
+<h3 class="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">image</span>
+                                Product Image
+                            </h3>
+<!-- Upload Zone -->
+<div class="flex-1 min-h-[200px] border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg flex flex-col items-center justify-center p-6 text-center hover:bg-white dark:hover:bg-slate-800 transition-colors cursor-pointer group">
+<div class="bg-slate-100 dark:bg-slate-700 rounded-full p-3 mb-3 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-3xl text-slate-400 dark:text-slate-300">cloud_upload</span>
+</div>
+<p class="text-sm font-medium text-slate-700 dark:text-slate-300">Click to upload</p>
+<p class="text-xs text-slate-500 dark:text-slate-400 mt-1">or drag and drop</p>
+<p class="text-[10px] text-slate-400 dark:text-slate-500 mt-4 uppercase">SVG, PNG, JPG or GIF</p>
+</div>
+<!-- Preview List (Optional: Empty state implies first upload) -->
+<div class="hidden">
+<!-- Placeholder for uploaded items list if needed later -->
+</div>
+</div>
+<div class="bg-yellow-50 dark:bg-yellow-900/10 rounded-lg p-4 border border-yellow-100 dark:border-yellow-900/20">
+<div class="flex gap-3">
+<span class="material-symbols-outlined text-yellow-600 dark:text-yellow-500 shrink-0">lightbulb</span>
+<div class="text-xs text-yellow-800 dark:text-yellow-200 leading-relaxed">
+<strong>Tip:</strong> Ensure your barcode scanner is connected before adding stock quantities for faster entry.
+                                </div>
+</div>
+</div>
+</div>
+</form>
+</div>
+<!-- Modal Footer -->
+<div class="bg-slate-50 dark:bg-[#1a2327] px-6 py-4 border-t border-neutral-light dark:border-slate-700 flex justify-end gap-3 sticky bottom-0">
+<button class="px-6 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 font-medium text-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-400" type="button">
+                    Cancel
+                </button>
+<button class="px-6 py-2.5 rounded-lg bg-primary hover:bg-[#16556b] text-white font-medium text-sm shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-slate-900 flex items-center gap-2" type="button">
+<span class="material-symbols-outlined text-[18px]">check</span>
+                    Save Product
+                </button>
+</div>
+</div>
+</div>
+</body></html>
