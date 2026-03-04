@@ -557,11 +557,21 @@
                 <div class="receipt-row receipt-total"><span>Change</span> <span class="change-highlight" id="receiptChange">—</span></div>
             </div>
 
-            <p class="text-muted mt-3 mb-3" style="font-size:13px;" id="receiptItems">—</p>
+            <p class="text-muted mt-3 mb-2" style="font-size:13px;" id="receiptItems">—</p>
 
-            <button class="btn-complete-sale" onclick="closeReceipt()" style="border-radius:10px;">
-                <i class="bi bi-arrow-repeat"></i> New Sale
-            </button>
+            {{-- Action buttons --}}
+            <div class="d-flex gap-2 mt-2">
+                <a id="printReceiptBtn" href="#" target="_blank" rel="noopener"
+                   style="flex:1; background:#f9fafb; color:#374151; border:1.5px solid #e5e7eb; border-radius:10px;
+                          padding:12px; font-size:14px; font-weight:600; text-decoration:none;
+                          display:flex; align-items:center; justify-content:center; gap:6px; transition:background .15s;"
+                   onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='#f9fafb'">
+                    🖨️ Print Receipt
+                </a>
+                <button class="btn-complete-sale" onclick="closeReceipt()" style="flex:1; border-radius:10px;">
+                    <i class="bi bi-arrow-repeat"></i> New Sale
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -886,6 +896,8 @@ function showReceiptModal(data) {
     document.getElementById('receiptPaid').textContent    = '$' + data.paid_amount;
     document.getElementById('receiptChange').textContent  = '$' + data.change_amount;
     document.getElementById('receiptItems').textContent   = `${data.items_count} item(s) sold`;
+    // Wire up the print receipt button — append ?print=1 for auto-print
+    document.getElementById('printReceiptBtn').href = data.receipt_url + '?print=1';
     receiptModal.show();
 }
 

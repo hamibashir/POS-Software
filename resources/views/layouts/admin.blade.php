@@ -188,9 +188,17 @@
        class="nav-link {{ request()->routeIs('admin.products*') ? 'active' : '' }}">
         <i class="bi bi-box-seam"></i>Products
     </a>
-    <a href="#"
+    <a href="{{ route('admin.sales.index') }}"
+       class="nav-link {{ request()->routeIs('admin.sales*') ? 'active' : '' }}">
+        <i class="bi bi-receipt"></i>Sales
+    </a>
+    <a href="{{ route('admin.purchases.index') }}"
        class="nav-link {{ request()->routeIs('admin.purchases*') ? 'active' : '' }}">
         <i class="bi bi-truck"></i>Purchases
+    </a>
+    <a href="{{ route('admin.stock.index') }}"
+       class="nav-link {{ request()->routeIs('admin.stock*') ? 'active' : '' }}">
+        <i class="bi bi-arrow-left-right"></i>Stock
     </a>
     <a href="#"
        class="nav-link {{ request()->routeIs('admin.reports*') ? 'active' : '' }}">

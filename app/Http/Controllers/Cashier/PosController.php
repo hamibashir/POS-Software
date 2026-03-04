@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Cashier;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Models\Sale;
 use App\Services\SaleService;
 use Illuminate\Http\Request;
 
@@ -11,6 +12,18 @@ class PosController extends Controller
 {
     public function __construct(protected SaleService $saleService)
     {
+    }
+
+    /**
+     * Show a printable receipt for a completed sale.
+     */
+    public function receipt(Sale $sale)
+    {
+        // Only allow viewing receipts for completed sales
+        abort_unless($sale->status === 'completed', 404);
+
+        $sale->load(['items', 'user']);
+        return view('cashier.receipt', compact('sale'));
     }
 
     /**
@@ -98,11 +111,13 @@ class PosController extends Controller
 
             return response()->json([
                 'success'        => true,
+                'sale_id'        => $sale->id,
                 'invoice_number' => $sale->invoice_number,
                 'total_amount'   => number_format($sale->total_amount, 2),
                 'paid_amount'    => number_format($sale->paid_amount, 2),
                 'change_amount'  => number_format($sale->change_amount, 2),
                 'items_count'    => $sale->items->count(),
+                'receipt_url'    => route('cashier.pos.receipt', $sale->id),
                 'message'        => "Sale {$sale->invoice_number} completed successfully!",
             ]);
         } catch (\RuntimeException $e) {

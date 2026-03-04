@@ -5,6 +5,9 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\SalesController;
+use App\Http\Controllers\Admin\PurchaseController;
+use App\Http\Controllers\Admin\StockAdjustmentController;
 use App\Http\Controllers\Cashier\PosController;
 
 /*
@@ -45,6 +48,21 @@ Route::middleware(['auth', 'admin'])
         Route::resource('products', ProductController::class);
         Route::patch('products/{product}/toggle-status', [ProductController::class, 'toggleStatus'])
             ->name('products.toggle-status');
+
+        // Sales
+        Route::get('sales',          [SalesController::class, 'index'])->name('sales.index');
+        Route::get('sales/{sale}',   [SalesController::class, 'show'])->name('sales.show');
+
+        // Purchases
+        Route::get('purchases',              [PurchaseController::class, 'index'])->name('purchases.index');
+        Route::get('purchases/create',       [PurchaseController::class, 'create'])->name('purchases.create');
+        Route::post('purchases',             [PurchaseController::class, 'store'])->name('purchases.store');
+        Route::get('purchases/{purchase}',   [PurchaseController::class, 'show'])->name('purchases.show');
+
+        // Stock Adjustments
+        Route::get('stock-adjustments',        [StockAdjustmentController::class, 'index'])->name('stock.index');
+        Route::get('stock-adjustments/create', [StockAdjustmentController::class, 'create'])->name('stock.create');
+        Route::post('stock-adjustments',       [StockAdjustmentController::class, 'store'])->name('stock.store');
     });
 
 /*
@@ -57,9 +75,10 @@ Route::middleware(['auth', 'cashier'])
     ->prefix('cashier')
     ->name('cashier.')
     ->group(function () {
-        Route::get('/pos',               [PosController::class, 'index'])->name('pos');
-        Route::get('/pos/search',        [PosController::class, 'searchProducts'])->name('pos.search');
-        Route::post('/pos/complete-sale', [PosController::class, 'completeSale'])->name('pos.complete-sale');
+        Route::get('/pos',                [PosController::class, 'index'])->name('pos');
+        Route::get('/pos/search',          [PosController::class, 'searchProducts'])->name('pos.search');
+        Route::post('/pos/complete-sale',  [PosController::class, 'completeSale'])->name('pos.complete-sale');
+        Route::get('/pos/receipt/{sale}',  [PosController::class, 'receipt'])->name('pos.receipt');
     });
 
 /*
