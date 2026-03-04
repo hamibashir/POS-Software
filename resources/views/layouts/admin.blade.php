@@ -200,7 +200,7 @@
        class="nav-link {{ request()->routeIs('admin.stock*') ? 'active' : '' }}">
         <i class="bi bi-arrow-left-right"></i>Stock
     </a>
-    <a href="#"
+    <a href="{{ route('admin.reports.index') }}"
        class="nav-link {{ request()->routeIs('admin.reports*') ? 'active' : '' }}">
         <i class="bi bi-bar-chart-line"></i>Reports
     </a>

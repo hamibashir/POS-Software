@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\SalesController;
 use App\Http\Controllers\Admin\PurchaseController;
 use App\Http\Controllers\Admin\StockAdjustmentController;
+use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Cashier\PosController;
 
 /*
@@ -63,6 +64,9 @@ Route::middleware(['auth', 'admin'])
         Route::get('stock-adjustments',        [StockAdjustmentController::class, 'index'])->name('stock.index');
         Route::get('stock-adjustments/create', [StockAdjustmentController::class, 'create'])->name('stock.create');
         Route::post('stock-adjustments',       [StockAdjustmentController::class, 'store'])->name('stock.store');
+
+        // Reports
+        Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
     });
 
 /*
