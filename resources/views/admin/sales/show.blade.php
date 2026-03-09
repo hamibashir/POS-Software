@@ -164,12 +164,12 @@
             </div>
             <div class="info-row">
                 <span class="lbl">Paid Amount</span>
-                <span class="val" style="color:#10b981;">${{ number_format($sale->paid_amount, 2) }}</span>
+                <span class="val" style="color:#10b981;">{{ pkr($sale->paid_amount, 2) }}</span>
             </div>
             @if($sale->change_amount > 0)
             <div class="info-row">
                 <span class="lbl">Change Given</span>
-                <span class="val">${{ number_format($sale->change_amount, 2) }}</span>
+                <span class="val">{{ pkr($sale->change_amount, 2) }}</span>
             </div>
             @endif
         </div>
@@ -203,13 +203,13 @@
                     <div class="item-name">{{ $item->product_name }}</div>
                     <div class="item-sku">{{ $item->product_sku }} · {{ strtoupper($item->product_unit) }}</div>
                 </td>
-                <td style="text-align:right;">${{ number_format($item->unit_price, 2) }}</td>
+                <td style="text-align:right;">{{ pkr($item->unit_price, 2) }}</td>
                 <td style="text-align:right; font-weight:600;">{{ $item->quantity }}</td>
                 <td style="text-align:right; color:#10b981;">
                     {{ $item->discount_amount > 0 ? '−$' . number_format($item->discount_amount, 2) : '—' }}
                 </td>
-                <td style="text-align:right; font-weight:700; color:#111827;">${{ number_format($item->total_price, 2) }}</td>
-                <td style="text-align:right; color:#9ca3af; font-size:12px;">${{ number_format($cost, 2) }}</td>
+                <td style="text-align:right; font-weight:700; color:#111827;">{{ pkr($item->total_price, 2) }}</td>
+                <td style="text-align:right; color:#9ca3af; font-size:12px;">{{ pkr($cost, 2) }}</td>
                 <td style="text-align:right;">
                     <span style="font-size:12px; font-weight:700;
                         color:{{ $margin >= 20 ? '#065f46' : ($margin >= 10 ? '#92400e' : '#991b1b') }};">
@@ -225,28 +225,28 @@
     <div style="border-top:1.5px dashed #e5e7eb; padding: 16px 0 8px;">
         <div class="t-row-foot">
             <span>Subtotal ({{ $sale->items->sum('quantity') }} items)</span>
-            <span>${{ number_format($sale->subtotal, 2) }}</span>
+            <span>{{ pkr($sale->subtotal, 2) }}</span>
         </div>
         @if($sale->discount_amount > 0)
         <div class="t-row-foot discount">
             <span>Discount</span>
-            <span>−${{ number_format($sale->discount_amount, 2) }}</span>
+            <span>−{{ pkr($sale->discount_amount, 2) }}</span>
         </div>
         @endif
         @if($sale->tax_amount > 0)
         <div class="t-row-foot">
             <span>Tax</span>
-            <span>${{ number_format($sale->tax_amount, 2) }}</span>
+            <span>{{ pkr($sale->tax_amount, 2) }}</span>
         </div>
         @endif
         <div class="t-row-foot grand">
             <span>TOTAL</span>
-            <span>${{ number_format($sale->total_amount, 2) }}</span>
+            <span>{{ pkr($sale->total_amount, 2) }}</span>
         </div>
         @if($sale->change_amount > 0)
         <div class="t-row-foot change">
             <span>💵 Change Due</span>
-            <span>${{ number_format($sale->change_amount, 2) }}</span>
+            <span>{{ pkr($sale->change_amount, 2) }}</span>
         </div>
         @endif
     </div>

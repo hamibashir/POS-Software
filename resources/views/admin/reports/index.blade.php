@@ -105,12 +105,12 @@
         </div>
         <div class="stat-card">
             <div class="stat-label">Total Revenue</div>
-            <div class="stat-value">${{ number_format($totals['revenue'], 2) }}</div>
+            <div class="stat-value">{{ pkr($totals['revenue'], 2) }}</div>
             <div class="stat-sub">completed sales</div>
         </div>
         <div class="stat-card">
             <div class="stat-label">Avg Sale Value</div>
-            <div class="stat-value">${{ number_format($totals['avg_sale'], 2) }}</div>
+            <div class="stat-value">{{ pkr($totals['avg_sale'], 2) }}</div>
             <div class="stat-sub">per transaction</div>
         </div>
         <div class="stat-card">
@@ -135,8 +135,8 @@
                 <tr>
                     <td style="font-weight:600;">{{ \Carbon\Carbon::parse($row->date)->format('D, d M Y') }}</td>
                     <td style="text-align:right;">{{ $row->transactions }}</td>
-                    <td style="text-align:right;font-weight:700;">${{ number_format($row->revenue,2) }}</td>
-                    <td style="text-align:right;color:#6b7280;">${{ number_format($row->avg_sale,2) }}</td>
+                    <td style="text-align:right;font-weight:700;">{{ pkr($row->revenue,2) }}</td>
+                    <td style="text-align:right;color:#6b7280;">{{ pkr($row->avg_sale,2) }}</td>
                 </tr>
                 @endforeach
             </tbody>
@@ -173,25 +173,25 @@
         </div>
         <div class="stat-card">
             <div class="stat-label">Total Revenue</div>
-            <div class="stat-value">${{ number_format($summary->revenue,2) }}</div>
+            <div class="stat-value">{{ pkr($summary->revenue,2) }}</div>
         </div>
         <div class="stat-card">
             <div class="stat-label">Cash Revenue</div>
-            <div class="stat-value">${{ number_format($summary->cash_revenue,2) }}</div>
+            <div class="stat-value">{{ pkr($summary->cash_revenue,2) }}</div>
             <div class="stat-sub">💵 cash payments</div>
         </div>
         <div class="stat-card">
             <div class="stat-label">Card Revenue</div>
-            <div class="stat-value">${{ number_format($summary->card_revenue,2) }}</div>
+            <div class="stat-value">{{ pkr($summary->card_revenue,2) }}</div>
             <div class="stat-sub">💳 card payments</div>
         </div>
         <div class="stat-card">
             <div class="stat-label">Avg Sale</div>
-            <div class="stat-value">${{ number_format($summary->avg_sale,2) }}</div>
+            <div class="stat-value">{{ pkr($summary->avg_sale,2) }}</div>
         </div>
         <div class="stat-card">
             <div class="stat-label">Discounts Given</div>
-            <div class="stat-value">${{ number_format($summary->discounts,2) }}</div>
+            <div class="stat-value">{{ pkr($summary->discounts,2) }}</div>
         </div>
     </div>
     @endif
@@ -210,7 +210,7 @@
                 <tr>
                     <td style="font-weight:600;">{{ \Carbon\Carbon::parse($row->date)->format('D, d M Y') }}</td>
                     <td style="text-align:right;">{{ $row->transactions }}</td>
-                    <td style="text-align:right;font-weight:700;">${{ number_format($row->revenue,2) }}</td>
+                    <td style="text-align:right;font-weight:700;">{{ pkr($row->revenue,2) }}</td>
                 </tr>
                 @endforeach
             </tbody>
@@ -278,8 +278,8 @@
                             <span style="font-size:11px;color:#9ca3af;width:32px;">{{ round($pct) }}%</span>
                         </div>
                     </td>
-                    <td style="text-align:right;color:#6b7280;">${{ number_format($p->cost_price,2) }}</td>
-                    <td style="text-align:right;font-weight:700;">${{ number_format($p->selling_price,2) }}</td>
+                    <td style="text-align:right;color:#6b7280;">{{ pkr($p->cost_price,2) }}</td>
+                    <td style="text-align:right;font-weight:700;">{{ pkr($p->selling_price,2) }}</td>
                 </tr>
                 @endforeach
             </tbody>
@@ -344,8 +344,8 @@
                     </td>
                     <td style="text-align:right;font-size:16px;font-weight:800;color:#111827;">{{ number_format($p->total_qty) }}</td>
                     <td style="text-align:right;color:#6b7280;">{{ $p->order_count }}</td>
-                    <td style="text-align:right;color:#6b7280;">${{ number_format($p->avg_price,2) }}</td>
-                    <td style="text-align:right;font-weight:700;color:#065f46;">${{ number_format($p->total_revenue,2) }}</td>
+                    <td style="text-align:right;color:#6b7280;">{{ pkr($p->avg_price,2) }}</td>
+                    <td style="text-align:right;font-weight:700;color:#065f46;">{{ pkr($p->total_revenue,2) }}</td>
                 </tr>
                 @endforeach
             </tbody>

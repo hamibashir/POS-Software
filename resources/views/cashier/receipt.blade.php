@@ -581,12 +581,12 @@
                         <div class="item-name">{{ $item->product_name }}</div>
                         <div class="item-meta">{{ $item->product_sku }} · {{ strtoupper($item->product_unit) }}</div>
                         @if($item->discount_amount > 0)
-                            <div class="item-meta" style="color:#10b981;">−${{ number_format($item->discount_amount,2) }} disc.</div>
+                            <div class="item-meta" style="color:#10b981;">−{{ pkr($item->discount_amount,2) }} disc.</div>
                         @endif
                     </td>
                     <td>{{ $item->quantity }}</td>
-                    <td>${{ number_format($item->unit_price, 2) }}</td>
-                    <td class="item-total">${{ number_format($item->total_price, 2) }}</td>
+                    <td>{{ pkr($item->unit_price, 2) }}</td>
+                    <td class="item-total">{{ pkr($item->total_price, 2) }}</td>
                 </tr>
                 @endforeach
             </tbody>
@@ -596,37 +596,37 @@
         <div class="totals-wrap">
             <div class="t-row">
                 <span>Subtotal</span>
-                <span>${{ number_format($sale->subtotal, 2) }}</span>
+                <span>{{ pkr($sale->subtotal, 2) }}</span>
             </div>
 
             @if($sale->discount_amount > 0)
             <div class="t-row discount">
                 <span>Discount</span>
-                <span>−${{ number_format($sale->discount_amount, 2) }}</span>
+                <span>−{{ pkr($sale->discount_amount, 2) }}</span>
             </div>
             @endif
 
             @if($sale->tax_amount > 0)
             <div class="t-row">
                 <span>Tax</span>
-                <span>${{ number_format($sale->tax_amount, 2) }}</span>
+                <span>{{ pkr($sale->tax_amount, 2) }}</span>
             </div>
             @endif
 
             <div class="t-row grand">
                 <span>TOTAL</span>
-                <span>${{ number_format($sale->total_amount, 2) }}</span>
+                <span>{{ pkr($sale->total_amount, 2) }}</span>
             </div>
 
             <div class="t-row paid-row">
                 <span>Paid ({{ strtoupper($sale->payment_method) }})</span>
-                <span>${{ number_format($sale->paid_amount, 2) }}</span>
+                <span>{{ pkr($sale->paid_amount, 2) }}</span>
             </div>
 
             @if($sale->change_amount > 0)
             <div class="change-box">
                 <span>💵 Change Due</span>
-                <span>${{ number_format($sale->change_amount, 2) }}</span>
+                <span>{{ pkr($sale->change_amount, 2) }}</span>
             </div>
             @endif
         </div>

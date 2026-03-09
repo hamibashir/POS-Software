@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 class Product extends Model
 {
@@ -13,6 +14,7 @@ class Product extends Model
     protected $fillable = [
         'category_id',
         'name',
+        'slug',
         'sku',
         'barcode',
         'description',
@@ -52,6 +54,11 @@ class Product extends Model
         return $query->where('is_active', true);
     }
 
+    public function scopeInCatalog($query)
+    {
+        return $query->where('is_active', true)->where('show_in_catalog', true);
+    }
+
     public function scopeLowStock($query)
     {
         return $query->whereColumn('stock_quantity', '<=', 'low_stock_threshold')
@@ -89,5 +96,37 @@ class Product extends Model
             'low_stock'    => 'Low Stock',
             default        => 'In Stock',
         };
+    }
+
+    /**
+     * Generate a unique slug from a given name.
+     */
+    public static function generateSlug(string $name, ?int $ignoreId = null): string
+    {
+        $slug     = Str::slug($name);
+        $original = $slug;
+        $count    = 1;
+
+        while (
+            static::withTrashed()
+                ->where('slug', $slug)
+                ->when($ignoreId, fn($q) => $q->where('id', '!=', $ignoreId))
+                ->exists()
+        ) {
+            $slug = $original . '-' . $count++;
+        }
+
+        return $slug;
+    }
+
+    /**
+     * Image URL accessor — returns a default placeholder when no image stored.
+     */
+    public function getImageUrlAttribute(): string
+    {
+        if ($this->image && file_exists(storage_path('app/public/' . $this->image))) {
+            return asset('storage/' . $this->image);
+        }
+        return asset('images/no-image.png');
     }
 }

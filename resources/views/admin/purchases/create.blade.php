@@ -117,7 +117,7 @@ const PRODUCTS = @json($products);
 let rowIndex = 0;
 
 function formatCurrency(n) {
-    return '$' + parseFloat(n || 0).toFixed(2);
+    return 'Rs. ' + parseFloat(n || 0).toFixed(2);
 }
 
 function recalcRow(idx) {
@@ -182,14 +182,14 @@ function addRow() {
                    oninput="recalcRow(${idx})">
         </div>
         <div class="fg">
-            <label style="font-size:11px;color:#6b7280;">Unit Cost ($)</label>
+            <label style="font-size:11px;color:#6b7280;">Unit Cost (PKR)</label>
             <input type="number" id="cost_${idx}" name="items[${idx}][unit_cost]"
                    class="pos-input" min="0" step="0.01" value="0.00" style="text-align:right;" required
                    oninput="recalcRow(${idx})">
         </div>
         <div class="fg">
             <label style="font-size:11px;color:#6b7280;">Line Total</label>
-            <div class="line-total-display" id="line_${idx}">$0.00</div>
+            <div class="line-total-display" id="line_${idx}">Rs. 0.00</div>
         </div>
         <button type="button" class="btn-remove-row" onclick="removeRow(${idx})" title="Remove">
             <i class="bi bi-x-lg"></i>
@@ -282,7 +282,7 @@ addRow(); // Start with one row
             <div class="product-row" style="padding-top:0; border-bottom:1.5px solid #e5e7eb; animation:none;">
                 <div class="col-header">Product</div>
                 <div class="col-header" style="text-align:right;">Quantity</div>
-                <div class="col-header" style="text-align:right;">Unit Cost ($)</div>
+                <div class="col-header" style="text-align:right;">Unit Cost (PKR)</div>
                 <div class="col-header" style="text-align:right;">Line Total</div>
                 <div></div>
             </div>
@@ -301,7 +301,7 @@ addRow(); // Start with one row
     <div class="summary-bar">
         <div>
             <div class="items-count"><span id="rowCount">0</span> product line(s)</div>
-            <div class="total-display">Total Cost: <span id="grandTotal">$0.00</span></div>
+            <div class="total-display">Total Cost: <span id="grandTotal">Rs. 0.00</span></div>
         </div>
         <button type="submit" class="btn-submit" id="submitBtn" disabled>
             <i class="bi bi-arrow-down-circle"></i> Record Purchase & Update Stock

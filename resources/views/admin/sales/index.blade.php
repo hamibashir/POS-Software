@@ -80,7 +80,7 @@
             <div class="stat-icon" style="background:#d1fae5; color:#065f46;"><i class="bi bi-cash-stack"></i></div>
             <div>
                 <div class="stat-label">Today's Revenue</div>
-                <div class="stat-value">${{ number_format($stats['today_revenue'], 2) }}</div>
+                <div class="stat-value">{{ pkr($stats['today_revenue'], 2) }}</div>
                 <div class="stat-sub">cash & card</div>
             </div>
         </div>
@@ -100,7 +100,7 @@
             <div class="stat-icon" style="background:#ede9fe; color:#5b21b6;"><i class="bi bi-bar-chart"></i></div>
             <div>
                 <div class="stat-label">Filtered Revenue</div>
-                <div class="stat-value">${{ number_format($stats['total_revenue'], 2) }}</div>
+                <div class="stat-value">{{ pkr($stats['total_revenue'], 2) }}</div>
                 <div class="stat-sub">in selected period</div>
             </div>
         </div>
@@ -224,7 +224,7 @@
                 </td>
 
                 {{-- Total --}}
-                <td class="total-amount">${{ number_format($sale->total_amount, 2) }}</td>
+                <td class="total-amount">{{ pkr($sale->total_amount, 2) }}</td>
 
                 {{-- Payment --}}
                 <td>

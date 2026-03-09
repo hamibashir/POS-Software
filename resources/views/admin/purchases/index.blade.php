@@ -54,7 +54,7 @@
             <div class="stat-icon" style="background:#fef3c7; color:#92400e;"><i class="bi bi-cash-coin"></i></div>
             <div>
                 <div class="stat-label">Today's Cost</div>
-                <div class="stat-value">${{ number_format($stats['today_cost'], 2) }}</div>
+                <div class="stat-value">{{ pkr($stats['today_cost'], 2) }}</div>
                 <div class="stat-sub">spent today</div>
             </div>
         </div>
@@ -74,7 +74,7 @@
             <div class="stat-icon" style="background:#ede9fe; color:#5b21b6;"><i class="bi bi-currency-dollar"></i></div>
             <div>
                 <div class="stat-label">Total Spent</div>
-                <div class="stat-value">${{ number_format($stats['total_cost'], 2) }}</div>
+                <div class="stat-value">{{ pkr($stats['total_cost'], 2) }}</div>
                 <div class="stat-sub">all time</div>
             </div>
         </div>
@@ -158,7 +158,7 @@
                         {{ $purchase->items_count }} item{{ $purchase->items_count !== 1 ? 's' : '' }}
                     </span>
                 </td>
-                <td style="font-size:15px;font-weight:700;color:#111827;">${{ number_format($purchase->total_amount, 2) }}</td>
+                <td style="font-size:15px;font-weight:700;color:#111827;">{{ pkr($purchase->total_amount, 2) }}</td>
                 <td>
                     @php $pm = $purchase->payment_method; @endphp
                     <span class="pay-badge {{ $pm === 'cash' ? 'pay-cash' : ($pm === 'card' ? 'pay-card' : 'pay-credit') }}">

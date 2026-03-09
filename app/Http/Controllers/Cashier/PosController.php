@@ -40,30 +40,36 @@ class PosController extends Controller
      */
     public function searchProducts(Request $request)
     {
-        $query = $request->get('q', '');
+        $query      = $request->get('q', '');
+        $categoryId = $request->get('category_id');
 
         $products = Product::where('is_active', true)
-            ->where(function ($q) use ($query) {
-                $q->where('name', 'like', "%{$query}%")
-                  ->orWhere('sku', 'like', "%{$query}%")
-                  ->orWhere('barcode', $query);   // exact match for barcode scan
+            ->when($query, function ($q) use ($query) {
+                $q->where(function ($inner) use ($query) {
+                    $inner->where('name',    'like', "%{$query}%")
+                          ->orWhere('sku',     'like', "%{$query}%")
+                          ->orWhere('barcode', $query);
+                });
             })
+            ->when($categoryId, fn($q) => $q->where('category_id', $categoryId))
             ->with('category:id,name')
-            ->select(['id', 'name', 'sku', 'barcode', 'sale_price', 'cost_price', 'stock_quantity', 'unit', 'category_id', 'image'])
-            ->orderByRaw("CASE WHEN barcode = ? THEN 0 ELSE 1 END", [$query]) // exact barcode first
-            ->limit(20)
+            ->select(['id', 'name', 'sku', 'barcode', 'sale_price', 'cost_price',
+                      'stock_quantity', 'low_stock_threshold', 'unit', 'category_id', 'image'])
+            ->orderByRaw("CASE WHEN barcode = ? THEN 0 ELSE 1 END", [$query])
+            ->limit(40)
             ->get()
             ->map(fn($p) => [
-                'id'             => $p->id,
-                'name'           => $p->name,
-                'sku'            => $p->sku,
-                'barcode'        => $p->barcode,
-                'sale_price'     => (float) $p->sale_price,
-                'cost_price'     => (float) $p->cost_price,
-                'stock_quantity' => $p->stock_quantity,
-                'unit'           => $p->unit,
-                'category'       => $p->category?->name,
-                'image_url'      => $p->image ? asset('storage/' . $p->image) : null,
+                'id'                  => $p->id,
+                'name'                => $p->name,
+                'sku'                 => $p->sku,
+                'barcode'             => $p->barcode,
+                'sale_price'          => (float) $p->sale_price,
+                'cost_price'          => (float) $p->cost_price,
+                'stock_quantity'      => $p->stock_quantity,
+                'low_stock_threshold' => $p->low_stock_threshold ?? 5,
+                'unit'                => $p->unit,
+                'category'            => $p->category?->name,
+                'image_url'           => $p->image ? asset('storage/' . $p->image) : asset('images/no-image.png'),
             ]);
 
         return response()->json($products);

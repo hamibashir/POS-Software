@@ -449,19 +449,3 @@ No offline fallback
 Internet dependency
 
 No real-time multi-user handling (not needed currently)
-
-13. 🔮 Future Enhancements (Optional)
-
-Multi-branch support
-
-Customer management
-
-Returns system
-
-Expense tracking
-
-Basic accounting
-
-Online ordering
-
-Barcode label printing

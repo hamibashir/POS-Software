@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Hardware World - Public Product Catalog</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1e6d8a",
+                        "primary-dark": "#155268",
+                        "primary-light": "#e0f0f5",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#121c20",
+                        "card-light": "#ffffff",
+                        "card-dark": "#1a262b",
+                        "text-main": "#121617",
+                        "text-secondary": "#667c85",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        /* Custom scrollbar for webkit */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+
+<body
+    class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display min-h-screen flex flex-col">
+    <!-- Top Navigation -->
+    <header
+        class="sticky top-0 z-50 bg-card-light dark:bg-card-dark border-b border-slate-200 dark:border-slate-800 shadow-sm">
+        <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16 gap-4">
+                <!-- Logo & Brand -->
+                <div class="flex items-center gap-3 min-w-fit">
+                    <div class="size-8 text-primary flex items-center justify-center">
+                        <span class="material-symbols-outlined text-3xl">home_repair_service</span>
+                    </div>
+                    <h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white hidden sm:block">Hardware
+                        World</h1>
+                </div>
+                <!-- Desktop Nav Links -->
+                <nav class="hidden md:flex items-center gap-6 lg:gap-8 mx-6">
+                    <a class="text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors"
+                        href="#">Tools</a>
+                    <a class="text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors"
+                        href="#">Plumbing</a>
+                    <a class="text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors"
+                        href="#">Electrical</a>
+                    <a class="text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors"
+                        href="#">Paint</a>
+                    <a class="text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors"
+                        href="#">Garden</a>
+                </nav>
+                <!-- Search & Actions -->
+                <div class="flex flex-1 items-center justify-end gap-3 sm:gap-4">
+                    <!-- Search Bar -->
+                    <div class="flex-1 max-w-md hidden sm:flex">
+                        <div class="relative w-full group">
+                            <div
+                                class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
+                                <span class="material-symbols-outlined">search</span>
+                            </div>
+                            <input
+                                class="block w-full pl-10 pr-3 py-2 border-none rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm transition-all"
+                                placeholder="Search products..." type="text" />
+                        </div>
+                    </div>
+                    <!-- Mobile Search Icon -->
+                    <button
+                        class="sm:hidden p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+                        <span class="material-symbols-outlined">search</span>
+                    </button>
+                    <!-- User Actions -->
+                    <div class="flex items-center gap-2">
+                        <button
+                            class="hidden lg:flex items-center justify-center px-4 py-2 text-sm font-medium text-primary bg-primary-light hover:bg-primary/20 rounded-lg transition-colors">
+                            Log In
+                        </button>
+                        <button
+                            class="flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary-dark rounded-lg shadow-sm transition-colors">
+                            <span class="hidden lg:inline">Sign Up</span>
+                            <span class="lg:hidden">Join</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    <!-- Main Content -->
+    <main class="flex-grow w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
+        <!-- Hero Section -->
+        <section
+            class="relative w-full rounded-2xl overflow-hidden bg-slate-900 shadow-lg min-h-[360px] md:min-h-[420px] flex items-center">
+            <!-- Background Image with Overlay -->
+            <div class="absolute inset-0 z-0">
+                <div class="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent z-10"></div>
+                <div class="w-full h-full bg-cover bg-center" data-alt="Man working in a workshop with tools"
+                    style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAWjtQjxl0QCsb1PoGdT3yp7qTmkfDpHtXZNfjmrNrtb6tDZs8FV7P-HpR-39_gn_FTlp5-XnmI65pt6Y6x7ud_IT1V0sYgbyEDRml6o9A_KXCyq8y6IvuG8rBpwpsAaR-IyGy6_Egy1c2SSY9UW5fZzPJDzyjCX-87bYHXuDkx7FZJrR3m3bN_Ec5gQXA6E4TYU95QJ7gzGybIC-8Ewch2B_nI6DC0SMLGLMOKuJMCqd-HJl_qXCfY7AMUFdgKbRD2pc179ZCLC6X7');">
+                </div>
+            </div>
+            <!-- Content -->
+            <div class="relative z-20 px-6 md:px-12 py-8 max-w-2xl">
+                <span
+                    class="inline-block py-1 px-3 rounded-full bg-primary/20 border border-primary/30 text-blue-100 text-xs font-semibold mb-4 backdrop-blur-sm">
+                    New Arrivals
+                </span>
+                <h2 class="text-4xl md:text-5xl lg:text-6xl font-black text-white tracking-tight leading-tight mb-4">
+                    Build Your <br /><span
+                        class="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-teal-200">Dream
+                        Project</span>
+                </h2>
+                <p class="text-slate-200 text-lg md:text-xl font-normal leading-relaxed mb-8 max-w-lg">
+                    Discover professional-grade tools and materials for any job, big or small.
+                </p>
+                <div class="flex flex-wrap gap-4">
+                    <button
+                        class="px-6 py-3 bg-primary hover:bg-primary-dark text-white font-bold rounded-lg transition-transform hover:-translate-y-0.5 shadow-lg shadow-primary/25 flex items-center gap-2">
+                        Shop Now
+                        <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                    </button>
+                    <button
+                        class="px-6 py-3 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-lg backdrop-blur-sm transition-colors flex items-center gap-2 border border-white/20">
+                        View Catalog
+                    </button>
+                </div>
+            </div>
+        </section>
+        <!-- Categories Section -->
+        <section>
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Featured Categories</h3>
+                <a class="text-primary font-medium hover:underline text-sm flex items-center gap-1" href="#">
+                    View All <span class="material-symbols-outlined text-sm">chevron_right</span>
+                </a>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                <!-- Category Item 1 -->
+                <a class="group flex flex-col items-center text-center p-4 rounded-xl bg-card-light dark:bg-card-dark border border-slate-200 dark:border-slate-700 hover:border-primary/50 hover:shadow-md transition-all"
+                    href="#">
+                    <div
+                        class="w-16 h-16 mb-3 rounded-full bg-blue-50 dark:bg-slate-800 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                        <span class="material-symbols-outlined text-3xl text-primary">handyman</span>
+                    </div>
+                    <span
+                        class="font-medium text-slate-900 dark:text-white group-hover:text-primary transition-colors">Power
+                        Tools</span>
+                    <span class="text-xs text-slate-500 mt-1">120+ Items</span>
+                </a>
+                <!-- Category Item 2 -->
+                <a class="group flex flex-col items-center text-center p-4 rounded-xl bg-card-light dark:bg-card-dark border border-slate-200 dark:border-slate-700 hover:border-primary/50 hover:shadow-md transition-all"
+                    href="#">
+                    <div
+                        class="w-16 h-16 mb-3 rounded-full bg-blue-50 dark:bg-slate-800 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                        <span class="material-symbols-outlined text-3xl text-primary">construction</span>
+                    </div>
+                    <span
+                        class="font-medium text-slate-900 dark:text-white group-hover:text-primary transition-colors">Hand
+                        Tools</span>
+                    <span class="text-xs text-slate-500 mt-1">350+ Items</span>
+                </a>
+                <!-- Category Item 3 -->
+                <a class="group flex flex-col items-center text-center p-4 rounded-xl bg-card-light dark:bg-card-dark border border-slate-200 dark:border-slate-700 hover:border-primary/50 hover:shadow-md transition-all"
+                    href="#">
+                    <div
+                        class="w-16 h-16 mb-3 rounded-full bg-blue-50 dark:bg-slate-800 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                        <span class="material-symbols-outlined text-3xl text-primary">bolt</span>
+                    </div>
+                    <span
+                        class="font-medium text-slate-900 dark:text-white group-hover:text-primary transition-colors">Electrical</span>
+                    <span class="text-xs text-slate-500 mt-1">85 Items</span>
+                </a>
+                <!-- Category Item 4 -->
+                <a class="group flex flex-col items-center text-center p-4 rounded-xl bg-card-light dark:bg-card-dark border border-slate-200 dark:border-slate-700 hover:border-primary/50 hover:shadow-md transition-all"
+                    href="#">
+                    <div
+                        class="w-16 h-16 mb-3 rounded-full bg-blue-50 dark:bg-slate-800 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                        <span class="material-symbols-outlined text-3xl text-primary">plumbing</span>
+                    </div>
+                    <span
+                        class="font-medium text-slate-900 dark:text-white group-hover:text-primary transition-colors">Plumbing</span>
+                    <span class="text-xs text-slate-500 mt-1">200+ Items</span>
+                </a>
+                <!-- Category Item 5 -->
+                <a class="group flex flex-col items-center text-center p-4 rounded-xl bg-card-light dark:bg-card-dark border border-slate-200 dark:border-slate-700 hover:border-primary/50 hover:shadow-md transition-all"
+                    href="#">
+                    <div
+                        class="w-16 h-16 mb-3 rounded-full bg-blue-50 dark:bg-slate-800 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                        <span class="material-symbols-outlined text-3xl text-primary">format_paint</span>
+                    </div>
+                    <span
+                        class="font-medium text-slate-900 dark:text-white group-hover:text-primary transition-colors">Paint</span>
+                    <span class="text-xs text-slate-500 mt-1">500+ Colors</span>
+                </a>
+                <!-- Category Item 6 -->
+                <a class="group flex flex-col items-center text-center p-4 rounded-xl bg-card-light dark:bg-card-dark border border-slate-200 dark:border-slate-700 hover:border-primary/50 hover:shadow-md transition-all"
+                    href="#">
+                    <div
+                        class="w-16 h-16 mb-3 rounded-full bg-blue-50 dark:bg-slate-800 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                        <span class="material-symbols-outlined text-3xl text-primary">yard</span>
+                    </div>
+                    <span
+                        class="font-medium text-slate-900 dark:text-white group-hover:text-primary transition-colors">Garden</span>
+                    <span class="text-xs text-slate-500 mt-1">90+ Items</span>
+                </a>
+            </div>
+        </section>
+        <!-- Product Grid Section -->
+        <section>
+            <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+                <div>
+                    <h3 class="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Popular Products</h3>
+                    <p class="text-slate-500 text-sm mt-1">Our top-selling hardware essentials.</p>
+                </div>
+                <!-- Filters -->
+                <div class="flex items-center gap-3 overflow-x-auto pb-1 md:pb-0">
+                    <button
+                        class="px-4 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-full text-sm font-medium whitespace-nowrap">All
+                        Items</button>
+                    <button
+                        class="px-4 py-2 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-full text-sm font-medium hover:bg-slate-300 dark:hover:bg-slate-700 whitespace-nowrap transition-colors">On
+                        Sale</button>
+                    <button
+                        class="px-4 py-2 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-full text-sm font-medium hover:bg-slate-300 dark:hover:bg-slate-700 whitespace-nowrap transition-colors">Under
+                        $50</button>
+                    <button
+                        class="px-4 py-2 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-full text-sm font-medium hover:bg-slate-300 dark:hover:bg-slate-700 whitespace-nowrap transition-colors flex items-center gap-1">
+                        Filters <span class="material-symbols-outlined text-sm">filter_list</span>
+                    </button>
+                </div>
+            </div>
+            <!-- Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <!-- Product Card 1 -->
+                <div
+                    class="group bg-card-light dark:bg-card-dark rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden hover:shadow-xl hover:border-primary/30 transition-all duration-300 flex flex-col">
+                    <div class="relative w-full aspect-[4/3] bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                        <span
+                            class="absolute top-3 left-3 z-10 px-2 py-1 bg-green-100 text-green-700 border border-green-200 text-xs font-bold rounded-md flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                            In Stock
+                        </span>
+                        <div class="w-full h-full bg-cover bg-center group-hover:scale-110 transition-transform duration-500"
+                            data-alt="Yellow power drill on wooden surface"
+                            style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCfDInQj22wdDm5otq5a2cXxdzvEBSYwhSButEDm-PcwHoHviBwMUeP9CZ4x77DvwNkaM9HO_f5ymWhOhf9FRHP8yj0QZK9fVBY43Bl40LYWpCLPYJNYEWHvEtzLFnQEKlMRDd3B76k4xQbS-J6ylviM4MFZ2ETXmF725ImcYXKFMV8Sh3rrwyAQKZGiH2rL3-7irE99kpPLyKCnb-DnQ3YzmNyNwr4SU-SvtV52yyZ7LC2MhL8C0Cg5WWYAdOjNs_MWEL8RYQ-a7u0');">
+                        </div>
+                        <!-- Hover Overlay -->
+                        <div
+                            class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <button
+                                class="px-4 py-2 bg-white text-slate-900 rounded-lg shadow-lg font-medium text-sm transform translate-y-4 group-hover:translate-y-0 transition-transform">Quick
+                                View</button>
+                        </div>
+                    </div>
+                    <div class="p-4 flex flex-col flex-grow">
+                        <div class="text-xs text-slate-500 mb-1">Power Tools</div>
+                        <h4
+                            class="text-lg font-bold text-slate-900 dark:text-white mb-1 group-hover:text-primary transition-colors">
+                            DeWalt Cordless Drill 20V</h4>
+                        <p class="text-slate-600 dark:text-slate-400 text-sm line-clamp-2 mb-4">High performance
+                            brushless motor delivers up to 57% more run time over brushed.</p>
+                        <div class="mt-auto flex items-center justify-between">
+                            <span class="text-xl font-bold text-slate-900 dark:text-white">$129.99</span>
+                            <button aria-label="Add to wishlist"
+                                class="p-2 text-primary hover:bg-primary-light rounded-lg transition-colors">
+                                <span class="material-symbols-outlined">favorite</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Product Card 2 -->
+                <div
+                    class="group bg-card-light dark:bg-card-dark rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden hover:shadow-xl hover:border-primary/30 transition-all duration-300 flex flex-col">
+                    <div class="relative w-full aspect-[4/3] bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                        <span
+                            class="absolute top-3 left-3 z-10 px-2 py-1 bg-green-100 text-green-700 border border-green-200 text-xs font-bold rounded-md flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                            In Stock
+                        </span>
+                        <div class="w-full h-full bg-cover bg-center group-hover:scale-110 transition-transform duration-500"
+                            data-alt="Set of hammers and hand tools"
+                            style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDwxUnaPL2j3fpBwsRIdnbmJ5Y174RnBlKwXsvgNWKIcPt0VhJq3ELBTPRGDGyby0rR_6kTJ7YgRnhtIs2Xl611S-LpvGcH7ltbXiiQ54sJ8trpILmYL8EoxpPWihTnCMWl0OD8gISj20t8dT0jKVWDCTz1_5IBTaJd9cphOaBy9Xw2PfpCgcjprUHQ-eg6PeL8dpMsRVMcS9xdBwnrFtlzbMpCtAD_mwJJtPyzyW7rEL3NIoxqcFlUQTisNbN34MfHaFdW0SpZrLH8');">
+                        </div>
+                        <div
+                            class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <button
+                                class="px-4 py-2 bg-white text-slate-900 rounded-lg shadow-lg font-medium text-sm transform translate-y-4 group-hover:translate-y-0 transition-transform">Quick
+                                View</button>
+                        </div>
+                    </div>
+                    <div class="p-4 flex flex-col flex-grow">
+                        <div class="text-xs text-slate-500 mb-1">Hand Tools</div>
+                        <h4
+                            class="text-lg font-bold text-slate-900 dark:text-white mb-1 group-hover:text-primary transition-colors">
+                            Premium Hammer Set</h4>
+                        <p class="text-slate-600 dark:text-slate-400 text-sm line-clamp-2 mb-4">Ergonomic fiberglass
+                            handles for shock absorption and durability.</p>
+                        <div class="mt-auto flex items-center justify-between">
+                            <span class="text-xl font-bold text-slate-900 dark:text-white">$45.50</span>
+                            <button aria-label="Add to wishlist"
+                                class="p-2 text-primary hover:bg-primary-light rounded-lg transition-colors">
+                                <span class="material-symbols-outlined">favorite</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Product Card 3 -->
+                <div
+                    class="group bg-card-light dark:bg-card-dark rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden hover:shadow-xl hover:border-primary/30 transition-all duration-300 flex flex-col">
+                    <div class="relative w-full aspect-[4/3] bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                        <span
+                            class="absolute top-3 left-3 z-10 px-2 py-1 bg-yellow-100 text-yellow-700 border border-yellow-200 text-xs font-bold rounded-md flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-yellow-500"></span>
+                            Low Stock
+                        </span>
+                        <div class="w-full h-full bg-cover bg-center group-hover:scale-110 transition-transform duration-500"
+                            data-alt="Blue electrical wire spool"
+                            style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAPT7Zse1tQDUkd9EXLNQ9mqFccWF-pfJu5MbpILuDbakuHedBc0mYlSYzuu8u7KVDeRaxxaeKkI7kt3Zzp0o-6yntNa84OGNlg6WLHAcrzmlfsjCgHVgIxy1I6VdThLQqt4a0M-dG-FG7p8NGr9CRgqYACxO6rpWZxDIKZ3WjZ-XE8GdwByq62oEUdyQ2qanmY-1V6uBH3WZoVk4dc3R9X0KD4Yf8kzPv41_IV2zLBw3KqYDiJgtBkF4owhfOMvEsryXE1Fhpu3rcs');">
+                        </div>
+                        <div
+                            class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <button
+                                class="px-4 py-2 bg-white text-slate-900 rounded-lg shadow-lg font-medium text-sm transform translate-y-4 group-hover:translate-y-0 transition-transform">Quick
+                                View</button>
+                        </div>
+                    </div>
+                    <div class="p-4 flex flex-col flex-grow">
+                        <div class="text-xs text-slate-500 mb-1">Electrical</div>
+                        <h4
+                            class="text-lg font-bold text-slate-900 dark:text-white mb-1 group-hover:text-primary transition-colors">
+                            12/2 Romex Wire 250ft</h4>
+                        <p class="text-slate-600 dark:text-slate-400 text-sm line-clamp-2 mb-4">Standard NM-B copper
+                            building wire for residential wiring.</p>
+                        <div class="mt-auto flex items-center justify-between">
+                            <span class="text-xl font-bold text-slate-900 dark:text-white">$108.00</span>
+                            <button aria-label="Add to wishlist"
+                                class="p-2 text-primary hover:bg-primary-light rounded-lg transition-colors">
+                                <span class="material-symbols-outlined">favorite</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Product Card 4 -->
+                <div
+                    class="group bg-card-light dark:bg-card-dark rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden hover:shadow-xl hover:border-primary/30 transition-all duration-300 flex flex-col">
+                    <div class="relative w-full aspect-[4/3] bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                        <span
+                            class="absolute top-3 left-3 z-10 px-2 py-1 bg-green-100 text-green-700 border border-green-200 text-xs font-bold rounded-md flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                            In Stock
+                        </span>
+                        <div class="w-full h-full bg-cover bg-center group-hover:scale-110 transition-transform duration-500"
+                            data-alt="Paint bucket and roller"
+                            style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuC8KA-FTs_L7U60EsT0CB6mDo1t1V01W4bxgfBivgblBgJQ06zbJHLTo0XSJckQbJYHveqPzs0GhpxSahUSOUoTNfVO8qfgIAe56xlNCTIWyS3SrcJ3tFzvr5FPFoUfBR11_qZ0nd9Wli_-p4-8VUxa4XNBM9-4g12judT3VbuyyTneeGN66aZ4gioBtJ_aT3_ZF5wNQQx0CHo-2Pq6YOknwtXsNk_6XP1HCd-VOTWA2PJOs-RRbn58DIAHYtSyNzSS-vhlxoYf7XL9');">
+                        </div>
+                        <div
+                            class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <button
+                                class="px-4 py-2 bg-white text-slate-900 rounded-lg shadow-lg font-medium text-sm transform translate-y-4 group-hover:translate-y-0 transition-transform">Quick
+                                View</button>
+                        </div>
+                    </div>
+                    <div class="p-4 flex flex-col flex-grow">
+                        <div class="text-xs text-slate-500 mb-1">Paint &amp; Supplies</div>
+                        <h4
+                            class="text-lg font-bold text-slate-900 dark:text-white mb-1 group-hover:text-primary transition-colors">
+                            Premium Wall Paint</h4>
+                        <p class="text-slate-600 dark:text-slate-400 text-sm line-clamp-2 mb-4">Interior satin finish,
+                            ultra pure white, 1 gallon.</p>
+                        <div class="mt-auto flex items-center justify-between">
+                            <span class="text-xl font-bold text-slate-900 dark:text-white">$38.98</span>
+                            <button aria-label="Add to wishlist"
+                                class="p-2 text-primary hover:bg-primary-light rounded-lg transition-colors">
+                                <span class="material-symbols-outlined">favorite</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Product Card 5 -->
+                <div
+                    class="group bg-card-light dark:bg-card-dark rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden hover:shadow-xl hover:border-primary/30 transition-all duration-300 flex flex-col">
+                    <div class="relative w-full aspect-[4/3] bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                        <span
+                            class="absolute top-3 left-3 z-10 px-2 py-1 bg-green-100 text-green-700 border border-green-200 text-xs font-bold rounded-md flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                            In Stock
+                        </span>
+                        <div class="w-full h-full bg-cover bg-center group-hover:scale-110 transition-transform duration-500"
+                            data-alt="Safety helmet and gloves"
+                            style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuB1PIXfhTl19RMz0F6BU2i8aRslaZY5R5td9vjw22fXPMTyAzN3GcNQP5BMjnAYXdQ6W8O1qeSjCV7Evs7QvdBBU1LZzV9rCT4cHHAkB2tiZydYqO03n2ZYbA0PDxW4I8rfN08IXpaNXkSWfJdu6AUiVTh0ItSkz-JFKNVD8IMp9-FqK_C-W-yXmODS9IlpggyVVC4IituV3WDUPoJG5KtPPnIwFDCF039ev2uupISjODwYI7uSbHtRz5Do-9wiUvIB5SbfL09Z1Dzv');">
+                        </div>
+                        <div
+                            class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <button
+                                class="px-4 py-2 bg-white text-slate-900 rounded-lg shadow-lg font-medium text-sm transform translate-y-4 group-hover:translate-y-0 transition-transform">Quick
+                                View</button>
+                        </div>
+                    </div>
+                    <div class="p-4 flex flex-col flex-grow">
+                        <div class="text-xs text-slate-500 mb-1">Safety Gear</div>
+                        <h4
+                            class="text-lg font-bold text-slate-900 dark:text-white mb-1 group-hover:text-primary transition-colors">
+                            Industrial Safety Helmet</h4>
+                        <p class="text-slate-600 dark:text-slate-400 text-sm line-clamp-2 mb-4">ANSI certified hard hat
+                            with adjustable ratchet suspension.</p>
+                        <div class="mt-auto flex items-center justify-between">
+                            <span class="text-xl font-bold text-slate-900 dark:text-white">$15.99</span>
+                            <button aria-label="Add to wishlist"
+                                class="p-2 text-primary hover:bg-primary-light rounded-lg transition-colors">
+                                <span class="material-symbols-outlined">favorite</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Product Card 6 -->
+                <div
+                    class="group bg-card-light dark:bg-card-dark rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden hover:shadow-xl hover:border-primary/30 transition-all duration-300 flex flex-col">
+                    <div class="relative w-full aspect-[4/3] bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                        <span
+                            class="absolute top-3 left-3 z-10 px-2 py-1 bg-red-100 text-red-700 border border-red-200 text-xs font-bold rounded-md flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                            Out of Stock
+                        </span>
+                        <div class="w-full h-full bg-cover bg-center group-hover:scale-110 transition-transform duration-500 opacity-60 grayscale"
+                            data-alt="Metal screws and bolts"
+                            style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuARcWuTkXo72pD3hTZp8EW6YtalW0Dsa_B0IFikbxka2BrRyv-HXb9o_X9977JDNytz8olaS_2WvEObUpS5Ex5FO_UC-bPB0bkxHSTlBHjwja8v9jE5HNHzoO4m7d3bqbatvB_8d-CfcQeoQsqlYXe23i09hbx2VDVkZz8Jw40Kw_ViZUUAihqRJ79YYuuhn6Ed6UoU_vwQLskyVqMH9PHkkGOOHfcUsRLfsJd_vvH8ibE9-BYl-yLdxaoNjh2gvE32vv7daQCssbr1');">
+                        </div>
+                        <div
+                            class="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <button
+                                class="px-4 py-2 bg-white text-slate-900 rounded-lg shadow-lg font-medium text-sm transform translate-y-4 group-hover:translate-y-0 transition-transform">Notify
+                                Me</button>
+                        </div>
+                    </div>
+                    <div class="p-4 flex flex-col flex-grow">
+                        <div class="text-xs text-slate-500 mb-1">Fasteners</div>
+                        <h4
+                            class="text-lg font-bold text-slate-900 dark:text-white mb-1 group-hover:text-primary transition-colors">
+                            Deck Screws 5lb Box</h4>
+                        <p class="text-slate-600 dark:text-slate-400 text-sm line-clamp-2 mb-4">Coated exterior wood
+                            screws, #9 x 2-1/2 in.</p>
+                        <div class="mt-auto flex items-center justify-between">
+                            <span
+                                class="text-xl font-bold text-slate-500 dark:text-slate-400 line-through">$24.99</span>
+                            <button
+                                class="p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                                disabled="">
+                                <span class="material-symbols-outlined">favorite</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-8 flex justify-center">
+                <button
+                    class="px-8 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white font-medium rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm">
+                    Load More Products
+                </button>
+            </div>
+        </section>
+    </main>
+    <!-- Footer -->
+    <footer class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 mt-12 py-12">
+        <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+                <div class="col-span-1 md:col-span-1">
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="size-6 text-primary flex items-center justify-center">
+                            <span class="material-symbols-outlined">home_repair_service</span>
+                        </div>
+                        <span class="text-lg font-bold text-slate-900 dark:text-white">Hardware World</span>
+                    </div>
+                    <p class="text-slate-500 text-sm leading-relaxed">
+                        Your trusted partner for quality tools, materials, and expert advice for every project.
+                    </p>
+                </div>
+                <div>
+                    <h4 class="font-bold text-slate-900 dark:text-white mb-4">Shop</h4>
+                    <ul class="space-y-2 text-sm text-slate-500">
+                        <li><a class="hover:text-primary transition-colors" href="#">Power Tools</a></li>
+                        <li><a class="hover:text-primary transition-colors" href="#">Hand Tools</a></li>
+                        <li><a class="hover:text-primary transition-colors" href="#">Plumbing</a></li>
+                        <li><a class="hover:text-primary transition-colors" href="#">Electrical</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold text-slate-900 dark:text-white mb-4">Support</h4>
+                    <ul class="space-y-2 text-sm text-slate-500">
+                        <li><a class="hover:text-primary transition-colors" href="#">Contact Us</a></li>
+                        <li><a class="hover:text-primary transition-colors" href="#">FAQ</a></li>
+                        <li><a class="hover:text-primary transition-colors" href="#">Shipping</a></li>
+                        <li><a class="hover:text-primary transition-colors" href="#">Returns</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold text-slate-900 dark:text-white mb-4">Contact</h4>
+                    <ul class="space-y-2 text-sm text-slate-500">
+                        <li class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-sm">call</span>
+                            (555) 123-4567
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-sm">mail</span>
+                            support@hardware.com
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-sm">location_on</span>
+                            123 Builder Lane, NY
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div
+                class="border-t border-slate-100 dark:border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+                <p class="text-sm text-slate-400">© 2023 Hardware World. All rights reserved.</p>
+                <div class="flex gap-4">
+                    <a class="text-slate-400 hover:text-primary" href="#"><span class="sr-only">Facebook</span>FB</a>
+                    <a class="text-slate-400 hover:text-primary" href="#"><span class="sr-only">Twitter</span>TW</a>
+                    <a class="text-slate-400 hover:text-primary" href="#"><span class="sr-only">Instagram</span>IG</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <!-- Product Detail Modal (Simulated) -->
+    <!-- This would typically be hidden by default and toggled with JS. 
+         For this design, I'll position it as if it was just opened by clicking the first product 
+         but keep it hidden by default to keep the main view clean, 
+         OR I will add a "peer" mechanism to show it on focus/target if pure CSS is needed.
+         Since "No JS" is a constraint, I'll add it at the bottom as a conceptual part of the design 
+         but won't make it interactive. I'll style it as a visual block below for demonstration. -->
+    <!-- For the purpose of the screenshot/mockup, I will append a separate "Detail View" section below 
+         to show how it looks, as requested by the prompt "Clicking a product opens a detail view". 
+         I will wrap it in a container that suggests it's a modal overlay or a separate state. -->
+    <div class="fixed inset-0 z-[100] hidden target:flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto"
+        id="product-modal">
+        <div
+            class="relative w-full max-w-4xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row max-h-[90vh]">
+            <!-- Close Button (Link back to #) -->
+            <a class="absolute top-4 right-4 z-10 p-2 bg-white/80 dark:bg-black/50 rounded-full text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                href="#">
+                <span class="material-symbols-outlined">close</span>
+            </a>
+            <!-- Image Section -->
+            <div class="w-full md:w-1/2 bg-slate-100 dark:bg-slate-800 relative min-h-[300px]">
+                <div class="absolute inset-0 bg-cover bg-center" data-alt="DeWalt Cordless Drill Detail View"
+                    style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDk0bXEyy_NPU3-eEbRNHP4aSEu3kwOp3IrDqwiNLXSbsgdlTsBxGDw6STXNiQ0ZQiB1hBFizGlaaFxl_Zv9FWvNE5Qj5uQJA8aJPxewgwTOvzl7eMqKmhV4Gf7L-Y8YFMaibuxkl-FuDTexjCtV5NySBRvRqX-MxAHgJD4BsJ0UvKtNQ1cUCzu_u4Ckxj0a5KfH8kt7VvbCQmjmrnvR4BpLmyf0Mox4RoFO524FbbSKvCMQ_JOv2Jr4xy-Olo2speCpTrjJfYD3XXE');">
+                </div>
+            </div>
+            <!-- Content Section -->
+            <div class="w-full md:w-1/2 p-6 md:p-8 flex flex-col overflow-y-auto">
+                <div class="mb-auto">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span
+                            class="px-2 py-1 bg-primary/10 text-primary text-xs font-bold rounded-md uppercase tracking-wider">Power
+                            Tools</span>
+                        <span
+                            class="px-2 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-md flex items-center gap-1">In
+                            Stock</span>
+                    </div>
+                    <h2 class="text-3xl font-black text-slate-900 dark:text-white mb-2">DeWalt Cordless Drill 20V</h2>
+                    <div class="text-2xl font-bold text-primary mb-6">$129.99</div>
+                    <p class="text-slate-600 dark:text-slate-300 mb-6 leading-relaxed">
+                        The DCD771C2 20V MAX Lithium-Ion Compact Drill/Driver Kit is lightweight and compact for working
+                        in tight spaces for long periods of time. High-speed transmission delivers 2-speed variations
+                        allowing users to choose the level of performance needed for various applications.
+                    </p>
+                    <div class="space-y-3 mb-8">
+                        <div class="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
+                            <span class="material-symbols-outlined text-primary">check_circle</span>
+                            <span>Ergonomic handle delivers comfort and control</span>
+                        </div>
+                        <div class="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
+                            <span class="material-symbols-outlined text-primary">check_circle</span>
+                            <span>High performance motor (0-450 &amp; 1,500 rpm)</span>
+                        </div>
+                        <div class="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
+                            <span class="material-symbols-outlined text-primary">check_circle</span>
+                            <span>Includes 2 batteries and charger</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex flex-col gap-3 mt-4 pt-6 border-t border-slate-100 dark:border-slate-800">
+                    <p class="text-xs text-center text-slate-400 mb-1">Interested? Contact us directly to reserve or
+                        buy.</p>
+                    <button
+                        class="w-full py-3 bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold rounded-lg flex items-center justify-center gap-2 shadow-lg shadow-green-500/20 transition-all">
+                        <span class="material-symbols-outlined fill-current">chat</span>
+                        Chat on WhatsApp
+                    </button>
+                    <button
+                        class="w-full py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 font-bold rounded-lg flex items-center justify-center gap-2 transition-all">
+                        <span class="material-symbols-outlined">call</span>
+                        Call to Order
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Demonstration Link for Modal (Invisible but functional via CSS :target) -->
+    <!-- Just to simulate the detail view, I'll add a little "demo" trigger button fixed on the screen corner for the reviewer -->
+    <a class="fixed bottom-6 right-6 z-40 bg-primary text-white px-4 py-2 rounded-full shadow-lg font-bold text-sm flex items-center gap-2 hover:bg-primary-dark transition-colors animate-bounce"
+        href="#product-modal">
+        <span class="material-symbols-outlined">visibility</span>
+        View Product Detail
+    </a>
+</body>
+
+</html>

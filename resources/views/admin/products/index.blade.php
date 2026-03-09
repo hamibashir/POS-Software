@@ -161,10 +161,10 @@
                     <td style="font-size:13px; color:#6b7280;">{{ strtoupper($product->unit) }}</td>
 
                     {{-- Cost --}}
-                    <td style="font-size:13px; color:#6b7280;">${{ number_format($product->cost_price, 2) }}</td>
+                    <td style="font-size:13px; color:#6b7280;">{{ pkr($product->cost_price, 2) }}</td>
 
                     {{-- Sale Price --}}
-                    <td style="font-weight:600; color:#111827;">${{ number_format($product->sale_price, 2) }}</td>
+                    <td style="font-weight:600; color:#111827;">{{ pkr($product->sale_price, 2) }}</td>
 
                     {{-- Stock --}}
                     <td>

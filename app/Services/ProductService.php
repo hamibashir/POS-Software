@@ -54,6 +54,7 @@ class ProductService
             $data['image'] = $this->uploadImage($image);
         }
 
+        $data['slug']            = Product::generateSlug($data['name']);
         $data['show_in_catalog'] = isset($data['show_in_catalog']) ? (bool)$data['show_in_catalog'] : true;
         $data['is_active']       = isset($data['is_active']) ? (bool)$data['is_active'] : true;
 
@@ -74,6 +75,11 @@ class ProductService
             // Delete old image before replacing
             $this->deleteImage($product->image);
             $data['image'] = $this->uploadImage($image);
+        }
+
+        // Regenerate slug if name changed
+        if (isset($data['name']) && $data['name'] !== $product->name) {
+            $data['slug'] = Product::generateSlug($data['name'], $product->id);
         }
 
         $data['show_in_catalog'] = isset($data['show_in_catalog']) ? (bool)$data['show_in_catalog'] : false;

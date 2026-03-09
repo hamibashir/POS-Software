@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\PurchaseController;
 use App\Http\Controllers\Admin\StockAdjustmentController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Cashier\PosController;
+use App\Http\Controllers\Catalog\CatalogController;
 
 /*
 |--------------------------------------------------------------------------
@@ -87,15 +88,27 @@ Route::middleware(['auth', 'cashier'])
 
 /*
 |--------------------------------------------------------------------------
-| Default redirect
+| Public Catalog Routes (no auth required)
 |--------------------------------------------------------------------------
 */
 
-Route::get('/', function () {
+Route::get('/',             [CatalogController::class, 'home'])    ->name('catalog.home');
+Route::get('/search',       [CatalogController::class, 'search'])  ->name('catalog.search');
+Route::get('/c/{slug}',     [CatalogController::class, 'category'])->name('catalog.category');
+Route::get('/p/{slug}',     [CatalogController::class, 'product']) ->name('catalog.product');
+
+/*
+|--------------------------------------------------------------------------
+| Staff redirect (logged-in users going to /staff)
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/staff', function () {
     if (auth()->check()) {
         return auth()->user()->isAdmin()
             ? redirect()->route('admin.dashboard')
             : redirect()->route('cashier.pos');
     }
     return redirect()->route('login');
-});
+})->name('staff');
+

@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Hardware Store POS</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1e6d8a",
+                        "primary-dark": "#165268",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#121c20",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#1a262c",
+                        "text-main": "#1e293b",
+                        "text-muted": "#64748b",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        /* Custom scrollbar for cart items if needed */
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+
+<body
+    class="bg-background-light dark:bg-background-dark text-text-main dark:text-slate-100 min-h-screen flex flex-col overflow-hidden">
+    <!-- Header -->
+    <header
+        class="h-16 flex items-center justify-between px-6 bg-surface-light dark:bg-surface-dark border-b border-slate-200 dark:border-slate-700 z-20 shrink-0">
+        <div class="flex items-center gap-3 text-primary dark:text-white">
+            <span class="material-symbols-outlined text-3xl text-primary">storefront</span>
+            <h1 class="text-xl font-bold tracking-tight">Hardware POS</h1>
+        </div>
+        <nav class="hidden md:flex items-center gap-8">
+            <a class="text-sm font-semibold text-primary border-b-2 border-primary pb-0.5" href="#">Dashboard</a>
+            <a class="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-primary transition-colors"
+                href="#">Inventory</a>
+            <a class="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-primary transition-colors"
+                href="#">Orders</a>
+            <a class="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-primary transition-colors"
+                href="#">Customers</a>
+        </nav>
+        <div class="flex items-center gap-4">
+            <div class="flex flex-col items-end mr-2">
+                <span class="text-sm font-bold">John Doe</span>
+                <span class="text-xs text-slate-500">Sales Associate</span>
+            </div>
+            <div class="bg-center bg-no-repeat bg-cover rounded-full size-10 ring-2 ring-slate-100 dark:ring-slate-700"
+                data-alt="User avatar placeholder"
+                style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDaO0lWh2ObYBVvloNKAZK-vu2ZFKBpzdmqJiyHeWWygB4o9HtPffhU6PaUjHCxv93YslEKGsB_ARv_wX-DODNW1cWEmhLYveQ2NZ6KZCzsdArCG_sPgTHIKElaEEcllC-puXSuk3cGkQmpZhwy_zMMdtroWxNYMzP0ZT0P3rpb4cRBHIvyc5c0qe0PZy6Tai6ZTfEaI8JyvzEikvD2Pa1usGBHIrS6foqnX8_-rz5id-2y5sbzwztB_eJApLipp0uSmiNZDwgKW1nc");'>
+            </div>
+        </div>
+    </header>
+    <!-- Main Content Area -->
+    <main class="flex flex-1 overflow-hidden h-[calc(100vh-64px)]">
+        <!-- LEFT: Product Catalog (70%) -->
+        <section
+            class="flex-1 flex flex-col h-full bg-background-light dark:bg-background-dark overflow-hidden border-r border-slate-200 dark:border-slate-700">
+            <!-- Search & Filters Header -->
+            <div class="p-6 pb-2 shrink-0">
+                <div class="flex flex-col md:flex-row gap-4 mb-4">
+                    <!-- Barcode Input -->
+                    <div class="relative w-full md:w-1/3">
+                        <span
+                            class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">qr_code_scanner</span>
+                        <input autofocus=""
+                            class="w-full pl-10 pr-4 py-3 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-surface-dark focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-shadow shadow-sm"
+                            placeholder="Scan Barcode..." type="text" />
+                    </div>
+                    <!-- Product Search -->
+                    <div class="relative w-full md:w-2/3">
+                        <span
+                            class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+                        <input
+                            class="w-full pl-10 pr-4 py-3 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-surface-dark focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-shadow shadow-sm"
+                            placeholder="Search products by name, SKU, or tag..." type="text" />
+                    </div>
+                </div>
+                <!-- Categories -->
+                <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide select-none">
+                    <button
+                        class="bg-primary text-white px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap shadow-sm shadow-primary/20">All
+                        Items</button>
+                    <button
+                        class="bg-white dark:bg-surface-dark text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">Power
+                        Tools</button>
+                    <button
+                        class="bg-white dark:bg-surface-dark text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">Plumbing</button>
+                    <button
+                        class="bg-white dark:bg-surface-dark text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">Electrical</button>
+                    <button
+                        class="bg-white dark:bg-surface-dark text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">Fasteners</button>
+                    <button
+                        class="bg-white dark:bg-surface-dark text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">Paint</button>
+                    <button
+                        class="bg-white dark:bg-surface-dark text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">Lumber</button>
+                </div>
+            </div>
+            <!-- Product Grid -->
+            <div class="flex-1 overflow-y-auto p-6 pt-2">
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4 pb-20">
+                    <!-- Product Card 1 -->
+                    <div
+                        class="bg-white dark:bg-surface-dark rounded-xl p-3 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow group cursor-pointer flex flex-col h-full">
+                        <div class="relative aspect-square bg-slate-100 rounded-lg mb-3 overflow-hidden">
+                            <div class="w-full h-full bg-center bg-cover" data-alt="Yellow power drill"
+                                style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCAwkHnu9is1nV88GBViWpbaFV4qeKj8hQbnTv46dGBdJD7W2W4Id8hqv_SXHm4YTz_XKwDeoB4MnsFeprPoMemocU0ADA7HMSVQZUNekGzGXDJklje_GpYfFKDhz-Ia322YYz9YnACDNYgd46yYeIor0fb_9-ZeHbp0n6AkYCjWGxPvTV6uCmvvaGutsc7oU_Ll1bnBT4fu11oUbHi6d14pGb7e-hnG7LvDvSYBt3QXCBSPMW2J1UBXp7QD2ttKyGQleiO9CMW5kxr");'>
+                            </div>
+                            <span
+                                class="absolute top-2 right-2 bg-white/90 dark:bg-black/70 backdrop-blur-sm text-xs font-bold px-2 py-1 rounded text-slate-700 dark:text-white">15
+                                in stock</span>
+                        </div>
+                        <div class="flex flex-col flex-1">
+                            <h3 class="font-semibold text-slate-800 dark:text-slate-100 text-sm leading-tight mb-1">
+                                DeWalt 20V Max Drill</h3>
+                            <p class="text-xs text-slate-500 mb-2">SKU: dw-20v-d</p>
+                            <div class="mt-auto flex items-center justify-between">
+                                <span class="font-bold text-primary text-lg">$129.00</span>
+                                <button
+                                    class="bg-primary/10 hover:bg-primary text-primary hover:text-white p-2 rounded-lg transition-colors">
+                                    <span class="material-symbols-outlined text-sm">add</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Product Card 2 -->
+                    <div
+                        class="bg-white dark:bg-surface-dark rounded-xl p-3 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow group cursor-pointer flex flex-col h-full">
+                        <div class="relative aspect-square bg-slate-100 rounded-lg mb-3 overflow-hidden">
+                            <div class="w-full h-full bg-center bg-cover" data-alt="Metal claw hammer"
+                                style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA4rLYUOlQKZcEJQKrHArlx0aKMzcnzlidP12Tpx6xT1GUH8JGPyF-h-WwyUIFFTGNnAHhJMzwHHi6b4RcIdSg_fJrocDUUPfp_gtz1BOsylH2NeCBSRlCTIEsqD2v1hxwNKrGezqStX3qjue-9wQu0xMWDf9ixVbhrv-q92sSuQvV1iuqr--zcoJE74cMj3wdDvLUDOGlgTQhuDu1YCiNxYTUBXFQWKYNVyzQRo5i4oqrTjycDznW3VL8jy_B2P_f6J3DZYCxNVmHO");'>
+                            </div>
+                            <span
+                                class="absolute top-2 right-2 bg-white/90 dark:bg-black/70 backdrop-blur-sm text-xs font-bold px-2 py-1 rounded text-slate-700 dark:text-white">42
+                                in stock</span>
+                        </div>
+                        <div class="flex flex-col flex-1">
+                            <h3 class="font-semibold text-slate-800 dark:text-slate-100 text-sm leading-tight mb-1">
+                                Estwing Hammer 16oz</h3>
+                            <p class="text-xs text-slate-500 mb-2">SKU: ew-hmr-16</p>
+                            <div class="mt-auto flex items-center justify-between">
+                                <span class="font-bold text-primary text-lg">$28.50</span>
+                                <button
+                                    class="bg-primary/10 hover:bg-primary text-primary hover:text-white p-2 rounded-lg transition-colors">
+                                    <span class="material-symbols-outlined text-sm">add</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Product Card 3 -->
+                    <div
+                        class="bg-white dark:bg-surface-dark rounded-xl p-3 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow group cursor-pointer flex flex-col h-full">
+                        <div class="relative aspect-square bg-slate-100 rounded-lg mb-3 overflow-hidden">
+                            <div class="w-full h-full bg-center bg-cover" data-alt="Adjustable wrench"
+                                style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBQvVUEoGS1aDLUwiB9kQ_bcJ8BwjfNL6_qyf5i5dUr5Ty28IhuM8qu0e1Bq8968s9N78NTW5_meCIDg1XnMW-OWA0N-wfXOTolgDcBuW5SNIb8UtTExi5KaMpy5kkQejhLs6JFqNQZ6HCMje-4xigzJelvsCpWRsjPn5pBcybR7MjKZVYX4_0MwntfnrPF9HQbNOsLJCUAD29H7y5vCdevRVJnvKJ-u69z54V11_Jd0JEAXvwPk0pvk5pK2gqVcb8FGaFo_XSWOiT0");'>
+                            </div>
+                            <span
+                                class="absolute top-2 right-2 bg-white/90 dark:bg-black/70 backdrop-blur-sm text-xs font-bold px-2 py-1 rounded text-slate-700 dark:text-white">10
+                                in stock</span>
+                        </div>
+                        <div class="flex flex-col flex-1">
+                            <h3 class="font-semibold text-slate-800 dark:text-slate-100 text-sm leading-tight mb-1">
+                                Craftsman Wrench Set</h3>
+                            <p class="text-xs text-slate-500 mb-2">SKU: cm-wr-set</p>
+                            <div class="mt-auto flex items-center justify-between">
+                                <span class="font-bold text-primary text-lg">$24.00</span>
+                                <button
+                                    class="bg-primary/10 hover:bg-primary text-primary hover:text-white p-2 rounded-lg transition-colors">
+                                    <span class="material-symbols-outlined text-sm">add</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Product Card 4 -->
+                    <div
+                        class="bg-white dark:bg-surface-dark rounded-xl p-3 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow group cursor-pointer flex flex-col h-full">
+                        <div class="relative aspect-square bg-slate-100 rounded-lg mb-3 overflow-hidden">
+                            <div class="w-full h-full bg-center bg-cover" data-alt="Multi-bit screwdriver"
+                                style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuA-zNtltaLeZna5QKT-fE8024iphz8CGTJtpeBdRa4HlD5FLteOiiEagmiqQb3yF9tg49K0bFvt8M0TnX2NKp9JznbZsilx87_p6gnXh7MlUCJpOqQ_mRvGLz_k5DMXhvOOxHA-GTogBVzLGVNtmleGZbAS4DpGTiy8djx-mqcVHKmJrHuYwnhJtSTRKYTTCQ4MLbyjvUFpiDvVusIaPJR05nFx2qdpDT3K_mZQixrKpaN2SKjstBk_3783UTuJ7myuq0_hAHRj_ltJ");'>
+                            </div>
+                            <span
+                                class="absolute top-2 right-2 bg-white/90 dark:bg-black/70 backdrop-blur-sm text-xs font-bold px-2 py-1 rounded text-slate-700 dark:text-white">25
+                                in stock</span>
+                        </div>
+                        <div class="flex flex-col flex-1">
+                            <h3 class="font-semibold text-slate-800 dark:text-slate-100 text-sm leading-tight mb-1">
+                                Husky Screwdriver</h3>
+                            <p class="text-xs text-slate-500 mb-2">SKU: hu-sd-multi</p>
+                            <div class="mt-auto flex items-center justify-between">
+                                <span class="font-bold text-primary text-lg">$12.99</span>
+                                <button
+                                    class="bg-primary/10 hover:bg-primary text-primary hover:text-white p-2 rounded-lg transition-colors">
+                                    <span class="material-symbols-outlined text-sm">add</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Product Card 5 -->
+                    <div
+                        class="bg-white dark:bg-surface-dark rounded-xl p-3 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow group cursor-pointer flex flex-col h-full">
+                        <div class="relative aspect-square bg-slate-100 rounded-lg mb-3 overflow-hidden">
+                            <div class="w-full h-full bg-center bg-cover" data-alt="Can of white paint"
+                                style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCKMF4XICCJUtrH6CdhWI5Qhod8q2lu4fN5aD7AgvRe9vTCfhx8Q1cAKODVXP4QCgqbrk4-HxvA6E-BuDcv5gPAVwspkOOuVx67XFOBEt0e_h6rx5e1enjetMGC46v0v5y639uEJpUUggFOKqvRbwVWBglo0_BMzS9GmfQ9hchMQT-Qzy5nbSpPebTgtBhdJ-I5O2scgOOiu4fh3eyxhcnuxgXFT8u70v1oK4al5owV_-L91RIxo17vkucF2Cdgyseuln8L08r1AC1d");'>
+                            </div>
+                            <span
+                                class="absolute top-2 right-2 bg-white/90 dark:bg-black/70 backdrop-blur-sm text-xs font-bold px-2 py-1 rounded text-slate-700 dark:text-white">80
+                                in stock</span>
+                        </div>
+                        <div class="flex flex-col flex-1">
+                            <h3 class="font-semibold text-slate-800 dark:text-slate-100 text-sm leading-tight mb-1">Behr
+                                Premium Paint</h3>
+                            <p class="text-xs text-slate-500 mb-2">SKU: bh-pnt-wht</p>
+                            <div class="mt-auto flex items-center justify-between">
+                                <span class="font-bold text-primary text-lg">$45.00</span>
+                                <button
+                                    class="bg-primary/10 hover:bg-primary text-primary hover:text-white p-2 rounded-lg transition-colors">
+                                    <span class="material-symbols-outlined text-sm">add</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Product Card 6 -->
+                    <div
+                        class="bg-white dark:bg-surface-dark rounded-xl p-3 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow group cursor-pointer flex flex-col h-full">
+                        <div class="relative aspect-square bg-slate-100 rounded-lg mb-3 overflow-hidden">
+                            <div class="w-full h-full bg-center bg-cover" data-alt="White PVC pipe segment"
+                                style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBVLoNG25FUuWExf_cA2ORiX_2byQ2hG1QfA300FDd84lLOp5CeBoOxaIBHeAzweTp8xMxBujJh6re8lKuQtE83TRxO-sw1ecTUDWD7VBp2RBkHxYu3MS1sJxSoS5b4DgT5QLaOaiWW0t68DXHCBF_ist8Xtlr52DlRR_V4cZd1YzVya-bJifDrGYzuqEFlxrTsmuXFmrttA4Pzi30dnEX7mwOzfjDT88n_H-zthLaOPT6M8wlBqz0mgHWwDKcgdMXXDVJm8JJ8G4hZ");'>
+                            </div>
+                            <span
+                                class="absolute top-2 right-2 bg-white/90 dark:bg-black/70 backdrop-blur-sm text-xs font-bold px-2 py-1 rounded text-slate-700 dark:text-white">100+
+                                in stock</span>
+                        </div>
+                        <div class="flex flex-col flex-1">
+                            <h3 class="font-semibold text-slate-800 dark:text-slate-100 text-sm leading-tight mb-1">3/4"
+                                PVC Pipe (10ft)</h3>
+                            <p class="text-xs text-slate-500 mb-2">SKU: pvc-34-10</p>
+                            <div class="mt-auto flex items-center justify-between">
+                                <span class="font-bold text-primary text-lg">$8.50</span>
+                                <button
+                                    class="bg-primary/10 hover:bg-primary text-primary hover:text-white p-2 rounded-lg transition-colors">
+                                    <span class="material-symbols-outlined text-sm">add</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Product Card 7 -->
+                    <div
+                        class="bg-white dark:bg-surface-dark rounded-xl p-3 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow group cursor-pointer flex flex-col h-full">
+                        <div class="relative aspect-square bg-slate-100 rounded-lg mb-3 overflow-hidden">
+                            <div class="w-full h-full bg-center bg-cover" data-alt="LED light bulb pack"
+                                style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDYD64oHm6ERl48awRMq2ihSs_GxIzJzj8KvygArSHUdVfQhyLo7xKUx6lKc0e3KvVW-3GmoOjDbM5ZztKVvM5R9xzm-BGvOhP4CUomgMAySzoOxvooGI6obLGNJaUYssbIrob6lO91IoR_BnkbFFCSSPsbkuOs3cPMSshfTMk0OJg3mo9Di-Er56oQHRsdP8pSmPgzp-O1wnSBej_HiGA4_QYqWsgXW9lGrmFSTtaUUIBSFjhWUSCWLu58OE7_57iJ1mjD32e5f2OH");'>
+                            </div>
+                            <span
+                                class="absolute top-2 right-2 bg-white/90 dark:bg-black/70 backdrop-blur-sm text-xs font-bold px-2 py-1 rounded text-slate-700 dark:text-white">60
+                                in stock</span>
+                        </div>
+                        <div class="flex flex-col flex-1">
+                            <h3 class="font-semibold text-slate-800 dark:text-slate-100 text-sm leading-tight mb-1">LED
+                                Daylight Bulbs 4pk</h3>
+                            <p class="text-xs text-slate-500 mb-2">SKU: led-dl-4pk</p>
+                            <div class="mt-auto flex items-center justify-between">
+                                <span class="font-bold text-primary text-lg">$19.99</span>
+                                <button
+                                    class="bg-primary/10 hover:bg-primary text-primary hover:text-white p-2 rounded-lg transition-colors">
+                                    <span class="material-symbols-outlined text-sm">add</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Product Card 8 -->
+                    <div
+                        class="bg-white dark:bg-surface-dark rounded-xl p-3 border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow group cursor-pointer flex flex-col h-full">
+                        <div class="relative aspect-square bg-slate-100 rounded-lg mb-3 overflow-hidden">
+                            <div class="w-full h-full bg-center bg-cover" data-alt="Orange extension cord"
+                                style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBUVeSUACEvjUzTNa4sylxhutLCx2b9tIHf2-B9ighQRIhkkc9QzNpqqu1mT4_E-UmE6JnaOZG4qSV1bX6FYBPOpL0oz5-40dJKdIs2woJVObQHhsBOyd02x4DCeOp9fivSeA0ukqNlp7nRC7G9ss4WDJhQo5t8rx9GjTheFfl3wfL7E0noSbNjOVvLRYK61DNkeZtsXBtKclvM-csiAloVSYIhc_PTVoZCMm_YPdzJmknHDOuCJF8s4dsVdjGPJWBBMTiKHtnAeKmn");'>
+                            </div>
+                            <span
+                                class="absolute top-2 right-2 bg-white/90 dark:bg-black/70 backdrop-blur-sm text-xs font-bold px-2 py-1 rounded text-slate-700 dark:text-white">30
+                                in stock</span>
+                        </div>
+                        <div class="flex flex-col flex-1">
+                            <h3 class="font-semibold text-slate-800 dark:text-slate-100 text-sm leading-tight mb-1">
+                                Outdoor Ext. Cord 50ft</h3>
+                            <p class="text-xs text-slate-500 mb-2">SKU: cord-50-out</p>
+                            <div class="mt-auto flex items-center justify-between">
+                                <span class="font-bold text-primary text-lg">$35.00</span>
+                                <button
+                                    class="bg-primary/10 hover:bg-primary text-primary hover:text-white p-2 rounded-lg transition-colors">
+                                    <span class="material-symbols-outlined text-sm">add</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- RIGHT: Cart / Transaction (30%) -->
+        <aside
+            class="w-[30%] min-w-[320px] max-w-[450px] bg-white dark:bg-surface-dark flex flex-col h-full shadow-2xl z-10 border-l border-slate-200 dark:border-slate-700">
+            <!-- Cart Header -->
+            <div
+                class="p-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-surface-dark">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">shopping_cart</span>
+                    <h2 class="text-lg font-bold">Current Order</h2>
+                </div>
+                <div class="flex gap-2">
+                    <button class="text-slate-400 hover:text-red-500 transition-colors p-1" title="Clear Cart">
+                        <span class="material-symbols-outlined">delete</span>
+                    </button>
+                    <button class="text-slate-400 hover:text-primary transition-colors p-1" title="Add Customer">
+                        <span class="material-symbols-outlined">person_add</span>
+                    </button>
+                    <div
+                        class="bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded text-xs font-mono text-slate-600 dark:text-slate-400 self-center">
+                        #4921</div>
+                </div>
+            </div>
+            <!-- Cart Items List (Scrollable) -->
+            <div class="flex-1 overflow-y-auto p-4 space-y-3">
+                <!-- Cart Item 1 -->
+                <div class="flex gap-3 items-start group">
+                    <div class="w-16 h-16 rounded bg-slate-100 bg-center bg-cover shrink-0"
+                        data-alt="Yellow power drill"
+                        style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuByWNpaPwkXZK4W0G2uRyirsNgI1yEfgZu13YPuqMDyFozlma9gXWBAJfrLY0HkrT5PhaozBOXKSiFWKHQeTyRJWM_NZzHA5lHtCIKPcoXKgCcxaAFYJ06rkRmOTGf_dYP6LJe2hQM98FX8EH9zadrJ2dK8JmSTAYEmLypWWQX0y1OV-xqtQv-umI6449yyIfnh109i5xt-Lcybf3C6F5tPzG-wTxpme_hvLJacA0FSLeizAMptH_hjoGlLFay40gCmDPVhe6WMxZru");'>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex justify-between items-start mb-1">
+                            <h4 class="font-medium text-sm text-slate-900 dark:text-slate-100 truncate pr-2">DeWalt 20V
+                                Max Drill</h4>
+                            <span class="font-bold text-sm">$129.00</span>
+                        </div>
+                        <div class="flex justify-between items-end">
+                            <p class="text-xs text-slate-500">Unit: $129.00</p>
+                            <div
+                                class="flex items-center border border-slate-200 dark:border-slate-600 rounded bg-white dark:bg-slate-800 h-8">
+                                <button
+                                    class="px-2 text-slate-500 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-700 h-full rounded-l transition-colors">-</button>
+                                <span class="px-2 text-sm font-semibold w-8 text-center">1</span>
+                                <button
+                                    class="px-2 text-slate-500 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-700 h-full rounded-r transition-colors">+</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Cart Item 2 -->
+                <div class="flex gap-3 items-start group">
+                    <div class="w-16 h-16 rounded bg-slate-100 bg-center bg-cover shrink-0" data-alt="White PVC pipe"
+                        style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDdnObic0s87pLfig1vKwVA85bLyUa0zTeEY-of-uPisfNq9DHU131v8Bku0LFZPks49pER5gd4rBqYqcVsJz7v7mYO-7RY916cbNYKzhnql6OdbGSzUkazxbQ_V5hSJ28eLur1zzhI2TgaDOI3fFieQFhYbrhu50e_0sSq13MYzwU510owz1s2t1xFRpHKjId02lKt0kyGXsksY9T-8jl3gY8pklGq94vuL4azd6rJg4-Q7-WSz8Q9GCav0A1Q0Neysx8sPWyP-LQm");'>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex justify-between items-start mb-1">
+                            <h4 class="font-medium text-sm text-slate-900 dark:text-slate-100 truncate pr-2">3/4" PVC
+                                Pipe (10ft)</h4>
+                            <span class="font-bold text-sm">$34.00</span>
+                        </div>
+                        <div class="flex justify-between items-end">
+                            <p class="text-xs text-slate-500">Unit: $8.50</p>
+                            <div
+                                class="flex items-center border border-slate-200 dark:border-slate-600 rounded bg-white dark:bg-slate-800 h-8">
+                                <button
+                                    class="px-2 text-slate-500 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-700 h-full rounded-l transition-colors">-</button>
+                                <span class="px-2 text-sm font-semibold w-8 text-center">4</span>
+                                <button
+                                    class="px-2 text-slate-500 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-700 h-full rounded-r transition-colors">+</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Cart Item 3 -->
+                <div class="flex gap-3 items-start group">
+                    <div class="w-16 h-16 rounded bg-slate-100 bg-center bg-cover shrink-0" data-alt="LED bulb box"
+                        style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAghYSrAlJjPZnPHtSgaFX4X1xhgMz3bofF-l1PTUfe0r1RSqFc2GjLXZyfD57dt4etWOOeW0Vn8PyWFkTggvakz9WwomQr2n_cnXLlqjia8fypdIpeeHi5bbi-I9YIra1pwascc9YZkXpMnQP_JhqjMzvOrageZ9dkb98l-Nf5J5QDEjaSW5FjVWqGAyzvZbpMF0Ih5FNMOVi21huAnm6_3I2RV7-qfoLauIl2TaGVTsaJSmm9JcMx8w4FH68_AUDdTHGv8RDVyT8-");'>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex justify-between items-start mb-1">
+                            <h4 class="font-medium text-sm text-slate-900 dark:text-slate-100 truncate pr-2">LED
+                                Daylight Bulbs 4pk</h4>
+                            <span class="font-bold text-sm">$39.98</span>
+                        </div>
+                        <div class="flex justify-between items-end">
+                            <p class="text-xs text-slate-500">Unit: $19.99</p>
+                            <div
+                                class="flex items-center border border-slate-200 dark:border-slate-600 rounded bg-white dark:bg-slate-800 h-8">
+                                <button
+                                    class="px-2 text-slate-500 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-700 h-full rounded-l transition-colors">-</button>
+                                <span class="px-2 text-sm font-semibold w-8 text-center">2</span>
+                                <button
+                                    class="px-2 text-slate-500 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-700 h-full rounded-r transition-colors">+</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Totals & Actions Sticky Footer -->
+            <div class="p-5 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700">
+                <!-- Discount Input -->
+                <div class="mb-4">
+                    <div class="relative">
+                        <span
+                            class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 material-symbols-outlined text-[18px]">percent</span>
+                        <input
+                            class="w-full pl-9 pr-3 py-2 text-sm rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-surface-dark focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+                            placeholder="Add Discount Code" type="text" />
+                        <button
+                            class="absolute right-2 top-1/2 -translate-y-1/2 text-primary font-bold text-xs uppercase hover:underline">Apply</button>
+                    </div>
+                </div>
+                <!-- Price Summary -->
+                <div class="space-y-2 mb-6">
+                    <div class="flex justify-between text-slate-600 dark:text-slate-400 text-sm">
+                        <span>Subtotal</span>
+                        <span>$202.98</span>
+                    </div>
+                    <div class="flex justify-between text-slate-600 dark:text-slate-400 text-sm">
+                        <span>Tax (8%)</span>
+                        <span>$16.24</span>
+                    </div>
+                    <div
+                        class="flex justify-between items-end pt-2 border-t border-slate-200 dark:border-slate-700 mt-2">
+                        <span class="font-bold text-lg text-slate-800 dark:text-white">Total</span>
+                        <span class="font-bold text-4xl text-primary">$219.22</span>
+                    </div>
+                </div>
+                <!-- Complete Sale Button -->
+                <button
+                    class="w-full bg-primary hover:bg-primary-dark text-white font-bold text-lg py-4 rounded-xl shadow-lg shadow-primary/30 transition-all active:scale-[0.98] flex justify-center items-center gap-2 group">
+                    <span>Complete Sale</span>
+                    <span
+                        class="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                </button>
+                <div class="mt-3 flex gap-2">
+                    <button
+                        class="flex-1 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-surface-dark transition-colors">Hold
+                        Order</button>
+                    <button
+                        class="flex-1 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-surface-dark transition-colors">Void</button>
+                </div>
+            </div>
+        </aside>
+    </main>
+</body>
+
+</html>

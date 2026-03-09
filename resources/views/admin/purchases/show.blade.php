@@ -125,7 +125,7 @@
             </div>
             <div class="info-row">
                 <span class="lbl">Total Cost</span>
-                <span class="val" style="color:#92400e;font-size:18px;">${{ number_format($purchase->total_amount, 2) }}</span>
+                <span class="val" style="color:#92400e;font-size:18px;">{{ pkr($purchase->total_amount, 2) }}</span>
             </div>
         </div>
     </div>
@@ -151,9 +151,9 @@
                     <div class="item-name">{{ $item->product_name }}</div>
                     <div class="item-sku">{{ $item->product_sku }} · {{ strtoupper($item->product_unit) }}</div>
                 </td>
-                <td style="text-align:right;">${{ number_format($item->unit_cost, 2) }}</td>
+                <td style="text-align:right;">{{ pkr($item->unit_cost, 2) }}</td>
                 <td style="text-align:right; font-weight:700;">{{ $item->quantity }}</td>
-                <td style="text-align:right; font-weight:700; color:#111827;">${{ number_format($item->total_cost, 2) }}</td>
+                <td style="text-align:right; font-weight:700; color:#111827;">{{ pkr($item->total_cost, 2) }}</td>
                 <td style="text-align:right;">
                     <span class="stock-badge">+{{ $item->quantity }}</span>
                 </td>
@@ -170,7 +170,7 @@
         </div>
         <div class="t-row-foot grand">
             <span>TOTAL COST</span>
-            <span>${{ number_format($purchase->total_amount, 2) }}</span>
+            <span>{{ pkr($purchase->total_amount, 2) }}</span>
         </div>
     </div>
 </div>
