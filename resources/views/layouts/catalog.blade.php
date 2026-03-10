@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=1280">
     <meta name="description" content="@yield('meta_description', 'Browse our full range of hardware and sanitary products.')">
     <title>@yield('title', 'Product Catalog') — Hardware World</title>
 
@@ -38,8 +38,9 @@
         }
         .cat-nav .inner {
             max-width: 1440px; margin: 0 auto;
-            display: flex; align-items: center; gap: 16px;
-            padding: 0 24px; height: 64px;
+            display: flex; align-items: center; gap: 12px;
+            padding: 0 16px; height: 64px;
+            overflow: hidden;   /* ← prevents child overflow causing hscroll */
         }
         .cat-nav .brand {
             display: flex; align-items: center; gap: 8px;
@@ -58,9 +59,10 @@
         }
         .cat-nav-links a:hover { color: var(--primary); }
 
-        /* Search */
+        /* Search + auth buttons */
         .cat-nav-right {
-            flex: 1; display: flex; align-items: center; justify-content: flex-end; gap: 12px;
+            flex: 1; min-width: 0;   /* ← allows it to shrink */
+            display: flex; align-items: center; justify-content: flex-end; gap: 8px;
         }
         .cat-search-wrap {
             flex: 1; max-width: 420px; position: relative;
@@ -82,21 +84,31 @@
         .cat-search-input::placeholder { color: #94a3b8; }
 
         .btn-login {
-            padding: 7px 16px; font-size: 13px; font-weight: 600;
+            padding: 7px 14px; font-size: 13px; font-weight: 600;
             color: var(--primary); background: var(--primary-lt);
             border: none; border-radius: 8px; cursor: pointer;
-            text-decoration: none; white-space: nowrap;
+            text-decoration: none; white-space: nowrap; flex-shrink: 0;
             transition: background .15s;
         }
         .btn-login:hover { background: #c8e4ee; }
         .btn-signup {
-            padding: 7px 16px; font-size: 13px; font-weight: 600;
+            padding: 7px 14px; font-size: 13px; font-weight: 600;
             color: #fff; background: var(--primary);
             border: none; border-radius: 8px; cursor: pointer;
-            text-decoration: none; white-space: nowrap;
+            text-decoration: none; white-space: nowrap; flex-shrink: 0;
             transition: background .15s;
         }
         .btn-signup:hover { background: var(--primary-dk); }
+
+        /* ── Mobile nav ─────────────────────── */
+        @media (max-width: 640px) {
+            .cat-nav-links { display: none; }   /* hide nav links on mobile */
+            .cat-search-wrap { max-width: 100%; flex: 1; }
+            .btn-login { display: none; }       /* keep only Sign Up on mobile */
+            .cat-nav .inner { gap: 10px; padding: 0 12px; }
+            .cat-nav .brand { font-size: 15px; }
+            .cat-nav .brand .ms-icon { font-size: 22px; }
+        }
 
         /* ── Page content ───────────────── */
         .cat-page {
