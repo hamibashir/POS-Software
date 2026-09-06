@@ -16,8 +16,8 @@ class CatalogController extends Controller
     {
         $categories = Cache::remember('catalog.categories', 300, function () {
             return Category::active()
+                ->whereHas('products', fn($q) => $q->inCatalog())
                 ->withCount(['products' => fn($q) => $q->inCatalog()])
-                ->having('products_count', '>', 0)
                 ->orderBy('name')
                 ->get();
         });
@@ -51,8 +51,8 @@ class CatalogController extends Controller
             ->withQueryString();
 
         $categories = Category::active()
+            ->whereHas('products', fn($q) => $q->inCatalog())
             ->withCount(['products' => fn($q) => $q->inCatalog()])
-            ->having('products_count', '>', 0)
             ->orderBy('name')
             ->get();
 
@@ -97,8 +97,8 @@ class CatalogController extends Controller
             ->withQueryString();
 
         $categories = Category::active()
+            ->whereHas('products', fn($q) => $q->inCatalog())
             ->withCount(['products' => fn($q) => $q->inCatalog()])
-            ->having('products_count', '>', 0)
             ->orderBy('name')
             ->get();
 

@@ -18,7 +18,7 @@ class AdminMiddleware
             return redirect()->route('login');
         }
 
-        if (!auth()->user()->isAdmin()) {
+        if (!in_array(auth()->user()->role, ['admin', 'cashier'])) {
             abort(403, 'Access denied. Admin only area.');
         }
 

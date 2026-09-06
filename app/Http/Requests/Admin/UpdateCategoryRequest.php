@@ -9,7 +9,7 @@ class UpdateCategoryRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return auth()->check() && auth()->user()->isAdmin();
+        return auth()->check() && in_array(auth()->user()->role, ['admin', 'cashier']);
     }
 
     public function rules(): array

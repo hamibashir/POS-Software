@@ -18,10 +18,12 @@ return new class extends Migration
 
             // Movement type
             $table->enum('type', [
-                'sale',         // stock decreased via POS sale
-                'purchase',     // stock increased via purchase entry
-                'adjustment',   // manual stock adjustment by admin
-                'return',       // future: stock returned on refund
+                'sale',
+                'purchase',
+                'adjustment',
+                'adjustment_in',
+                'adjustment_out',
+                'return',
             ]);
 
             // Direction: positive = stock in, negative = stock out
