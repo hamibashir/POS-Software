@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Cashier;
 
 use App\Http\Controllers\Controller;
+use App\Models\Employee;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Services\SaleService;
@@ -22,7 +23,7 @@ class PosController extends Controller
         // Only allow viewing receipts for completed sales
         abort_unless($sale->status === 'completed', 404);
 
-        $sale->load(['items', 'user']);
+        $sale->load(['items', 'user', 'employee']);
         return view('cashier.receipt', compact('sale'));
     }
 
@@ -31,7 +32,19 @@ class PosController extends Controller
      */
     public function index()
     {
-        return view('cashier.pos');
+        $employees = Employee::where('is_active', true)
+            ->with(['sales' => fn($q) => $q->where('payment_method', 'credit')->where('status', 'completed'), 'payments'])
+            ->orderBy('name')
+            ->get()
+            ->map(fn($e) => [
+                'id'              => $e->id,
+                'name'            => $e->name,
+                'phone'           => $e->phone,
+                'address'         => $e->address,
+                'pending_payment' => $e->pending_payment,
+            ]);
+
+        return view('cashier.pos', compact('employees'));
     }
 
     /**
@@ -87,15 +100,23 @@ class PosController extends Controller
             'cart.*.quantity'         => ['required', 'integer', 'min:1'],
             'cart.*.unit_price'       => ['required', 'numeric', 'min:0'],
             'cart.*.discount_amount'  => ['nullable', 'numeric', 'min:0'],
-            'payment_method'          => ['required', 'in:cash,card'],
+            'payment_method'          => ['required', 'in:cash,card,credit'],
             'paid_amount'             => ['required', 'numeric', 'min:0'],
             'discount_amount'         => ['nullable', 'numeric', 'min:0'],
             'customer_name'           => ['nullable', 'string', 'max:150'],
             'customer_phone'          => ['nullable', 'string', 'max:30'],
+            'employee_id'             => ['nullable', 'required_if:payment_method,credit', 'integer', 'exists:employees,id'],
             'notes'                   => ['nullable', 'string', 'max:500'],
         ]);
 
         try {
+            if ($data['payment_method'] === 'credit') {
+                $employee = Employee::where('is_active', true)->findOrFail($data['employee_id']);
+                $data['customer_name']  = $employee->name;
+                $data['customer_phone'] = $employee->phone;
+                $data['paid_amount']    = 0;
+            }
+
             $sale = $this->saleService->complete(
                 saleData: [
                     'payment_method'  => $data['payment_method'],
@@ -104,6 +125,7 @@ class PosController extends Controller
                     'tax_amount'      => 0,
                     'customer_name'   => $data['customer_name'] ?? 'Walk-in Customer',
                     'customer_phone'  => $data['customer_phone'] ?? null,
+                    'employee_id'     => $data['employee_id'] ?? null,
                     'notes'           => $data['notes'] ?? null,
                 ],
                 cartItems: array_map(fn($item) => [

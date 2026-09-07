@@ -74,6 +74,7 @@ class SaleService
             $sale = Sale::create([
                 'invoice_number'  => $this->generateInvoiceNumber(),
                 'user_id'         => $cashierId,
+                'employee_id'     => $saleData['employee_id'] ?? null,
                 'customer_name'   => $saleData['customer_name'] ?? 'Walk-in Customer',
                 'customer_phone'  => $saleData['customer_phone'] ?? null,
                 'subtotal'        => $subtotal,

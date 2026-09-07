@@ -208,6 +208,12 @@
        class="nav-link {{ request()->routeIs('admin.reports*') ? 'active' : '' }}">
         <i class="bi bi-bar-chart-line"></i>Reports
     </a>
+    @if(auth()->user()->isAdmin())
+    <a href="{{ route('admin.staff.index') }}"
+       class="nav-link {{ request()->routeIs('admin.staff*') ? 'active' : '' }}">
+        <i class="bi bi-people"></i>Staff
+    </a>
+    @endif
 
     <div class="ms-auto d-flex align-items-center gap-3">
         <div class="user-badge">

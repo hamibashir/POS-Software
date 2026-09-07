@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\PurchaseController;
 use App\Http\Controllers\Admin\PurchaseReturnController;
 use App\Http\Controllers\Admin\StockAdjustmentController;
 use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\StaffController;
 use App\Http\Controllers\Cashier\PosController;
 use App\Http\Controllers\Catalog\CatalogController;
 
@@ -75,6 +76,17 @@ Route::middleware(['auth', 'admin'])
 
         // Reports
         Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
+
+        // Staff Management (Employees & Cashiers) - Admin only
+        Route::get('staff',                                    [StaffController::class, 'index'])->name('staff.index');
+        Route::post('staff/employees',                         [StaffController::class, 'storeEmployee'])->name('staff.employees.store');
+        Route::put('staff/employees/{employee}',               [StaffController::class, 'updateEmployee'])->name('staff.employees.update');
+        Route::delete('staff/employees/{employee}',            [StaffController::class, 'destroyEmployee'])->name('staff.employees.destroy');
+        Route::post('staff/employees/{employee}/payments',     [StaffController::class, 'recordPayment'])->name('staff.employees.payments');
+        Route::get('staff/employees/{employee}/ledger',        [StaffController::class, 'employeeLedger'])->name('staff.employees.ledger');
+        Route::post('staff/cashiers',                          [StaffController::class, 'storeCashier'])->name('staff.cashiers.store');
+        Route::put('staff/cashiers/{user}',                    [StaffController::class, 'updateCashier'])->name('staff.cashiers.update');
+        Route::delete('staff/cashiers/{user}',                 [StaffController::class, 'destroyCashier'])->name('staff.cashiers.destroy');
     });
 
 /*

@@ -11,6 +11,7 @@ class Sale extends Model
     protected $fillable = [
         'invoice_number',
         'user_id',
+        'employee_id',
         'customer_name',
         'customer_phone',
         'subtotal',
@@ -39,6 +40,11 @@ class Sale extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function employee(): BelongsTo
+    {
+        return $this->belongsTo(Employee::class);
     }
 
     public function items(): HasMany

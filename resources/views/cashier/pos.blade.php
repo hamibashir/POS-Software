@@ -269,17 +269,27 @@
     }
     .grand-amt { font-size: 28px; font-weight: 900; color: var(--primary); line-height: 1; }
     /* Payment */
-    .pay-methods { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .pay-methods { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
     .pay-btn {
-        padding: 9px 8px; border-radius: 8px;
+        padding: 9px 6px; border-radius: 8px;
         border: 1.5px solid #e2e8f0; background: #f8fafc;
-        font-size: 12px; font-weight: 600; color: #64748b; cursor: pointer;
-        display: flex; align-items: center; justify-content: center; gap: 6px;
+        font-size: 11.5px; font-weight: 700; color: #64748b; cursor: pointer;
+        display: flex; align-items: center; justify-content: center; gap: 5px;
         font-family: 'Inter', sans-serif; transition: all .15s;
     }
-    .pay-btn .si { font-size: 17px; }
+    .pay-btn .si { font-size: 16px; }
     .pay-btn.active { border-color: var(--primary); background: var(--primary-lt); color: var(--primary); }
     .pay-btn:not(.active):hover { background: #f1f5f9; }
+
+    .emp-credit-box {
+        background: #fff; border: 1.5px solid #fecaca; border-radius: 10px;
+        padding: 10px 12px; display: flex; flex-direction: column; gap: 4px;
+        box-shadow: 0 2px 6px rgba(220,38,38,.06);
+    }
+    .emp-credit-badge {
+        background: #fee2e2; color: #991b1b; font-weight: 800; font-size: 13px;
+        padding: 2px 8px; border-radius: 6px; display: inline-block;
+    }
     /* Paid */
     .paid-row { display: flex; align-items: center; gap: 8px; }
     .paid-label { font-size: 13px; font-weight: 600; color: #374151; white-space: nowrap; display: flex; align-items: center; gap: 4px; }
@@ -449,6 +459,47 @@
                 <button class="pay-btn" data-method="card" onclick="selectPayment('card')">
                     <span class="material-symbols-outlined si">credit_card</span>Card
                 </button>
+                <button class="pay-btn" data-method="credit" onclick="selectPayment('credit')">
+                    <span class="material-symbols-outlined si">badge</span>Credit
+                </button>
+            </div>
+
+            {{-- Employee selection for Credit Sale --}}
+            <div id="creditEmployeeSection" style="display:none; flex-direction:column; gap:6px;">
+                <label style="font-size:12px; font-weight:700; color:#374151; display:flex; align-items:center; gap:4px;">
+                    <span class="material-symbols-outlined" style="font-size:16px; color:var(--primary);">badge</span>
+                    Employee Taking Credit <span style="color:#ef4444;">*</span>
+                </label>
+                <select id="employeeSelect" class="cust-input" onchange="onEmployeeSelect()">
+                    <option value="">-- Select Authorized Employee --</option>
+                    @foreach($employees as $emp)
+                    <option value="{{ $emp['id'] }}"
+                            data-name="{{ $emp['name'] }}"
+                            data-phone="{{ $emp['phone'] }}"
+                            data-address="{{ $emp['address'] }}"
+                            data-pending="{{ $emp['pending_payment'] }}">
+                        {{ $emp['name'] }} (Pending: Rs. {{ number_format($emp['pending_payment'], 2) }})
+                    </option>
+                    @endforeach
+                </select>
+
+                <div id="employeeDetailsCard" class="emp-credit-box" style="display:none;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                        <div>
+                            <div style="font-weight:800; font-size:14px; color:#111827;" id="cardEmpName">—</div>
+                            <div style="font-size:12px; color:#4b5563;" id="cardEmpPhone">—</div>
+                            <div style="font-size:11px; color:#6b7280; margin-top:2px;" id="cardEmpAddress">—</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-size:10px; font-weight:700; color:#991b1b; text-transform:uppercase;">Pending Due</div>
+                            <div class="emp-credit-badge" id="cardEmpPending">Rs. 0.00</div>
+                        </div>
+                    </div>
+                    <div style="border-top:1px dashed #fecaca; margin-top:6px; padding-top:6px; font-size:11px; color:#991b1b; font-weight:700; display:flex; justify-content:space-between;">
+                        <span>Balance after this sale:</span>
+                        <span id="cardEmpNewTotal" style="font-size:12px;">Rs. 0.00</span>
+                    </div>
+                </div>
             </div>
 
             {{-- Paid --}}
@@ -706,6 +757,7 @@ function updateTotals() {
     document.getElementById('cartTotal').textContent    = 'Rs. ' + total.toFixed(2);
     document.getElementById('discountInput').dataset.disc = disc;
     if (paymentMethod === 'card') document.getElementById('paidInput').value = total.toFixed(2);
+    if (paymentMethod === 'credit') onEmployeeSelect();
     updateChange();
 }
 
@@ -723,13 +775,58 @@ function updateChange() {
 function selectPayment(method) {
     paymentMethod = method;
     document.querySelectorAll('.pay-btn').forEach(b => b.classList.toggle('active', b.dataset.method === method));
-    const row = document.getElementById('paidAmountRow');
-    if (method === 'card') {
-        row.style.display = 'none';
+    const paidRow   = document.getElementById('paidAmountRow');
+    const changeBox = document.getElementById('changeDisplay');
+    const creditSec = document.getElementById('creditEmployeeSection');
+    const custToggle = document.getElementById('custToggleBtn');
+    const custSec    = document.getElementById('customerSection');
+
+    if (method === 'credit') {
+        paidRow.style.display    = 'none';
+        changeBox.style.display  = 'none';
+        creditSec.style.display  = 'flex';
+        custToggle.style.display = 'none';
+        if (custSec) custSec.style.display = 'none';
+        document.getElementById('paidInput').value = '0.00';
+        onEmployeeSelect();
+    } else if (method === 'card') {
+        paidRow.style.display    = 'none';
+        changeBox.style.display  = 'flex';
+        creditSec.style.display  = 'none';
+        custToggle.style.display = 'flex';
         const t = parseFloat(document.getElementById('cartTotal').textContent.replace('Rs. ', '')) || 0;
         document.getElementById('paidInput').value = t.toFixed(2);
-    } else { row.style.display = 'flex'; }
+    } else {
+        paidRow.style.display    = 'flex';
+        changeBox.style.display  = 'flex';
+        creditSec.style.display  = 'none';
+        custToggle.style.display = 'flex';
+    }
     updateChange();
+}
+
+function onEmployeeSelect() {
+    const sel = document.getElementById('employeeSelect');
+    const opt = sel ? sel.selectedOptions[0] : null;
+    const card = document.getElementById('employeeDetailsCard');
+    if (!opt || !opt.value) {
+        if (card) card.style.display = 'none';
+        return;
+    }
+
+    const name      = opt.dataset.name || '';
+    const phone     = opt.dataset.phone || '';
+    const address   = opt.dataset.address || '';
+    const pending   = parseFloat(opt.dataset.pending) || 0;
+    const cartTotal = parseFloat(document.getElementById('cartTotal').textContent.replace('Rs. ', '')) || 0;
+    const newTotal  = pending + cartTotal;
+
+    document.getElementById('cardEmpName').textContent    = name;
+    document.getElementById('cardEmpPhone').textContent   = '📞 ' + phone;
+    document.getElementById('cardEmpAddress').textContent = '📍 ' + address;
+    document.getElementById('cardEmpPending').textContent = 'Rs. ' + pending.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+    document.getElementById('cardEmpNewTotal').textContent = 'Rs. ' + newTotal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+    card.style.display = 'flex';
 }
 
 /* ── Customer ────────────────────────────────── */
@@ -744,10 +841,19 @@ function toggleCustomer() {
 /* ── Complete sale ───────────────────────────── */
 async function completeSale() {
     if (!cart.length) return;
-    const total   = parseFloat(document.getElementById('cartTotal').textContent.replace('Rs. ', '')) || 0;
-    const paid    = parseFloat(document.getElementById('paidInput').value) || 0;
+    const total    = parseFloat(document.getElementById('cartTotal').textContent.replace('Rs. ', '')) || 0;
+    const paid     = parseFloat(document.getElementById('paidInput').value) || 0;
     const discount = parseFloat(document.getElementById('discountInput').value) || 0;
+
     if (paymentMethod === 'cash' && paid < total) { toast('Paid amount is less than total!', 'e'); return; }
+
+    if (paymentMethod === 'credit') {
+        const empSelect = document.getElementById('employeeSelect');
+        if (!empSelect || !empSelect.value) {
+            toast('Please select an authorized employee for credit sale!', 'w');
+            return;
+        }
+    }
 
     const btn = document.getElementById('completeSaleBtn');
     btn.disabled = true;
@@ -760,8 +866,9 @@ async function completeSale() {
             body: JSON.stringify({
                 cart: cart.map(i => ({ product_id: i.id, quantity: i.qty, unit_price: i.sale_price, discount_amount: 0 })),
                 payment_method: paymentMethod,
-                paid_amount:    paymentMethod === 'card' ? total : paid,
+                paid_amount:    paymentMethod === 'card' ? total : (paymentMethod === 'credit' ? 0 : paid),
                 discount_amount: discount,
+                employee_id:    paymentMethod === 'credit' ? parseInt(document.getElementById('employeeSelect').value) : null,
                 customer_name:  document.getElementById('customerName').value.trim() || 'Walk-in Customer',
                 customer_phone: document.getElementById('customerPhone').value.trim() || null,
             }),
@@ -801,6 +908,10 @@ function closeReceipt() {
     document.getElementById('paidInput').value     = '';
     document.getElementById('customerName').value  = '';
     document.getElementById('customerPhone').value = '';
+    const empSel = document.getElementById('employeeSelect');
+    if (empSel) empSel.value = '';
+    const empCard = document.getElementById('employeeDetailsCard');
+    if (empCard) empCard.style.display = 'none';
     if (custVisible) toggleCustomer();
     selectPayment('cash');
     renderCart();

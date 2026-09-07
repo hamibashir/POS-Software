@@ -534,13 +534,24 @@
                 <tr>
                     <td>Payment</td>
                     <td>
-                        <span class="pay-badge">
-                            {{ $sale->payment_method === 'cash' ? '💵' : '💳' }}
+                        <span class="pay-badge" style="{{ $sale->payment_method === 'credit' ? 'background:#b91c1c;' : '' }}">
+                            {{ $sale->payment_method === 'cash' ? '💵' : ($sale->payment_method === 'card' ? '💳' : '📋') }}
                             {{ strtoupper($sale->payment_method) }}
                         </span>
                     </td>
                 </tr>
-                @if($sale->customer_name && $sale->customer_name !== 'Walk-in Customer')
+                @if($sale->employee)
+                <tr>
+                    <td>Staff Credit</td>
+                    <td>
+                        <div style="font-weight:700; color:#111827;">{{ $sale->employee->name }}</div>
+                        <div style="font-size:10px; color:#4b5563;">{{ $sale->employee->phone }} · {{ $sale->employee->address }}</div>
+                        <div style="font-size:10px; color:#b91c1c; font-weight:800; margin-top:2px;">
+                            Total Pending Due: {{ pkr($sale->employee->pending_payment, 2) }}
+                        </div>
+                    </td>
+                </tr>
+                @elseif($sale->customer_name && $sale->customer_name !== 'Walk-in Customer')
                 <tr>
                     <td>Customer</td>
                     <td>
@@ -618,6 +629,16 @@
                 <span>{{ pkr($sale->total_amount, 2) }}</span>
             </div>
 
+            @if($sale->payment_method === 'credit')
+            <div class="t-row paid-row" style="color:#b91c1c; font-weight:700;">
+                <span>Billed to Account</span>
+                <span>{{ pkr($sale->total_amount, 2) }}</span>
+            </div>
+            <div class="change-box" style="background:#fef2f2; color:#b91c1c; border:1px solid #fecaca;">
+                <span>📋 Payment Status</span>
+                <span>Unpaid (Staff Credit)</span>
+            </div>
+            @else
             <div class="t-row paid-row">
                 <span>Paid ({{ strtoupper($sale->payment_method) }})</span>
                 <span>{{ pkr($sale->paid_amount, 2) }}</span>
@@ -628,6 +649,7 @@
                 <span>💵 Change Due</span>
                 <span>{{ pkr($sale->change_amount, 2) }}</span>
             </div>
+            @endif
             @endif
         </div>
 
