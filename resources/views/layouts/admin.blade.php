@@ -196,6 +196,10 @@
        class="nav-link {{ request()->routeIs('admin.purchases*') ? 'active' : '' }}">
         <i class="bi bi-truck"></i>Purchases
     </a>
+    <a href="{{ route('admin.purchase-returns.index') }}"
+       class="nav-link {{ request()->routeIs('admin.purchase-returns*') ? 'active' : '' }}">
+        <i class="bi bi-arrow-return-left"></i>Returns
+    </a>
     <a href="{{ route('admin.stock.index') }}"
        class="nav-link {{ request()->routeIs('admin.stock*') ? 'active' : '' }}">
         <i class="bi bi-arrow-left-right"></i>Stock

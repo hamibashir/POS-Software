@@ -51,10 +51,11 @@
         </div>
         <div class="fg">
             <label>Type</label>
-            <select name="type" class="pos-input" style="width:140px;">
-                <option value="">All</option>
+            <select name="type" class="pos-input" style="width:160px;">
+                <option value="">All Types</option>
                 <option value="adjustment_in"  {{ request('type') === 'adjustment_in'  ? 'selected' : '' }}>Stock In  (+)</option>
                 <option value="adjustment_out" {{ request('type') === 'adjustment_out' ? 'selected' : '' }}>Stock Out (−)</option>
+                <option value="return"         {{ request('type') === 'return'         ? 'selected' : '' }}>Supplier Return (↩)</option>
             </select>
         </div>
         <div class="fg">
@@ -102,12 +103,16 @@
                 <td>
                     @if($m->type === 'adjustment_in')
                         <span class="badge-in">⬆ Stock In</span>
+                    @elseif($m->type === 'return')
+                        <span class="badge" style="background:#fff1f2; color:#b91c1c; border:1px solid #fecdd3; border-radius:20px; padding:3px 10px; font-size:11px; font-weight:700;">
+                            <i class="bi bi-arrow-return-left"></i> Return
+                        </span>
                     @else
                         <span class="badge-out">⬇ Stock Out</span>
                     @endif
                 </td>
-                <td style="font-weight:700;font-size:15px;">
-                    {{ $m->type === 'adjustment_in' ? '+' : '−' }}{{ $m->quantity }}
+                <td style="font-weight:700;font-size:15px; color:{{ $m->type === 'adjustment_in' ? '#065f46' : '#991b1b' }};">
+                    {{ $m->type === 'adjustment_in' ? '+' : '−' }}{{ abs($m->quantity) }}
                 </td>
                 <td style="color:#9ca3af;">{{ $m->stock_before }}</td>
                 <td style="font-weight:600;color:{{ $m->type === 'adjustment_in' ? '#065f46' : '#991b1b' }};">

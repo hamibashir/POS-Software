@@ -103,7 +103,7 @@ class PurchaseController extends Controller
      */
     public function show(Purchase $purchase)
     {
-        $purchase->load(['items', 'user:id,name']);
+        $purchase->load(['items', 'user:id,name', 'returns.items']);
         return view('admin.purchases.show', compact('purchase'));
     }
 }

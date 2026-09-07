@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\SalesController;
 use App\Http\Controllers\Admin\PurchaseController;
+use App\Http\Controllers\Admin\PurchaseReturnController;
 use App\Http\Controllers\Admin\StockAdjustmentController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Cashier\PosController;
@@ -60,6 +61,12 @@ Route::middleware(['auth', 'admin'])
         Route::get('purchases/create',       [PurchaseController::class, 'create'])->name('purchases.create');
         Route::post('purchases',             [PurchaseController::class, 'store'])->name('purchases.store');
         Route::get('purchases/{purchase}',   [PurchaseController::class, 'show'])->name('purchases.show');
+
+        // Stock Returns
+        Route::get('purchase-returns',                   [PurchaseReturnController::class, 'index'])->name('purchase-returns.index');
+        Route::get('purchase-returns/create',            [PurchaseReturnController::class, 'create'])->name('purchase-returns.create');
+        Route::post('purchase-returns',                  [PurchaseReturnController::class, 'store'])->name('purchase-returns.store');
+        Route::get('purchase-returns/{purchaseReturn}',  [PurchaseReturnController::class, 'show'])->name('purchase-returns.show');
 
         // Stock Adjustments
         Route::get('stock-adjustments',        [StockAdjustmentController::class, 'index'])->name('stock.index');

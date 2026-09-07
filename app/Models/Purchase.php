@@ -39,4 +39,19 @@ class Purchase extends Model
     {
         return $this->hasMany(PurchaseItem::class);
     }
+
+    public function returns(): HasMany
+    {
+        return $this->hasMany(PurchaseReturn::class);
+    }
+
+    public function getTotalReturnedAmountAttribute(): float
+    {
+        return (float) $this->returns()->sum('total_return_amount');
+    }
+
+    public function getNetTotalAmountAttribute(): float
+    {
+        return max(0, (float) $this->total_amount - $this->total_returned_amount);
+    }
 }

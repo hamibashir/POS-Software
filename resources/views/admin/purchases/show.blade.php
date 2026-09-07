@@ -60,9 +60,21 @@
     </nav>
 </div>
 
-<div class="mb-3">
-    <div class="ref-hero">{{ $purchase->reference_number }}</div>
-    <span class="status-badge status-received ms-2">{{ ucfirst($purchase->status) }}</span>
+<div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+    <div>
+        <div class="ref-hero">{{ $purchase->reference_number }}</div>
+        <span class="status-badge status-received ms-2">{{ ucfirst($purchase->status) }}</span>
+        @if($purchase->returns->count() > 0)
+        <span class="badge" style="background:#fee2e2; color:#b91c1c; border-radius:20px; padding:4px 12px; font-size:12px; font-weight:700;">
+            <i class="bi bi-arrow-return-left"></i> {{ $purchase->returns->count() }} Return(s)
+        </span>
+        @endif
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ route('admin.purchase-returns.create', ['purchase_id' => $purchase->id]) }}" class="btn-pos-outline" style="border-color:#b91c1c; color:#b91c1c; text-decoration:none;">
+            <i class="bi bi-arrow-return-left"></i> Return Items to Supplier
+        </a>
+    </div>
 </div>
 
 {{-- Info grid --}}
@@ -127,6 +139,16 @@
                 <span class="lbl">Total Cost</span>
                 <span class="val" style="color:#92400e;font-size:18px;">{{ pkr($purchase->total_amount, 2) }}</span>
             </div>
+            @if($purchase->returns->count() > 0)
+            <div class="info-row">
+                <span class="lbl">Total Returned</span>
+                <span class="val" style="color:#b91c1c;font-weight:700;">-{{ pkr($purchase->total_returned_amount, 2) }}</span>
+            </div>
+            <div class="info-row">
+                <span class="lbl">Net Purchase Value</span>
+                <span class="val" style="color:#065f46;font-size:16px;font-weight:800;">{{ pkr($purchase->net_total_amount, 2) }}</span>
+            </div>
+            @endif
         </div>
     </div>
 </div>
@@ -172,7 +194,76 @@
             <span>TOTAL COST</span>
             <span>{{ pkr($purchase->total_amount, 2) }}</span>
         </div>
+        @if($purchase->returns->count() > 0)
+        <div class="t-row-foot" style="color:#b91c1c; font-weight:700;">
+            <span>LESS TOTAL RETURNS</span>
+            <span>-{{ pkr($purchase->total_returned_amount, 2) }}</span>
+        </div>
+        <div class="t-row-foot" style="font-size:16px; font-weight:800; color:#065f46; border-top:1px solid #e5e7eb; padding-top:8px;">
+            <span>NET ORDER AMOUNT</span>
+            <span>{{ pkr($purchase->net_total_amount, 2) }}</span>
+        </div>
+        @endif
     </div>
 </div>
+
+{{-- Stock Returns & Refunds History --}}
+@if($purchase->returns->count() > 0)
+<div class="detail-card mb-4">
+    <div class="detail-card-header" style="background:#fff1f2; color:#9f1239; border-color:#fecdd3;">
+        <i class="bi bi-arrow-return-left"></i> Stock Returns & Refunds History ({{ $purchase->returns->count() }})
+    </div>
+    <div style="overflow-x:auto;">
+        <table class="items-detail-table">
+            <thead>
+                <tr>
+                    <th style="text-align:left;">Return Ref #</th>
+                    <th style="text-align:left;">Date</th>
+                    <th style="text-align:center;">Items Returned</th>
+                    <th style="text-align:right;">Return Value</th>
+                    <th style="text-align:right;">Refund Amount</th>
+                    <th style="text-align:center;">Refund Method</th>
+                    <th style="text-align:center;">Status</th>
+                    <th style="text-align:right;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($purchase->returns as $ret)
+                <tr>
+                    <td>
+                        <a href="{{ route('admin.purchase-returns.show', $ret) }}" style="font-family:monospace; font-weight:700; color:#b91c1c; text-decoration:none;">
+                            {{ $ret->reference_number }}
+                        </a>
+                    </td>
+                    <td>{{ $ret->returned_at ? $ret->returned_at->format('d M Y') : $ret->created_at->format('d M Y') }}</td>
+                    <td style="text-align:center;">
+                        <span style="background:#f3f4f6; color:#374151; border-radius:12px; padding:2px 8px; font-size:11px; font-weight:700;">
+                            {{ $ret->items->sum('quantity') }} pcs ({{ $ret->items->count() }} lines)
+                        </span>
+                    </td>
+                    <td style="text-align:right; font-weight:700; color:#b91c1c;">-{{ pkr($ret->total_return_amount, 2) }}</td>
+                    <td style="text-align:right; font-weight:700; color:#047857;">{{ pkr($ret->refund_amount, 2) }}</td>
+                    <td style="text-align:center;">
+                        <span class="pay-badge pay-{{ $ret->refund_method }}">
+                            {{ ucfirst($ret->refund_method) }}
+                        </span>
+                    </td>
+                    <td style="text-align:center;">
+                        <span class="status-badge status-{{ $ret->refund_status }}">
+                            {{ ucfirst($ret->refund_status) }}
+                        </span>
+                    </td>
+                    <td style="text-align:right;">
+                        <a href="{{ route('admin.purchase-returns.show', $ret) }}" class="btn-pos-outline" style="padding:3px 8px; font-size:12px; text-decoration:none;">
+                            <i class="bi bi-eye"></i> View Slip
+                        </a>
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+</div>
+@endif
 
 @endsection

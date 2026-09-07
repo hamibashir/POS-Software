@@ -16,8 +16,13 @@ class StockAdjustmentController extends Controller
     public function index(Request $request)
     {
         $query = StockMovement::with(['product:id,name,sku', 'user:id,name'])
-            ->whereIn('type', ['adjustment_in', 'adjustment_out'])
             ->latest();
+
+        if ($type = $request->get('type')) {
+            $query->where('type', $type);
+        } else {
+            $query->whereIn('type', ['adjustment_in', 'adjustment_out', 'return']);
+        }
 
         if ($search = $request->get('search')) {
             $query->whereHas('product', fn($q) =>
@@ -30,9 +35,6 @@ class StockAdjustmentController extends Controller
         }
         if ($to = $request->get('date_to')) {
             $query->whereDate('created_at', '<=', $to);
-        }
-        if ($type = $request->get('type')) {
-            $query->where('type', $type);
         }
 
         $movements = $query->paginate(25)->withQueryString();

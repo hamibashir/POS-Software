@@ -32,9 +32,14 @@
         <h1><i class="bi bi-truck me-2" style="color:var(--pos-primary)"></i>Purchases</h1>
         <p>Stock-in entries and supplier orders.</p>
     </div>
-    <a href="{{ route('admin.purchases.create') }}" class="btn-pos text-decoration-none">
-        <i class="bi bi-plus-circle"></i> New Purchase
-    </a>
+    <div class="d-flex gap-2">
+        <a href="{{ route('admin.purchase-returns.index') }}" class="btn-pos-outline text-decoration-none">
+            <i class="bi bi-arrow-return-left"></i> Stock Returns
+        </a>
+        <a href="{{ route('admin.purchases.create') }}" class="btn-pos text-decoration-none">
+            <i class="bi bi-plus-circle"></i> New Purchase
+        </a>
+    </div>
 </div>
 
 {{-- Stats --}}
