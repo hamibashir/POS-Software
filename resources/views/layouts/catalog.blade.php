@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1280">
-    <meta name="description" content="@yield('meta_description', 'Browse our full range of hardware and sanitary products.')">
-    <title>@yield('title', 'Product Catalog') — Hardware World</title>
+    <meta name="description" content="@yield('meta_description', 'Browse our full range of sanitary and hardware products.')">
+    <title>@yield('title', 'Product Catalog') — Hassan Sanitary and Hardware Store</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
@@ -228,7 +228,7 @@
             max-width: 1440px; margin: 0 auto;
         }
         .cat-footer-grid {
-            display: grid; grid-template-columns: 2fr 1fr 1fr 1.5fr;
+            display: grid; grid-template-columns: 2fr 1fr 1.5fr;
             gap: 32px; margin-bottom: 32px;
         }
         .cat-footer .brand-col .brand-row {
@@ -284,7 +284,7 @@
     <div class="inner">
         <a href="{{ route('catalog.home') }}" class="brand">
             <span class="material-symbols-outlined ms-icon">home_repair_service</span>
-            <span>Hardware World</span>
+            <span>Hassan Sanitary and Hardware Store</span>
         </a>
 
         <div class="cat-nav-links">
@@ -320,9 +320,9 @@
             <div class="brand-col">
                 <div class="brand-row">
                     <span class="material-symbols-outlined ms-icon" style="color:var(--primary);font-size:22px;">home_repair_service</span>
-                    <span class="brand-name">Hardware World</span>
+                    <span class="brand-name">Hassan Sanitary and Hardware Store</span>
                 </div>
-                <p>Your trusted partner for quality tools, materials, and expert advice for every project.</p>
+                <p>Your trusted partner for quality sanitary ware, hardware tools, plumbing, and building materials.</p>
             </div>
 
             {{-- Shop --}}
@@ -335,48 +335,32 @@
                 </ul>
             </div>
 
-            {{-- Support --}}
-            <div>
-                <h4>Support</h4>
-                <ul>
-                    <li><a href="#">Contact Us</a></li>
-                    <li><a href="#">FAQ</a></li>
-                    <li><a href="#">Shipping</a></li>
-                    <li><a href="#">Returns</a></li>
-                </ul>
-            </div>
-
             {{-- Contact --}}
             <div>
                 <h4>Contact</h4>
                 @if(config('store.phone'))
                 <div class="contact-item">
                     <span class="material-symbols-outlined ms-icon">call</span>
-                    {{ config('store.phone') }}
+                    <a href="tel:{{ config('store.phone') }}" style="color:inherit;text-decoration:none;">{{ config('store.phone') }}</a>
                 </div>
                 @endif
                 @if(config('store.whatsapp'))
                 <div class="contact-item">
                     <span class="material-symbols-outlined ms-icon">chat</span>
-                    {{ config('store.whatsapp') }}
+                    <a href="https://wa.me/{{ config('store.whatsapp') }}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">{{ config('store.whatsapp') }}</a>
                 </div>
                 @endif
                 @if(config('store.address'))
-                <div class="contact-item">
-                    <span class="material-symbols-outlined ms-icon">location_on</span>
-                    {{ config('store.address') }}
+                <div class="contact-item" style="align-items:flex-start;">
+                    <span class="material-symbols-outlined ms-icon" style="margin-top:2px;flex-shrink:0;">location_on</span>
+                    <span>{{ config('store.address') }}</span>
                 </div>
                 @endif
             </div>
         </div>
 
         <div class="cat-footer-bottom">
-            <p>&copy; {{ date('Y') }} Hardware World. All rights reserved.</p>
-            <div class="social">
-                <a href="#">FB</a>
-                <a href="#">TW</a>
-                <a href="#">IG</a>
-            </div>
+            <p>&copy; {{ date('Y') }} Hassan Sanitary and Hardware Store. All rights reserved.</p>
         </div>
     </div>
 </footer>

@@ -1,7 +1,7 @@
 @extends('layouts.catalog')
 
-@section('title', $product->name . ' — Hardware World')
-@section('meta_description', Str::limit(strip_tags($product->description ?? $product->name . ' available at Hardware World.'), 155))
+@section('title', $product->name . ' — Hassan Sanitary and Hardware Store')
+@section('meta_description', Str::limit(strip_tags($product->description ?? $product->name . ' available at Hassan Sanitary and Hardware Store.'), 155))
 
 @push('styles')
 <style>

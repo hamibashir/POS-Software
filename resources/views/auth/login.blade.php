@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign In — HardwarePro POS</title>
+    <title>Sign In — Hassan Sanitary and Hardware Store</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 
@@ -193,7 +193,7 @@
             <div class="logo-circle">
                 <i class="bi bi-tools"></i>
             </div>
-            <h1>HardwarePro POS</h1>
+            <h1>Hassan Sanitary and Hardware Store</h1>
         </div>
     </div>
 
@@ -218,7 +218,7 @@
                 <div class="input-wrap">
                     <i class="bi bi-envelope icon-left"></i>
                     <input type="email" id="email" name="email" class="pos-field @error('email') is-invalid @enderror"
-                           placeholder="employee@hardwarepro.com"
+                           placeholder="Enter your email"
                            value="{{ old('email') }}"
                            required autofocus autocomplete="email">
                 </div>
@@ -252,8 +252,8 @@
 
     {{-- ── Footer ──────────────────────────────────── --}}
     <div class="login-footer">
-        Need help accessing your account?<br>
-        Contact the <a href="mailto:admin@hardwarepro.com">IT Support Desk</a>
+        <strong>Hassan Sanitary and Hardware Store</strong><br>
+        Rafi Commercial, Bahria Town Phase 8, Rawalpindi. &bull; Tel: 051-8891930
     </div>
 
 </div>

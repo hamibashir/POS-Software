@@ -424,7 +424,7 @@
                 </div>
                 <div>
                     <label class="form-label" style="font-size:13px; font-weight:600;">Email Address (Login) <span class="text-danger">*</span></label>
-                    <input type="email" name="email" class="pos-input" required placeholder="e.g. cashier1@hardwarepro.com">
+                    <input type="email" name="email" class="pos-input" required placeholder="e.g. cashier1@hassanstore.com">
                 </div>
                 <div>
                     <label class="form-label" style="font-size:13px; font-weight:600;">Password <span class="text-danger">*</span></label>

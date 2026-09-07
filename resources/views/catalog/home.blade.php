@@ -1,7 +1,7 @@
 @extends('layouts.catalog')
 
-@section('title', 'Hardware World — Tools, Plumbing, Paint & More')
-@section('meta_description', 'Discover professional-grade hardware tools, plumbing, electrical, and paint supplies. Shop our full catalog and contact us for orders.')
+@section('title', 'Hassan Sanitary and Hardware Store — Tools, Plumbing, Sanitary & More')
+@section('meta_description', 'Discover professional-grade hardware tools, sanitary ware, plumbing, and electrical supplies at Hassan Sanitary and Hardware Store. Shop our full catalog and contact us for orders.')
 
 @push('styles')
 <style>
@@ -368,7 +368,7 @@
                     flex-wrap:wrap;gap:12px;margin-bottom:22px;">
             <div>
                 <h2 class="sec-title">Popular Products</h2>
-                <p class="sec-sub">Our top-selling hardware essentials.</p>
+                <p class="sec-sub">Our top-selling sanitary & hardware essentials.</p>
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
                 <button class="filter-pill active">All Items</button>
