@@ -638,15 +638,16 @@ async function fetchProducts(q, silent = false) {
 function renderProducts(list) {
     if (!list.length) { showState('empty'); return; }
     productGrid.innerHTML = list.map(p => {
-        const stockLabel = p.stock_quantity <= 0 ? 'Out of Stock'
-            : p.stock_quantity <= (p.low_stock_threshold || 5) ? p.stock_quantity + ' low'
-            : p.stock_quantity + ' in stock';
+        const isOutOfStock = p.stock_quantity <= 0;
+        const stockChip = isOutOfStock
+            ? '<span class="stock-chip" style="background:#fee2e2; color:#b91c1c; font-weight:800;">Out of Stock</span>'
+            : '';
         return `
-        <div class="product-card ${p.stock_quantity <= 0 ? 'oos' : ''}"
+        <div class="product-card ${isOutOfStock ? 'oos' : ''}"
              onclick="addToCart(${JSON.stringify(p).replace(/"/g, '&quot;')})">
             <div class="prod-img-wrap">
                 <div class="prod-img-bg" style="background-image:url('${p.image_url}');"></div>
-                <span class="stock-chip">${stockLabel}</span>
+                ${stockChip}
             </div>
             <div class="prod-name">${p.name}</div>
             <div class="prod-sku">SKU: ${p.sku}</div>
@@ -674,10 +675,10 @@ function showState(t) {
 function addToCart(p) {
     const ex = cart.find(i => i.id === p.id);
     if (ex) {
-        if (ex.qty >= p.stock_quantity) { toast(`Only ${p.stock_quantity} in stock`, 'w'); return; }
+        if (ex.qty >= p.stock_quantity) { toast('Maximum available quantity reached', 'w'); return; }
         ex.qty++;
     } else {
-        if (p.stock_quantity <= 0) { toast('Out of stock', 'e'); return; }
+        if (p.stock_quantity <= 0) { toast('Product is out of stock', 'e'); return; }
         cart.push({ ...p, qty: 1 });
     }
     renderCart(); toast(`${p.name} added`, 's');
@@ -690,7 +691,7 @@ function updateQty(id, d) {
     if (!item) return;
     const n = item.qty + d;
     if (n <= 0) { removeFromCart(id); return; }
-    if (n > item.stock_quantity) { toast(`Max: ${item.stock_quantity}`, 'w'); return; }
+    if (n > item.stock_quantity) { toast('Maximum available quantity reached', 'w'); return; }
     item.qty = n; renderCart();
 }
 
@@ -699,7 +700,7 @@ function setQty(id, v) {
     if (!item) return;
     const q = parseInt(v) || 1;
     if (q <= 0) { removeFromCart(id); return; }
-    if (q > item.stock_quantity) { toast(`Max: ${item.stock_quantity}`, 'w'); return; }
+    if (q > item.stock_quantity) { toast('Maximum available quantity reached', 'w'); return; }
     item.qty = q; renderCart();
 }
 
