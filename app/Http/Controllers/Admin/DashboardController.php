@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Sale;
+use App\Models\Expense;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
@@ -17,6 +18,11 @@ class DashboardController extends Controller
         $todaySales = Sale::whereDate('created_at', $today)
             ->where('status', 'completed')
             ->sum('total_amount');
+
+        $todayExpenses = Expense::whereDate('expense_date', $today)->sum('amount');
+        $thisMonthExpenses = Expense::whereMonth('expense_date', $today->month)
+            ->whereYear('expense_date', $today->year)
+            ->sum('amount');
 
         $yesterdaySales = Sale::whereDate('created_at', $today->copy()->subDay())
             ->where('status', 'completed')
@@ -79,6 +85,7 @@ class DashboardController extends Controller
 
         return view('admin.dashboard', compact(
             'todaySales', 'todayVsYesterday',
+            'todayExpenses', 'thisMonthExpenses',
             'totalProducts',
             'lowStockCount',
             'thisMonthRevenue', 'monthVsLast',

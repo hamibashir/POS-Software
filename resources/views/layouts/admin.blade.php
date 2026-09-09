@@ -196,6 +196,10 @@
        class="nav-link {{ request()->routeIs('admin.purchases*') ? 'active' : '' }}">
         <i class="bi bi-truck"></i>Purchases
     </a>
+    <a href="{{ route('admin.suppliers.index') }}"
+       class="nav-link {{ request()->routeIs('admin.suppliers*') ? 'active' : '' }}">
+        <i class="bi bi-building"></i>Suppliers
+    </a>
     <a href="{{ route('admin.purchase-returns.index') }}"
        class="nav-link {{ request()->routeIs('admin.purchase-returns*') ? 'active' : '' }}">
         <i class="bi bi-arrow-return-left"></i>Returns
@@ -207,6 +211,10 @@
     <a href="{{ route('admin.reports.index') }}"
        class="nav-link {{ request()->routeIs('admin.reports*') ? 'active' : '' }}">
         <i class="bi bi-bar-chart-line"></i>Reports
+    </a>
+    <a href="{{ route('admin.expenses.index') }}"
+       class="nav-link {{ request()->routeIs('admin.expenses*') ? 'active' : '' }}">
+        <i class="bi bi-wallet2"></i>Expenses
     </a>
     @if(auth()->user()->isAdmin())
     <a href="{{ route('admin.staff.index') }}"

@@ -141,29 +141,14 @@
         </div>
     </div>
 
-    {{-- Total Products --}}
+    {{-- Today's Expenses --}}
     <div class="col-6 col-lg-3">
         <div class="dash-card">
-            <div class="card-bg-icon text-primary"><i class="bi bi-box-seam"></i></div>
-            <p class="label">Total Products</p>
+            <div class="card-bg-icon text-danger" style="color:#ef4444;"><i class="bi bi-wallet2"></i></div>
+            <p class="label">Today's Expenses</p>
             <div class="d-flex align-items-baseline gap-2 flex-wrap">
-                <p class="value">{{ number_format($totalProducts) }}</p>
-            </div>
-        </div>
-    </div>
-
-    {{-- Low Stock --}}
-    <div class="col-6 col-lg-3">
-        <div class="dash-card">
-            <div class="card-bg-icon" style="color:#e73508;"><i class="bi bi-exclamation-triangle"></i></div>
-            <p class="label">Low Stock Items</p>
-            <div class="d-flex align-items-baseline gap-2 flex-wrap">
-                <p class="value">{{ $lowStockCount }}</p>
-                @if($lowStockCount > 0)
-                <span class="badge-trend badge-warn">
-                    <i class="bi bi-exclamation-circle"></i> Action needed
-                </span>
-                @endif
+                <p class="value text-danger">Rs. {{ number_format($todayExpenses, 0) }}</p>
+                <a href="{{ route('admin.expenses.index', ['preset' => 'today']) }}" style="font-size:11px; text-decoration:none; font-weight:600; color:var(--pos-primary);">View &rarr;</a>
             </div>
         </div>
     </div>
@@ -181,6 +166,18 @@
                     {{ abs($monthVsLast) }}%
                 </span>
                 @endif
+            </div>
+        </div>
+    </div>
+
+    {{-- Monthly Expenses --}}
+    <div class="col-6 col-lg-3">
+        <div class="dash-card">
+            <div class="card-bg-icon" style="color:#d97706;"><i class="bi bi-pie-chart"></i></div>
+            <p class="label">Monthly Expenses</p>
+            <div class="d-flex align-items-baseline gap-2 flex-wrap">
+                <p class="value" style="color:#b45309;">Rs. {{ number_format($thisMonthExpenses, 0) }}</p>
+                <a href="{{ route('admin.expenses.index', ['preset' => 'this_month']) }}" style="font-size:11px; text-decoration:none; font-weight:600; color:var(--pos-primary);">Details &rarr;</a>
             </div>
         </div>
     </div>

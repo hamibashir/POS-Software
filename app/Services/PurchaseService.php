@@ -6,6 +6,8 @@ use App\Models\Product;
 use App\Models\Purchase;
 use App\Models\PurchaseItem;
 use App\Models\StockMovement;
+use App\Models\Supplier;
+use App\Models\SupplierPayment;
 use Illuminate\Support\Facades\DB;
 
 class PurchaseService
@@ -55,19 +57,58 @@ class PurchaseService
                 ];
             }
 
+            // Resolve or create supplier
+            $supplierId = $purchaseData['supplier_id'] ?? null;
+            $supplierName = $purchaseData['supplier_name'] ?? null;
+            $supplierPhone = $purchaseData['supplier_phone'] ?? null;
+
+            if ($supplierId) {
+                $supplier = Supplier::find($supplierId);
+                if ($supplier) {
+                    $supplierName = $supplier->name;
+                    $supplierPhone = $supplier->phone ?? $supplierPhone;
+                }
+            } elseif (!empty($supplierName)) {
+                $supplier = Supplier::firstOrCreate(
+                    ['name' => trim($supplierName)],
+                    ['phone' => $supplierPhone]
+                );
+                $supplierId = $supplier->id;
+            }
+
+            $paymentMethod = $purchaseData['payment_method'] ?? 'cash';
+            $paidAmount = isset($purchaseData['paid_amount']) 
+                ? (float) $purchaseData['paid_amount'] 
+                : ($paymentMethod === 'credit' ? 0.00 : $totalAmount);
+
             // Create purchase header
             $purchase = Purchase::create([
                 'reference_number' => $this->generateReferenceNumber(),
                 'user_id'          => $userId,
-                'supplier_name'    => $purchaseData['supplier_name'],
-                'supplier_phone'   => $purchaseData['supplier_phone'] ?? null,
+                'supplier_id'      => $supplierId,
+                'supplier_name'    => $supplierName,
+                'supplier_phone'   => $supplierPhone,
                 'total_amount'     => $totalAmount,
-                'paid_amount'      => $purchaseData['paid_amount'] ?? $totalAmount,
-                'payment_method'   => $purchaseData['payment_method'] ?? 'cash',
+                'paid_amount'      => $paidAmount,
+                'payment_method'   => $paymentMethod,
                 'status'           => 'received',
                 'received_at'      => $purchaseData['received_at'] ?? now(),
                 'notes'            => $purchaseData['notes'] ?? null,
             ]);
+
+            // If an upfront payment was made, record it in supplier_payments
+            if ($paidAmount > 0 && $supplierId) {
+                SupplierPayment::create([
+                    'supplier_id'      => $supplierId,
+                    'purchase_id'      => $purchase->id,
+                    'amount'           => $paidAmount,
+                    'payment_method'   => $paymentMethod,
+                    'payment_date'     => $purchaseData['received_at'] ?? now(),
+                    'user_id'          => $userId,
+                    'reference_number' => $purchase->reference_number,
+                    'notes'            => "Payment recorded on purchase {$purchase->reference_number}",
+                ]);
+            }
 
             // Create line items, increase stock, log movements
             foreach ($processedItems as $item) {

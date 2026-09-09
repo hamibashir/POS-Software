@@ -8,6 +8,7 @@ use App\Models\PurchaseItem;
 use App\Models\PurchaseReturn;
 use App\Models\PurchaseReturnItem;
 use App\Models\StockMovement;
+use App\Models\Supplier;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
 
@@ -71,12 +72,32 @@ class PurchaseReturnService
                 ? (float) $returnData['refund_amount']
                 : $totalReturnAmount;
 
+            // Resolve supplier
+            $supplierId = $returnData['supplier_id'] ?? null;
+            $supplierName = $returnData['supplier_name'] ?? null;
+            $supplierPhone = $returnData['supplier_phone'] ?? null;
+
+            if ($supplierId) {
+                $supplier = Supplier::find($supplierId);
+                if ($supplier) {
+                    $supplierName = $supplier->name;
+                    $supplierPhone = $supplier->phone ?? $supplierPhone;
+                }
+            } elseif (!empty($supplierName)) {
+                $supplier = Supplier::firstOrCreate(
+                    ['name' => trim($supplierName)],
+                    ['phone' => $supplierPhone]
+                );
+                $supplierId = $supplier->id;
+            }
+
             // Create return record
             $purchaseReturn = PurchaseReturn::create([
                 'reference_number'    => $this->generateReferenceNumber(),
                 'purchase_id'         => !empty($returnData['purchase_id']) ? (int) $returnData['purchase_id'] : null,
-                'supplier_name'       => $returnData['supplier_name'],
-                'supplier_phone'      => $returnData['supplier_phone'] ?? null,
+                'supplier_id'         => $supplierId,
+                'supplier_name'       => $supplierName,
+                'supplier_phone'      => $supplierPhone,
                 'user_id'             => $userId,
                 'total_return_amount' => $totalReturnAmount,
                 'refund_amount'       => $refundAmount,

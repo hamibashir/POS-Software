@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Purchase;
+use App\Models\Supplier;
 use App\Services\PurchaseService;
 use Illuminate\Http\Request;
 
@@ -17,7 +18,7 @@ class PurchaseController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Purchase::with('user:id,name')
+        $query = Purchase::with(['user:id,name', 'supplier:id,name,phone'])
             ->withCount('items')
             ->latest();
 
@@ -45,7 +46,7 @@ class PurchaseController extends Controller
     }
 
     /**
-     * Create form — pass all active products as JSON for the JS rows.
+     * Create form — pass all active products and registered suppliers.
      */
     public function create()
     {
@@ -53,7 +54,11 @@ class PurchaseController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'sku', 'unit', 'cost_price', 'stock_quantity']);
 
-        return view('admin.purchases.create', compact('products'));
+        $suppliers = Supplier::where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name', 'phone', 'company_name', 'address']);
+
+        return view('admin.purchases.create', compact('products', 'suppliers'));
     }
 
     /**
@@ -62,9 +67,11 @@ class PurchaseController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
+            'supplier_id'           => ['nullable', 'integer', 'exists:suppliers,id'],
             'supplier_name'         => ['required', 'string', 'max:150'],
             'supplier_phone'        => ['nullable', 'string', 'max:30'],
             'payment_method'        => ['required', 'in:cash,card,credit'],
+            'paid_amount'           => ['nullable', 'numeric', 'min:0'],
             'received_at'           => ['nullable', 'date'],
             'notes'                 => ['nullable', 'string', 'max:1000'],
             'items'                 => ['required', 'array', 'min:1'],
@@ -76,9 +83,11 @@ class PurchaseController extends Controller
         try {
             $purchase = $this->purchaseService->create(
                 purchaseData: [
+                    'supplier_id'    => $data['supplier_id'] ?? null,
                     'supplier_name'  => $data['supplier_name'],
                     'supplier_phone' => $data['supplier_phone'] ?? null,
                     'payment_method' => $data['payment_method'],
+                    'paid_amount'    => $data['paid_amount'] ?? null,
                     'received_at'    => $data['received_at'] ?? null,
                     'notes'          => $data['notes'] ?? null,
                 ],

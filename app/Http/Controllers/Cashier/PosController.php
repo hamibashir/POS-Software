@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use App\Models\Product;
 use App\Models\Sale;
+use App\Models\Supplier;
+use App\Models\SupplierPayment;
 use App\Services\SaleService;
 use Illuminate\Http\Request;
 
@@ -44,7 +46,19 @@ class PosController extends Controller
                 'pending_payment' => $e->pending_payment,
             ]);
 
-        return view('cashier.pos', compact('employees'));
+        $suppliers = Supplier::where('is_active', true)
+            ->with(['purchases', 'returns', 'payments'])
+            ->orderBy('name')
+            ->get()
+            ->map(fn($s) => [
+                'id'              => $s->id,
+                'name'            => $s->name,
+                'company_name'    => $s->company_name,
+                'phone'           => $s->phone,
+                'pending_balance' => (float) $s->pending_balance,
+            ]);
+
+        return view('cashier.pos', compact('employees', 'suppliers'));
     }
 
     /**
@@ -154,5 +168,65 @@ class PosController extends Controller
             report($e);
             return response()->json(['success' => false, 'message' => 'An unexpected error occurred. Please try again.'], 500);
         }
+    }
+
+    /**
+     * AJAX: Get list of active suppliers with pending balances for POS.
+     */
+    public function getSuppliers()
+    {
+        $suppliers = Supplier::where('is_active', true)
+            ->with(['purchases', 'returns', 'payments'])
+            ->orderBy('name')
+            ->get()
+            ->map(fn($s) => [
+                'id'              => $s->id,
+                'name'            => $s->name,
+                'company_name'    => $s->company_name,
+                'phone'           => $s->phone,
+                'pending_balance' => (float) $s->pending_balance,
+            ]);
+
+        return response()->json($suppliers);
+    }
+
+    /**
+     * AJAX: Record a payment made from the POS counter to a supplier.
+     */
+    public function recordSupplierPayment(Request $request)
+    {
+        $data = $request->validate([
+            'supplier_id'      => ['required', 'integer', 'exists:suppliers,id'],
+            'amount'           => ['required', 'numeric', 'min:0.01'],
+            'payment_method'   => ['required', 'in:cash,bank,cheque,online'],
+            'reference_number' => ['nullable', 'string', 'max:60'],
+            'notes'            => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $supplier = Supplier::findOrFail($data['supplier_id']);
+
+        $payment = SupplierPayment::create([
+            'supplier_id'      => $supplier->id,
+            'amount'           => $data['amount'],
+            'payment_method'   => $data['payment_method'],
+            'payment_date'     => now()->toDateString(),
+            'user_id'          => auth()->id(),
+            'reference_number' => $data['reference_number'] ?? null,
+            'notes'            => $data['notes'] ?? 'Paid at POS Counter',
+        ]);
+
+        $supplier->refresh();
+        $newBalance = $supplier->pending_balance;
+
+        return response()->json([
+            'success'         => true,
+            'payment_id'      => $payment->id,
+            'supplier_id'     => $supplier->id,
+            'supplier_name'   => $supplier->name,
+            'amount_paid'     => number_format($data['amount'], 2),
+            'new_balance'     => number_format($newBalance, 2),
+            'raw_new_balance' => (float) $newBalance,
+            'message'         => "Payment of PKR " . number_format($data['amount'], 2) . " cleared for '{$supplier->name}'. Remaining Balance: PKR " . number_format($newBalance, 2),
+        ]);
     }
 }

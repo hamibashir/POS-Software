@@ -11,6 +11,7 @@ class Purchase extends Model
     protected $fillable = [
         'reference_number',
         'user_id',
+        'supplier_id',
         'supplier_name',
         'supplier_phone',
         'total_amount',
@@ -33,6 +34,16 @@ class Purchase extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function supplier(): BelongsTo
+    {
+        return $this->belongsTo(Supplier::class);
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(SupplierPayment::class);
     }
 
     public function items(): HasMany

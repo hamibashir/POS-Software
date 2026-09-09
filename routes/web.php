@@ -10,7 +10,9 @@ use App\Http\Controllers\Admin\PurchaseController;
 use App\Http\Controllers\Admin\PurchaseReturnController;
 use App\Http\Controllers\Admin\StockAdjustmentController;
 use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\ExpenseController;
 use App\Http\Controllers\Admin\StaffController;
+use App\Http\Controllers\Admin\SupplierController;
 use App\Http\Controllers\Cashier\PosController;
 use App\Http\Controllers\Catalog\CatalogController;
 
@@ -77,6 +79,17 @@ Route::middleware(['auth', 'admin'])
         // Reports
         Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
 
+        // Daily Expenditures
+        Route::resource('expenses', ExpenseController::class)->only(['index', 'store', 'update', 'destroy']);
+
+        // Suppliers & Payables - Admin only
+        Route::get('suppliers',                          [SupplierController::class, 'index'])->name('suppliers.index');
+        Route::post('suppliers',                         [SupplierController::class, 'store'])->name('suppliers.store');
+        Route::put('suppliers/{supplier}',               [SupplierController::class, 'update'])->name('suppliers.update');
+        Route::delete('suppliers/{supplier}',            [SupplierController::class, 'destroy'])->name('suppliers.destroy');
+        Route::post('suppliers/{supplier}/payments',     [SupplierController::class, 'recordPayment'])->name('suppliers.payments');
+        Route::get('suppliers/{supplier}/ledger',        [SupplierController::class, 'ledger'])->name('suppliers.ledger');
+
         // Staff Management (Employees & Cashiers) - Admin only
         Route::get('staff',                                    [StaffController::class, 'index'])->name('staff.index');
         Route::post('staff/employees',                         [StaffController::class, 'storeEmployee'])->name('staff.employees.store');
@@ -99,10 +112,12 @@ Route::middleware(['auth', 'cashier'])
     ->prefix('cashier')
     ->name('cashier.')
     ->group(function () {
-        Route::get('/pos',                [PosController::class, 'index'])->name('pos');
-        Route::get('/pos/search',          [PosController::class, 'searchProducts'])->name('pos.search');
-        Route::post('/pos/complete-sale',  [PosController::class, 'completeSale'])->name('pos.complete-sale');
-        Route::get('/pos/receipt/{sale}',  [PosController::class, 'receipt'])->name('pos.receipt');
+        Route::get('/pos',                       [PosController::class, 'index'])->name('pos');
+        Route::get('/pos/search',                 [PosController::class, 'searchProducts'])->name('pos.search');
+        Route::post('/pos/complete-sale',         [PosController::class, 'completeSale'])->name('pos.complete-sale');
+        Route::get('/pos/receipt/{sale}',         [PosController::class, 'receipt'])->name('pos.receipt');
+        Route::get('/pos/suppliers',              [PosController::class, 'getSuppliers'])->name('pos.suppliers');
+        Route::post('/pos/supplier-payments',     [PosController::class, 'recordSupplierPayment'])->name('pos.supplier-payments');
     });
 
 /*

@@ -201,6 +201,17 @@ function addRow() {
     recalcGrand();
 }
 
+function onSupplierSelected(select) {
+    const opt = select.options[select.selectedIndex];
+    if (opt && opt.value) {
+        document.getElementById('supplierIdInput').value = opt.value;
+        document.getElementById('supplierNameInput').value = opt.dataset.name || '';
+        document.getElementById('supplierPhoneInput').value = opt.dataset.phone || '';
+    } else {
+        document.getElementById('supplierIdInput').value = '';
+    }
+}
+
 document.getElementById('addRowBtn').addEventListener('click', addRow);
 addRow(); // Start with one row
 </script>
@@ -240,23 +251,41 @@ addRow(); // Start with one row
         <div class="form-section-header"><i class="bi bi-building"></i> Supplier Information</div>
         <div class="form-section-body">
             <div class="form-grid">
+                @if(isset($suppliers) && $suppliers->isNotEmpty())
                 <div class="fg" style="grid-column: span 2;">
+                    <label>Select Registered Supplier <small class="text-muted fw-normal">(optional)</small></label>
+                    <select id="supplierSelect" class="pos-input" onchange="onSupplierSelected(this)">
+                        <option value="">-- Choose Existing Supplier --</option>
+                        @foreach($suppliers as $s)
+                            <option value="{{ $s->id }}"
+                                data-name="{{ $s->name }}"
+                                data-phone="{{ $s->phone }}"
+                                data-balance="{{ $s->pending_balance }}">
+                                {{ $s->name }} @if($s->company_name)({{ $s->company_name }})@endif — Due: {{ pkr($s->pending_balance, 2) }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                @endif
+                <input type="hidden" name="supplier_id" id="supplierIdInput" value="{{ old('supplier_id') }}">
+
+                <div class="fg">
                     <label class="required">Supplier Name</label>
-                    <input type="text" name="supplier_name" class="pos-input"
+                    <input type="text" name="supplier_name" id="supplierNameInput" class="pos-input"
                         value="{{ old('supplier_name') }}"
-                        placeholder="e.g. ABC Hardware Distributors" required>
+                        placeholder="e.g. Master Steel & Hardware" required>
                 </div>
                 <div class="fg">
                     <label>Supplier Phone</label>
-                    <input type="text" name="supplier_phone" class="pos-input"
-                        value="{{ old('supplier_phone') }}" placeholder="+1 555-0100">
+                    <input type="text" name="supplier_phone" id="supplierPhoneInput" class="pos-input"
+                        value="{{ old('supplier_phone') }}" placeholder="03001234567">
                 </div>
                 <div class="fg">
                     <label class="required">Payment Method</label>
                     <select name="payment_method" class="pos-input" required>
-                        <option value="cash"   {{ old('payment_method') === 'cash'   ? 'selected' : '' }}>💵 Cash</option>
-                        <option value="card"   {{ old('payment_method') === 'card'   ? 'selected' : '' }}>💳 Card</option>
-                        <option value="credit" {{ old('payment_method') === 'credit' ? 'selected' : '' }}>📋 Credit / Net Terms</option>
+                        <option value="cash"   {{ old('payment_method') === 'cash'   ? 'selected' : '' }}>💵 Cash (Paid now)</option>
+                        <option value="card"   {{ old('payment_method') === 'card'   ? 'selected' : '' }}>💳 Card / Bank (Paid now)</option>
+                        <option value="credit" {{ old('payment_method') === 'credit' ? 'selected' : '' }}>📋 Credit / Add to Supplier Due</option>
                     </select>
                 </div>
                 <div class="fg">
