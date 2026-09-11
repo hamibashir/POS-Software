@@ -1100,6 +1100,20 @@
             <span style="font-size:11px; opacity:0.75; margin-left:2px;">[F8]</span>
         </button>
 
+        {{-- Employee Payment Return Trigger --}}
+        <button type="button" class="top-action-btn" id="topEmployeePayBtn" onclick="openEmployeePayModal()" title="Receive Employee Payment / Clear Due (F10)" style="background:#f0fdf4; border-color:#bbf7d0; color:#15803d;">
+            <span class="material-symbols-outlined" style="font-size:18px; color:#16a34a;">account_balance_wallet</span>
+            <span>Clear Staff Due</span>
+            <span style="font-size:11px; opacity:0.75; margin-left:2px;">[F10]</span>
+        </button>
+
+        {{-- Customer Product Return Trigger --}}
+        <button type="button" class="top-action-btn" id="topCustomerReturnBtn" onclick="openCustomerReturnModal()" title="Customer Product Return / Restore Stock (F11)" style="background:#fef2f2; border-color:#fecaca; color:#b91c1c;">
+            <span class="material-symbols-outlined" style="font-size:18px; color:#ef4444;">assignment_return</span>
+            <span>Customer Return</span>
+            <span style="font-size:11px; opacity:0.75; margin-left:2px;">[F11]</span>
+        </button>
+
         {{-- Browse Visual Catalog Drawer Trigger --}}
         <button type="button" class="top-action-btn" data-bs-toggle="offcanvas" data-bs-target="#catalogOffcanvas" title="Open Visual Catalog (F3)">
             <span class="material-symbols-outlined" style="font-size:18px; color:#0f766e;">grid_view</span>
@@ -1326,6 +1340,11 @@
                             <span>New Ledger Balance:</span>
                             <span id="cardEmpNewTotal" style="font-size:13px;">Rs. 0.00</span>
                         </div>
+                        <div id="cardEmpPayAction" style="margin-top:8px; text-align:right;">
+                            <button type="button" class="btn btn-sm btn-outline-success" style="font-size:11px; font-weight:700; padding:2px 8px; border-radius:6px;" onclick="openEmployeePayModalFromCard()">
+                                <i class="bi bi-cash me-1"></i> Receive / Clear Due
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -1526,6 +1545,223 @@
                         <button type="button" class="btn btn-light px-3" data-bs-dismiss="modal" style="border-radius:10px; font-weight:700;">Cancel</button>
                         <button type="submit" class="btn text-white px-4" id="posSupplierSubmitBtn" style="background:#0f766e; border-radius:10px; font-weight:700;">
                             <span class="material-symbols-outlined" style="font-size:18px; vertical-align:middle;">check</span> Clear Payment
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- ══════════ RECEIVE EMPLOYEE PAYMENT MODAL (POS) ══════════ --}}
+<div class="modal fade" id="posEmployeePayModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:18px; border:none; box-shadow:0 20px 60px rgba(0,0,0,0.25); overflow:hidden;">
+            <div class="modal-header px-4 py-3" style="background:#15803d; color:#fff;">
+                <h5 class="modal-title fw-bold" style="color:#fff; display:flex; align-items:center; gap:8px;">
+                    <span class="material-symbols-outlined" style="font-size:22px;">account_balance_wallet</span>
+                    Receive Staff Payment / Clear Due
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="posEmployeePayForm" onsubmit="submitPosEmployeePayment(event)">
+                    {{-- Employee Selector --}}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-secondary">Select Employee / Staff <span class="text-danger">*</span></label>
+                        <select id="posEmployeeSelect" class="form-select" style="height:44px; border-radius:10px; font-weight:600;" required onchange="onPosEmployeeChange(this)">
+                            <option value="">-- Choose Employee --</option>
+                            @if(isset($employees))
+                                @foreach($employees as $e)
+                                    <option value="{{ $e['id'] }}" data-pending="{{ $e['pending_payment'] }}" data-name="{{ $e['name'] }}" data-phone="{{ $e['phone'] }}" data-address="{{ $e['address'] }}">
+                                        {{ $e['name'] }} — Due: PKR {{ number_format($e['pending_payment'], 2) }}
+                                    </option>
+                                @endforeach
+                            @endif
+                        </select>
+                    </div>
+
+                    {{-- Pending Balance Card --}}
+                    <div id="posEmployeeBalanceCard" class="p-3 mb-3 rounded-3" style="background:#f0fdf4; border:1.5px solid #bbf7d0; display:none;">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-dark small fw-bold" id="posEmployeeCardName">—</div>
+                                <div class="text-muted" style="font-size:11px;" id="posEmployeeCardPhone">—</div>
+                            </div>
+                            <div class="text-end">
+                                <div class="text-muted small fw-semibold">Current Pending Due:</div>
+                                <div class="fs-5 fw-bold text-danger" id="posEmployeeCardDue">PKR 0.00</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Amount Input --}}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="form-label fw-bold small text-secondary mb-0">Payment Received (PKR) <span class="text-danger">*</span></label>
+                            <button type="button" class="btn btn-sm btn-link p-0 text-decoration-none fw-bold" style="color:#15803d;" onclick="fillPosEmployeeFullPayment()">
+                                Clear Full Due
+                            </button>
+                        </div>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white fw-bold text-muted border-end-0">Rs.</span>
+                            <input type="number" step="0.01" min="0.01" id="posEmployeeAmount" class="form-control fs-5 fw-bold text-dark border-start-0" placeholder="0.00" required>
+                        </div>
+                    </div>
+
+                    {{-- Payment Method --}}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-secondary">Payment Method <span class="text-danger">*</span></label>
+                        <select id="posEmployeeMethod" class="form-select" style="height:42px; border-radius:10px;">
+                            <option value="cash" selected>💵 Cash (Counter Drawer)</option>
+                            <option value="bank">🏦 Bank Transfer</option>
+                            <option value="salary_deduction">💼 Salary Deduction</option>
+                            <option value="online">📱 Card / Online</option>
+                        </select>
+                    </div>
+
+                    {{-- Notes --}}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-secondary">Notes / Remarks</label>
+                        <input type="text" id="posEmployeeNotes" class="form-control" style="border-radius:10px;" placeholder="e.g. Returned cash at counter">
+                    </div>
+
+                    <div class="d-flex gap-2 justify-content-end mt-4">
+                        <button type="button" class="btn btn-light px-3" data-bs-dismiss="modal" style="border-radius:10px; font-weight:700;">Cancel</button>
+                        <button type="submit" class="btn text-white px-4" id="posEmployeeSubmitBtn" style="background:#15803d; border-radius:10px; font-weight:700;">
+                            <span class="material-symbols-outlined" style="font-size:18px; vertical-align:middle;">check_circle</span> Receive & Clear Payment
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- ══════════ CUSTOMER PRODUCT RETURN MODAL (POS) ══════════ --}}
+<div class="modal fade" id="posCustomerReturnModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content" style="border-radius:18px; border:none; box-shadow:0 20px 60px rgba(0,0,0,0.25); overflow:hidden;">
+            <div class="modal-header px-4 py-3" style="background:#b91c1c; color:#fff;">
+                <h5 class="modal-title fw-bold" style="color:#fff; display:flex; align-items:center; gap:8px;">
+                    <span class="material-symbols-outlined" style="font-size:22px;">assignment_return</span>
+                    Customer Product Return & Stock Restoration
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                {{-- Live Product Search / Barcode Scan --}}
+                <div class="position-relative mb-3">
+                    <label class="form-label fw-bold small text-secondary">Search & Add Product to Return <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0">
+                            <span class="material-symbols-outlined" style="font-size:20px; color:#b91c1c;">barcode_scanner</span>
+                        </span>
+                        <input type="text" id="posReturnProductSearchInput" class="form-control form-control-lg fs-6 border-start-0" 
+                               placeholder="Scan product barcode, or type product name / SKU..." 
+                               autocomplete="off"
+                               oninput="onReturnProductSearch(this.value)"
+                               onkeydown="onReturnProductSearchKeydown(event)">
+                        <button type="button" class="btn btn-outline-secondary" onclick="clearReturnProductSearch()" title="Clear">
+                            <span class="material-symbols-outlined" style="font-size:18px;">close</span>
+                        </button>
+                    </div>
+
+                    {{-- Floating live search dropdown --}}
+                    <div id="posReturnProductDropdown" class="search-dropdown" style="display:none; position:absolute; top:100%; left:0; right:0; z-index:1060; background:#fff; border:1.5px solid #e2e8f0; border-radius:12px; max-height:260px; overflow-y:auto; box-shadow:0 12px 30px rgba(0,0,0,0.15); margin-top:4px;"></div>
+                </div>
+
+                {{-- Form for Return Processing --}}
+                <form id="posCustomerReturnForm" onsubmit="submitCustomerReturn(event)">
+                    {{-- Return Items Table --}}
+                    <div class="table-responsive mb-3" style="max-height:280px; overflow-y:auto; border:1px solid #e5e7eb; border-radius:10px;">
+                        <table class="table table-hover align-middle mb-0" style="font-size:13px;">
+                            <thead style="background:#f8fafc; position:sticky; top:0; z-index:1;">
+                                <tr>
+                                    <th style="font-weight:700; color:#4b5563;">Product</th>
+                                    <th style="font-weight:700; color:#4b5563; text-align:center;">Current Stock</th>
+                                    <th style="font-weight:700; color:#0f766e; text-align:center; width:130px;">Sales Rate (PKR)</th>
+                                    <th style="font-weight:700; color:#b91c1c; text-align:center; width:130px;">Return Qty</th>
+                                    <th style="font-weight:700; color:#4b5563; text-align:right;">Line Total</th>
+                                    <th style="width:45px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="posReturnItemsTbody">
+                                <tr>
+                                    <td colspan="6" class="text-center py-4 text-muted" id="posReturnEmptyPrompt">
+                                        <span class="material-symbols-outlined d-block mb-1" style="font-size:32px; opacity:0.4;">qr_code_scanner</span>
+                                        <div class="fw-semibold">No products added yet.</div>
+                                        <div style="font-size:11.5px;">Scan a barcode or type a product name in the search box above to add items.</div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {{-- Customer & Staff Information --}}
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small text-secondary">Customer Name</label>
+                            <input type="text" id="posReturnCustomerName" class="form-control" style="height:42px; border-radius:10px;" placeholder="Walk-in Customer" value="Walk-in Customer">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small text-secondary">Customer Phone</label>
+                            <input type="text" id="posReturnCustomerPhone" class="form-control" style="height:42px; border-radius:10px;" placeholder="Optional phone #">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold small text-secondary">Staff / Employee (Optional)</label>
+                            <select id="posReturnEmployeeSelect" class="form-select" style="height:42px; border-radius:10px;" onchange="onReturnEmployeeChange(this)">
+                                <option value="">-- None (Walk-in) --</option>
+                                @if(isset($employees))
+                                    @foreach($employees as $e)
+                                        <option value="{{ $e['id'] }}">{{ $e['name'] }}</option>
+                                    @endforeach
+                                @endif
+                            </select>
+                        </div>
+                    </div>
+
+                    {{-- Refund Method & Reason --}}
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-secondary">Refund Method <span class="text-danger">*</span></label>
+                            <select id="posReturnRefundMethod" class="form-select" style="height:42px; border-radius:10px;" required>
+                                <option value="cash" selected>💵 Cash Refund (Counter Drawer)</option>
+                                <option value="card">💳 Card / Bank Transfer</option>
+                                <option value="credit_adjustment" id="posReturnOptionCreditAdj" style="display:none;">💼 Adjust Staff Credit Balance</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-secondary">Return Reason</label>
+                            <select id="posReturnReason" class="form-select" style="height:42px; border-radius:10px;">
+                                <option value="Customer Changed Mind">Customer Changed Mind</option>
+                                <option value="Defective / Damaged Item">Defective / Damaged Item</option>
+                                <option value="Incorrect Item Purchased">Incorrect Item Purchased</option>
+                                <option value="Excess / Leftover Quantity">Excess / Leftover Quantity</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    {{-- Notes --}}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-secondary">Notes / Remarks</label>
+                        <input type="text" id="posReturnNotes" class="form-control" style="border-radius:10px;" placeholder="Optional notes about the return condition...">
+                    </div>
+
+                    {{-- Total Refund Callout --}}
+                    <div class="p-3 my-3 rounded-3 d-flex justify-content-between align-items-center" style="background:#fff1f2; border:1.5px solid #fecdd3;">
+                        <div>
+                            <div class="fw-bold text-dark fs-6">Total Refund Amount to Customer</div>
+                            <div class="text-muted" style="font-size:11px;">Calculated using the product sales rate. Stock will be restored automatically upon completion.</div>
+                        </div>
+                        <div class="fs-4 fw-bold" style="color:#be123c;" id="posReturnTotalDisplay">PKR 0.00</div>
+                    </div>
+
+                    <div class="d-flex gap-2 justify-content-end mt-4">
+                        <button type="button" class="btn btn-light px-3" data-bs-dismiss="modal" style="border-radius:10px; font-weight:700;">Cancel</button>
+                        <button type="submit" class="btn text-white px-4" id="posReturnSubmitBtn" style="background:#b91c1c; border-radius:10px; font-weight:700;">
+                            <span class="material-symbols-outlined" style="font-size:18px; vertical-align:middle;">assignment_return</span> Complete Return & Restore Stock
                         </button>
                     </div>
                 </form>
@@ -2441,6 +2677,445 @@ async function submitPosSupplierPayment(e) {
     }
 }
 
+/* ── Employee Payment (POS Counter) ──────────── */
+const posEmployeeModal = new bootstrap.Modal(document.getElementById('posEmployeePayModal'));
+let posSelectedEmployeeDue = 0;
+
+function openEmployeePayModal(preSelectedEmployeeId = null) {
+    posEmployeeModal.show();
+    setTimeout(() => {
+        const sel = document.getElementById('posEmployeeSelect');
+        if (sel) {
+            if (preSelectedEmployeeId) {
+                sel.value = preSelectedEmployeeId;
+                onPosEmployeeChange(sel);
+            }
+            sel.focus();
+        }
+    }, 200);
+}
+
+function openEmployeePayModalFromCard() {
+    const empSelect = document.getElementById('employeeSelect');
+    const empId = empSelect ? empSelect.value : null;
+    openEmployeePayModal(empId);
+}
+
+function onPosEmployeeChange(sel) {
+    const opt = sel.options[sel.selectedIndex];
+    const card = document.getElementById('posEmployeeBalanceCard');
+    const amountInput = document.getElementById('posEmployeeAmount');
+
+    if (!opt || !opt.value) {
+        if (card) card.style.display = 'none';
+        posSelectedEmployeeDue = 0;
+        return;
+    }
+
+    const name = opt.dataset.name || '';
+    const phone = opt.dataset.phone || '';
+    const pending = parseFloat(opt.dataset.pending) || 0;
+    posSelectedEmployeeDue = pending;
+
+    document.getElementById('posEmployeeCardName').textContent = name;
+    document.getElementById('posEmployeeCardPhone').textContent = phone ? '📞 ' + phone : '';
+    document.getElementById('posEmployeeCardDue').textContent = 'PKR ' + pending.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    if (card) card.style.display = 'block';
+
+    if (pending > 0) {
+        amountInput.value = pending.toFixed(2);
+    }
+}
+
+function fillPosEmployeeFullPayment() {
+    if (posSelectedEmployeeDue > 0) {
+        document.getElementById('posEmployeeAmount').value = posSelectedEmployeeDue.toFixed(2);
+    }
+}
+
+async function submitPosEmployeePayment(e) {
+    e.preventDefault();
+
+    const employeeId = parseInt(document.getElementById('posEmployeeSelect').value);
+    const amount = parseFloat(document.getElementById('posEmployeeAmount').value);
+    const method = document.getElementById('posEmployeeMethod').value;
+    const notes = document.getElementById('posEmployeeNotes').value.trim();
+
+    if (!employeeId) {
+        toast('Please select an employee!', 'w');
+        return;
+    }
+    if (isNaN(amount) || amount <= 0) {
+        toast('Please enter a valid payment amount!', 'w');
+        return;
+    }
+
+    const submitBtn = document.getElementById('posEmployeeSubmitBtn');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Clearing...';
+
+    try {
+        const res = await fetch('{{ route('cashier.pos.employee-payments') }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': CSRF,
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                employee_id: employeeId,
+                amount: amount,
+                payment_method: method,
+                notes: notes || null
+            })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+            toast(data.message, 's');
+            posEmployeeModal.hide();
+
+            // Update employee option dataset & text in POS employee modal dropdown
+            const modalSelect = document.getElementById('posEmployeeSelect');
+            const modalOpt = modalSelect ? modalSelect.querySelector(`option[value="${employeeId}"]`) : null;
+            if (modalOpt) {
+                modalOpt.dataset.pending = data.raw_new_balance;
+                modalOpt.textContent = `${data.employee_name} — Due: PKR ${data.new_balance}`;
+            }
+
+            // Update checkout employee select dropdown as well
+            const checkoutSelect = document.getElementById('employeeSelect');
+            const checkoutOpt = checkoutSelect ? checkoutSelect.querySelector(`option[value="${employeeId}"]`) : null;
+            if (checkoutOpt) {
+                checkoutOpt.dataset.pending = data.raw_new_balance;
+                checkoutOpt.textContent = `${data.employee_name} (Due: Rs. ${data.new_balance})`;
+            }
+
+            // If currently selected in checkout panel, trigger onEmployeeSelect to refresh balance card
+            if (checkoutSelect && checkoutSelect.value == employeeId) {
+                onEmployeeSelect();
+            }
+
+            // Reset modal form
+            document.getElementById('posEmployeePayForm').reset();
+            document.getElementById('posEmployeeBalanceCard').style.display = 'none';
+            posSelectedEmployeeDue = 0;
+
+            // Offer to view / print clearance receipt
+            if (data.receipt_url) {
+                setTimeout(() => {
+                    if (confirm(`Payment of PKR ${data.amount_paid} recorded for ${data.employee_name}. Would you like to print the Clearance Voucher?`)) {
+                        window.open(data.receipt_url + '?print=1', '_blank', 'width=420,height=600');
+                    }
+                }, 300);
+            }
+        } else {
+            toast(data.message || 'Payment clearance failed.', 'e');
+        }
+    } catch (err) {
+        toast('Network or server error recording payment.', 'e');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:18px; vertical-align:middle;">check_circle</span> Receive & Clear Payment';
+    }
+}
+
+/* ── Customer Product Return (POS Counter) ───── */
+const posCustomerReturnModal = new bootstrap.Modal(document.getElementById('posCustomerReturnModal'));
+let returnItemsList = [];
+let returnSearchTimeout = null;
+let currentReturnSearchResults = [];
+
+function openCustomerReturnModal() {
+    posCustomerReturnModal.show();
+    setTimeout(() => {
+        const input = document.getElementById('posReturnProductSearchInput');
+        if (input) {
+            input.focus();
+        }
+    }, 200);
+}
+
+function clearReturnProductSearch() {
+    const input = document.getElementById('posReturnProductSearchInput');
+    if (input) input.value = '';
+    const dropdown = document.getElementById('posReturnProductDropdown');
+    if (dropdown) {
+        dropdown.style.display = 'none';
+        dropdown.innerHTML = '';
+    }
+}
+
+function onReturnProductSearch(query) {
+    clearTimeout(returnSearchTimeout);
+    query = query.trim();
+
+    if (!query) {
+        clearReturnProductSearch();
+        return;
+    }
+
+    returnSearchTimeout = setTimeout(async () => {
+        try {
+            const res = await fetch(`{{ route('cashier.pos.search') }}?q=${encodeURIComponent(query)}`);
+            const products = await res.json();
+            currentReturnSearchResults = products;
+            renderReturnSearchDropdown(products, query);
+        } catch (err) {
+            console.error(err);
+        }
+    }, 180);
+}
+
+function renderReturnSearchDropdown(products, query) {
+    const dropdown = document.getElementById('posReturnProductDropdown');
+    if (!products.length) {
+        dropdown.innerHTML = `<div class="p-3 text-center text-muted small">No active products found matching "<strong>${escapeHtml(query)}</strong>"</div>`;
+        dropdown.style.display = 'block';
+        return;
+    }
+
+    // If exact barcode match, auto-add immediately
+    const exactBarcode = products.find(p => p.barcode && p.barcode.toLowerCase() === query.toLowerCase());
+    if (exactBarcode) {
+        addProductToReturn(exactBarcode);
+        clearReturnProductSearch();
+        return;
+    }
+
+    let html = '';
+    products.forEach((p) => {
+        html += `
+            <div class="p-2 border-bottom d-flex justify-content-between align-items-center" 
+                 style="cursor:pointer; transition:background .15s;" 
+                 onmouseover="this.style.background='#fef2f2'" 
+                 onmouseout="this.style.background='#fff'"
+                 onclick="addProductToReturn(${JSON.stringify(p).replace(/"/g, '&quot;')}); clearReturnProductSearch();">
+                <div>
+                    <div class="fw-bold text-dark fs-6">${escapeHtml(p.name)}</div>
+                    <div class="text-muted small" style="font-family:monospace;">${escapeHtml(p.sku || '')} ${p.barcode ? '· 🏷️ ' + escapeHtml(p.barcode) : ''} · Stock: ${p.stock_quantity} ${escapeHtml(p.unit || 'pcs')}</div>
+                </div>
+                <div class="text-end">
+                    <div class="fw-bold text-success fs-6">PKR ${p.sale_price.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
+                    <span class="badge bg-danger">Click to Return</span>
+                </div>
+            </div>
+        `;
+    });
+
+    dropdown.innerHTML = html;
+    dropdown.style.display = 'block';
+}
+
+function onReturnProductSearchKeydown(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        const input = document.getElementById('posReturnProductSearchInput');
+        const query = input.value.trim();
+        if (query && currentReturnSearchResults.length > 0) {
+            addProductToReturn(currentReturnSearchResults[0]);
+            clearReturnProductSearch();
+        }
+    } else if (e.key === 'Escape') {
+        clearReturnProductSearch();
+    }
+}
+
+function addProductToReturn(product) {
+    const existing = returnItemsList.find(item => item.product_id === product.id);
+    if (existing) {
+        existing.quantity += 1;
+    } else {
+        returnItemsList.push({
+            product_id: product.id,
+            product_name: product.name,
+            product_sku: product.sku || '',
+            product_unit: product.unit || 'pcs',
+            current_stock: product.stock_quantity,
+            unit_price: parseFloat(product.sale_price) || 0,
+            quantity: 1
+        });
+    }
+    renderReturnItemsTable();
+}
+
+function renderReturnItemsTable() {
+    const tbody = document.getElementById('posReturnItemsTbody');
+    if (returnItemsList.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="text-center py-4 text-muted" id="posReturnEmptyPrompt">
+                    <span class="material-symbols-outlined d-block mb-1" style="font-size:32px; opacity:0.4;">qr_code_scanner</span>
+                    <div class="fw-semibold">No products added yet.</div>
+                    <div style="font-size:11.5px;">Scan a barcode or type a product name in the search box above to add items.</div>
+                </td>
+            </tr>
+        `;
+        updateReturnGrandTotal();
+        return;
+    }
+
+    let html = '';
+    returnItemsList.forEach((item, idx) => {
+        const lineTotal = item.quantity * item.unit_price;
+        html += `
+            <tr>
+                <td>
+                    <div class="fw-bold text-dark">${escapeHtml(item.product_name)}</div>
+                    <div class="text-muted" style="font-size:11px; font-family:monospace;">${escapeHtml(item.product_sku)}</div>
+                </td>
+                <td style="text-align:center; font-weight:600; color:#64748b;">
+                    ${item.current_stock} ${escapeHtml(item.product_unit)}
+                </td>
+                <td style="text-align:center;">
+                    <div class="input-group input-group-sm" style="width:120px; margin:0 auto;">
+                        <span class="input-group-text bg-white border-end-0 text-muted" style="font-size:11px;">Rs.</span>
+                        <input type="number" step="0.01" min="0" value="${item.unit_price.toFixed(2)}"
+                               class="form-control text-end fw-bold border-start-0" 
+                               style="color:#0f766e; font-size:13px;"
+                               onchange="onReturnItemRateChange(${idx}, this.value)">
+                    </div>
+                </td>
+                <td style="text-align:center;">
+                    <div class="input-group input-group-sm" style="width:110px; margin:0 auto;">
+                        <button type="button" class="btn btn-outline-secondary px-2" onclick="adjustReturnItemQty(${idx}, -1)">−</button>
+                        <input type="number" min="1" value="${item.quantity}" 
+                               class="form-control text-center fw-bold" 
+                               onchange="onReturnItemQtyChange(${idx}, this.value)">
+                        <button type="button" class="btn btn-outline-secondary px-2" onclick="adjustReturnItemQty(${idx}, 1)">+</button>
+                    </div>
+                </td>
+                <td style="text-align:right; font-weight:800; color:#b91c1c;">
+                    PKR ${lineTotal.toFixed(2)}
+                </td>
+                <td style="text-align:center;">
+                    <button type="button" class="btn btn-sm btn-link text-danger p-0" onclick="removeReturnItem(${idx})" title="Remove">
+                        <span class="material-symbols-outlined" style="font-size:18px;">delete</span>
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+
+    tbody.innerHTML = html;
+    updateReturnGrandTotal();
+}
+
+function adjustReturnItemQty(idx, change) {
+    if (!returnItemsList[idx]) return;
+    returnItemsList[idx].quantity += change;
+    if (returnItemsList[idx].quantity < 1) returnItemsList[idx].quantity = 1;
+    renderReturnItemsTable();
+}
+
+function onReturnItemQtyChange(idx, val) {
+    if (!returnItemsList[idx]) return;
+    let qty = parseInt(val) || 1;
+    if (qty < 1) qty = 1;
+    returnItemsList[idx].quantity = qty;
+    renderReturnItemsTable();
+}
+
+function onReturnItemRateChange(idx, val) {
+    if (!returnItemsList[idx]) return;
+    let rate = parseFloat(val);
+    if (isNaN(rate) || rate < 0) rate = 0;
+    returnItemsList[idx].unit_price = rate;
+    renderReturnItemsTable();
+}
+
+function removeReturnItem(idx) {
+    returnItemsList.splice(idx, 1);
+    renderReturnItemsTable();
+}
+
+function updateReturnGrandTotal() {
+    let grandTotal = 0;
+    returnItemsList.forEach(item => {
+        grandTotal += (item.quantity * item.unit_price);
+    });
+    document.getElementById('posReturnTotalDisplay').textContent = 'PKR ' + grandTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+}
+
+function onReturnEmployeeChange(sel) {
+    const creditOption = document.getElementById('posReturnOptionCreditAdj');
+    if (sel.value) {
+        creditOption.style.display = 'block';
+        creditOption.selected = true;
+    } else {
+        creditOption.style.display = 'none';
+        document.getElementById('posReturnRefundMethod').value = 'cash';
+    }
+}
+
+async function submitCustomerReturn(e) {
+    e.preventDefault();
+
+    if (returnItemsList.length === 0) {
+        toast('Please add at least one product to return!', 'w');
+        return;
+    }
+
+    const submitBtn = document.getElementById('posReturnSubmitBtn');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Processing Return...';
+
+    const empId = document.getElementById('posReturnEmployeeSelect').value;
+
+    try {
+        const res = await fetch('{{ route('cashier.pos.process-return') }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': CSRF,
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                customer_name: document.getElementById('posReturnCustomerName').value.trim() || 'Walk-in Customer',
+                customer_phone: document.getElementById('posReturnCustomerPhone').value.trim() || null,
+                employee_id: empId ? parseInt(empId) : null,
+                refund_method: document.getElementById('posReturnRefundMethod').value,
+                reason: document.getElementById('posReturnReason').value,
+                notes: document.getElementById('posReturnNotes').value.trim() || null,
+                items: returnItemsList.map(item => ({
+                    product_id: item.product_id,
+                    quantity: item.quantity,
+                    unit_price: item.unit_price
+                }))
+            })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+            toast(data.message, 's');
+            posCustomerReturnModal.hide();
+
+            // Reset state
+            returnItemsList = [];
+            renderReturnItemsTable();
+            document.getElementById('posCustomerReturnForm').reset();
+            document.getElementById('posReturnCustomerName').value = 'Walk-in Customer';
+            clearReturnProductSearch();
+
+            // Prompt to print return voucher
+            if (data.receipt_url) {
+                setTimeout(() => {
+                    if (confirm(`Return ${data.return_number} processed successfully! Would you like to print the Return Voucher?`)) {
+                        window.open(data.receipt_url + '?print=1', '_blank', 'width=420,height=600');
+                    }
+                }, 300);
+            }
+        } else {
+            toast(data.message || 'Error processing return.', 'e');
+        }
+    } catch (err) {
+        toast('Network or server error processing return.', 'e');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:18px; vertical-align:middle;">assignment_return</span> Complete Return & Restore Stock';
+    }
+}
+
 /* ── Keyboard Shortcuts ──────────────────────── */
 document.addEventListener('keydown', (e) => {
     // F2 -> Focus Product Search
@@ -2489,6 +3164,16 @@ document.addEventListener('keydown', (e) => {
         if (!completeSaleBtn.disabled) {
             completeSale();
         }
+    }
+    // F10 -> Open Receive Employee Payment Modal
+    else if (e.key === 'F10') {
+        e.preventDefault();
+        openEmployeePayModal();
+    }
+    // F11 -> Open Customer Product Return Modal
+    else if (e.key === 'F11') {
+        e.preventDefault();
+        openCustomerReturnModal();
     }
 });
 

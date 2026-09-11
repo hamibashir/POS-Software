@@ -4,17 +4,23 @@ namespace App\Http\Controllers\Cashier;
 
 use App\Http\Controllers\Controller;
 use App\Models\Employee;
+use App\Models\EmployeePayment;
 use App\Models\Product;
 use App\Models\Sale;
+use App\Models\SaleReturn;
+use App\Models\SaleReturnItem;
 use App\Models\Supplier;
 use App\Models\SupplierPayment;
+use App\Services\SaleReturnService;
 use App\Services\SaleService;
 use Illuminate\Http\Request;
 
 class PosController extends Controller
 {
-    public function __construct(protected SaleService $saleService)
-    {
+    public function __construct(
+        protected SaleService $saleService,
+        protected SaleReturnService $saleReturnService
+    ) {
     }
 
     /**
@@ -228,5 +234,182 @@ class PosController extends Controller
             'raw_new_balance' => (float) $newBalance,
             'message'         => "Payment of PKR " . number_format($data['amount'], 2) . " cleared for '{$supplier->name}'. Remaining Balance: PKR " . number_format($newBalance, 2),
         ]);
+    }
+
+    /**
+     * AJAX: Record a payment returned by an employee at the POS counter to clear pending credit dues.
+     */
+    public function recordEmployeePayment(Request $request)
+    {
+        $data = $request->validate([
+            'employee_id'    => ['required', 'integer', 'exists:employees,id'],
+            'amount'         => ['required', 'numeric', 'min:0.01'],
+            'payment_method' => ['required', 'in:cash,bank,salary_deduction,online'],
+            'notes'          => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $employee = Employee::where('is_active', true)->findOrFail($data['employee_id']);
+
+        $payment = EmployeePayment::create([
+            'employee_id'    => $employee->id,
+            'amount'         => $data['amount'],
+            'payment_method' => $data['payment_method'],
+            'payment_date'   => now()->toDateString(),
+            'user_id'        => auth()->id(),
+            'notes'          => $data['notes'] ?? 'Received & Cleared at POS Counter',
+        ]);
+
+        $employee->refresh();
+        $newBalance = $employee->pending_payment;
+
+        return response()->json([
+            'success'         => true,
+            'payment_id'      => $payment->id,
+            'employee_id'     => $employee->id,
+            'employee_name'   => $employee->name,
+            'amount_paid'     => number_format($data['amount'], 2),
+            'new_balance'     => number_format($newBalance, 2),
+            'raw_new_balance' => (float) $newBalance,
+            'receipt_url'     => route('cashier.pos.employee-receipt', $payment->id),
+            'message'         => "Payment of PKR " . number_format($data['amount'], 2) . " received from '{$employee->name}'. Remaining Due: PKR " . number_format($newBalance, 2),
+        ]);
+    }
+
+    /**
+     * Show a printable receipt for an employee clearance payment.
+     */
+     public function employeePaymentReceipt(EmployeePayment $payment)
+     {
+         $payment->load(['employee', 'user']);
+         return view('cashier.employee-receipt', compact('payment'));
+     }
+
+    /**
+     * AJAX: Look up a sale by invoice number or search query to load sold items and original sales rates.
+     */
+    public function lookupSale(Request $request)
+    {
+        $query = trim($request->get('invoice', $request->get('q', '')));
+
+        if (empty($query)) {
+            return response()->json(['success' => false, 'message' => 'Please provide an invoice number.'], 422);
+        }
+
+        $sale = Sale::with(['items.product', 'items.returnItems', 'employee', 'user'])
+            ->where('invoice_number', $query)
+            ->orWhere('invoice_number', 'like', "%{$query}%")
+            ->latest()
+            ->first();
+
+        if (!$sale) {
+            return response()->json(['success' => false, 'message' => "Sale invoice '{$query}' not found."], 404);
+        }
+
+        $items = $sale->items->map(function ($item) {
+            $returnedQty   = (int) $item->returnItems->sum('quantity');
+            $returnableQty = max(0, $item->quantity - $returnedQty);
+
+            return [
+                'sale_item_id'        => $item->id,
+                'product_id'          => $item->product_id,
+                'product_name'        => $item->product_name,
+                'product_sku'         => $item->product_sku,
+                'product_unit'        => $item->product_unit,
+                'quantity_sold'       => $item->quantity,
+                'quantity_returned'   => $returnedQty,
+                'quantity_returnable' => $returnableQty,
+                'unit_price'          => (float) $item->unit_price, // Exact rate sold at
+                'cost_price'          => (float) $item->cost_price,
+                'total_price'         => (float) $item->total_price,
+                'current_stock'       => $item->product?->stock_quantity ?? 0,
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'sale'    => [
+                'id'             => $sale->id,
+                'invoice_number' => $sale->invoice_number,
+                'customer_name'  => $sale->customer_name,
+                'customer_phone' => $sale->customer_phone,
+                'employee_id'    => $sale->employee_id,
+                'employee_name'  => $sale->employee?->name,
+                'employee_due'   => $sale->employee ? (float) $sale->employee->pending_payment : null,
+                'total_amount'   => (float) $sale->total_amount,
+                'paid_amount'    => (float) $sale->paid_amount,
+                'payment_method' => $sale->payment_method,
+                'created_at'     => $sale->created_at->format('d M Y, g:i A'),
+                'cashier_name'   => $sale->user?->name ?? 'N/A',
+                'items'          => $items,
+            ],
+        ]);
+    }
+
+    /**
+     * AJAX: Process a customer sale return and restore items back into stock.
+     */
+    public function processReturn(Request $request)
+    {
+        $data = $request->validate([
+            'sale_id'             => ['nullable', 'integer', 'exists:sales,id'],
+            'customer_name'       => ['nullable', 'string', 'max:150'],
+            'customer_phone'      => ['nullable', 'string', 'max:30'],
+            'employee_id'         => ['nullable', 'integer', 'exists:employees,id'],
+            'refund_method'       => ['required', 'in:cash,card,credit_adjustment'],
+            'refund_amount'       => ['nullable', 'numeric', 'min:0'],
+            'reason'              => ['nullable', 'string', 'max:150'],
+            'notes'               => ['nullable', 'string', 'max:500'],
+            'items'               => ['required', 'array', 'min:1'],
+            'items.*.product_id'   => ['required', 'integer', 'exists:products,id'],
+            'items.*.sale_item_id' => ['nullable', 'integer', 'exists:sale_items,id'],
+            'items.*.quantity'     => ['required', 'integer', 'min:1'],
+            'items.*.unit_price'   => ['required', 'numeric', 'min:0'],
+            'items.*.reason'       => ['nullable', 'string', 'max:150'],
+        ]);
+
+        try {
+            $saleReturn = $this->saleReturnService->processReturn(
+                returnData: $data,
+                items: $data['items'],
+                cashierId: auth()->id()
+            );
+
+            // Fetch updated stock for returned products to sync POS UI
+            $productIds = collect($data['items'])->pluck('product_id')->unique();
+            $updatedProducts = Product::whereIn('id', $productIds)
+                ->get(['id', 'name', 'sku', 'stock_quantity'])
+                ->map(fn($p) => [
+                    'id'             => $p->id,
+                    'name'           => $p->name,
+                    'sku'            => $p->sku,
+                    'stock_quantity' => $p->stock_quantity,
+                ]);
+
+            return response()->json([
+                'success'             => true,
+                'return_id'           => $saleReturn->id,
+                'return_number'       => $saleReturn->return_number,
+                'total_return_amount' => number_format($saleReturn->total_return_amount, 2),
+                'refund_amount'       => number_format($saleReturn->refund_amount, 2),
+                'refund_method'       => $saleReturn->refund_method,
+                'receipt_url'         => route('cashier.pos.return-receipt', $saleReturn->id),
+                'updated_products'    => $updatedProducts,
+                'message'             => "Customer Return {$saleReturn->return_number} processed! {$saleReturn->items->sum('quantity')} item(s) returned back to stock.",
+            ]);
+        } catch (\RuntimeException $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+        } catch (\Throwable $e) {
+            report($e);
+            return response()->json(['success' => false, 'message' => 'An error occurred while processing the return.'], 500);
+        }
+    }
+
+    /**
+     * Show a printable receipt/voucher for a customer sale return.
+     */
+    public function returnReceipt(SaleReturn $saleReturn)
+    {
+        $saleReturn->load(['items.product', 'sale.items', 'employee', 'user']);
+        return view('cashier.return-receipt', compact('saleReturn'));
     }
 }

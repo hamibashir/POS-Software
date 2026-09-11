@@ -1,7 +1,7 @@
 @extends('layouts.catalog')
 
-@section('title', 'Hassan Sanitary and Hardware Store — Tools, Plumbing, Sanitary & More')
-@section('meta_description', 'Discover professional-grade hardware tools, sanitary ware, plumbing, and electrical supplies at Hassan Sanitary and Hardware Store. Shop our full catalog and contact us for orders.')
+@section('title', 'Hassan & Sons — Tools, Plumbing, Sanitary & More')
+@section('meta_description', 'Discover professional-grade hardware tools, sanitary ware, plumbing, and electrical supplies at Hassan & Sons. Shop our full catalog and contact us for orders.')
 
 @push('styles')
 <style>
@@ -300,6 +300,10 @@
                 <a href="#products" class="btn-hero-primary">
                     Shop Now
                     <span class="material-symbols-outlined" style="font-size:17px;">arrow_forward</span>
+                </a>
+                <a href="tel:051-8891930" class="btn-hero-outline" onclick="openPhoneOrderModal(); return false;">
+                    <i class="bi bi-telephone-fill"></i>
+                    Order by Phone: 051-8891930
                 </a>
                 <a href="{{ route('catalog.search') }}" class="btn-hero-outline">
                     View Catalog

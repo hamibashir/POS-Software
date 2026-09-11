@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign In — Hassan Sanitary and Hardware Store</title>
+    <title>Sign In — Hassan & Sons</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 
@@ -193,7 +193,7 @@
             <div class="logo-circle">
                 <i class="bi bi-tools"></i>
             </div>
-            <h1>Hassan Sanitary and Hardware Store</h1>
+            <h1>Hassan & Sons</h1>
         </div>
     </div>
 
@@ -252,7 +252,7 @@
 
     {{-- ── Footer ──────────────────────────────────── --}}
     <div class="login-footer">
-        <strong>Hassan Sanitary and Hardware Store</strong><br>
+        <strong>Hassan & Sons</strong><br>
         Rafi Commercial, Bahria Town Phase 8, Rawalpindi. &bull; Tel: 051-8891930
     </div>
 

@@ -287,7 +287,7 @@
         <div class="stock-card" style="height:100%;">
             <div class="s-header">
                 <h3>Low Stock Alert</h3>
-                <a href="{{ route('admin.reports.index') }}"
+                <a href="{{ route('admin.reports.index', ['tab' => 'lowstock']) }}"
                    style="font-size:12px;font-weight:600;color:var(--pos-primary);text-decoration:none;">
                    View All
                 </a>

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1280">
     <meta name="description" content="@yield('meta_description', 'Browse our full range of sanitary and hardware products.')">
-    <title>@yield('title', 'Product Catalog') — Hassan Sanitary and Hardware Store</title>
+    <title>@yield('title', 'Product Catalog') — Hassan & Sons</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
@@ -273,6 +273,144 @@
             .cat-footer-grid { grid-template-columns: 1fr; }
             .cat-page { padding: 16px 16px 48px; }
         }
+
+        /* ── Phone Order Button in Navbar ──────── */
+        .btn-order-phone {
+            display: inline-flex; align-items: center; gap: 7px;
+            background: #f0fdf4; color: #166534;
+            border: 1px solid #bbf7d0; border-radius: 8px;
+            padding: 7px 13px; font-size: 13px; font-weight: 700;
+            text-decoration: none; cursor: pointer; white-space: nowrap; flex-shrink: 0;
+            transition: all .15s ease;
+        }
+        .btn-order-phone:hover {
+            background: #dcfce7; color: #14532d; border-color: #86efac;
+            transform: translateY(-1px);
+        }
+        .btn-order-phone i { font-size: 14px; }
+
+        /* ── Phone Modal Popup ─────────────────── */
+        .phone-modal-overlay {
+            position: fixed; inset: 0; z-index: 99999;
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(5px);
+            display: none; align-items: center; justify-content: center;
+            padding: 20px;
+            animation: fadeIn .2s ease-out;
+        }
+        .phone-modal-overlay.active {
+            display: flex;
+        }
+        .phone-modal-box {
+            background: #ffffff;
+            border-radius: 18px;
+            width: 100%; max-width: 460px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0,0,0,.06);
+            padding: 28px;
+            position: relative;
+            transform: scale(0.96);
+            transition: transform .2s cubic-bezier(0.16, 1, 0.3, 1);
+            animation: popIn .25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes popIn {
+            from { opacity: 0; transform: scale(0.93) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .phone-modal-close {
+            position: absolute; top: 16px; right: 16px;
+            background: #f1f5f9; border: none; width: 32px; height: 32px;
+            border-radius: 50%; font-size: 18px; color: #64748b;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all .15s;
+        }
+        .phone-modal-close:hover {
+            background: #e2e8f0; color: #0f172a;
+        }
+        .phone-modal-header {
+            text-align: center; margin-bottom: 20px;
+        }
+        .phone-modal-icon {
+            width: 56px; height: 56px; border-radius: 50%;
+            background: #e0f2fe; color: #0284c7;
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: 24px; margin-bottom: 12px;
+        }
+        .phone-modal-header h3 {
+            font-size: 20px; font-weight: 800; color: #0f172a; margin-bottom: 6px;
+        }
+        .phone-modal-header p {
+            font-size: 13px; color: #64748b; line-height: 1.5;
+        }
+        .phone-modal-product-info {
+            background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px;
+            padding: 12px 16px; margin-bottom: 18px; text-align: left;
+        }
+        .prod-badge-label {
+            font-size: 10px; font-weight: 800; text-transform: uppercase;
+            letter-spacing: .6px; color: #0284c7; margin-bottom: 4px;
+        }
+        .prod-info-title {
+            font-size: 14px; font-weight: 700; color: #1e293b;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .prod-info-sub {
+            font-size: 12px; color: #64748b; margin-top: 2px;
+        }
+        .phone-display-card {
+            background: linear-gradient(135deg, #0d5c75 0%, #1e6d8a 100%);
+            border-radius: 14px; padding: 20px; text-align: center;
+            color: #ffffff; margin-bottom: 18px;
+            box-shadow: 0 10px 25px -5px rgba(30, 109, 138, 0.4);
+        }
+        .phone-tag {
+            font-size: 11px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: .8px; color: #bae6fd; margin-bottom: 6px;
+        }
+        .phone-number-link {
+            display: inline-block; font-size: 28px; font-weight: 900;
+            color: #ffffff; text-decoration: none; letter-spacing: 0.5px;
+            transition: transform .15s, color .15s;
+        }
+        .phone-number-link:hover {
+            color: #e0f2fe; transform: scale(1.02);
+        }
+        .phone-actions-row {
+            display: flex; gap: 10px; margin-top: 16px; justify-content: center;
+        }
+        .btn-call-direct {
+            flex: 1; padding: 10px 14px;
+            background: #ffffff; color: #0d5c75 !important;
+            font-size: 13px; font-weight: 700; border-radius: 9px;
+            text-decoration: none !important; display: inline-flex;
+            align-items: center; justify-content: center; gap: 6px;
+            transition: all .15s;
+        }
+        .btn-call-direct:hover {
+            background: #f0fdf4; color: #166534 !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .btn-copy-number {
+            flex: 1; padding: 10px 14px;
+            background: rgba(255, 255, 255, 0.18); color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            font-size: 13px; font-weight: 600; border-radius: 9px;
+            cursor: pointer; display: inline-flex;
+            align-items: center; justify-content: center; gap: 6px;
+            transition: all .15s;
+        }
+        .btn-copy-number:hover {
+            background: rgba(255, 255, 255, 0.28); color: #fff;
+        }
+        .phone-modal-footer-info {
+            display: flex; flex-direction: column; gap: 8px; font-size: 12px; color: #64748b;
+        }
+        .phone-modal-footer-info .info-point {
+            display: flex; align-items: center; gap: 8px;
+        }
     </style>
 
     @stack('styles')
@@ -284,7 +422,7 @@
     <div class="inner">
         <a href="{{ route('catalog.home') }}" class="brand">
             <span class="material-symbols-outlined ms-icon">home_repair_service</span>
-            <span>Hassan Sanitary and Hardware Store</span>
+            <span>Hassan & Sons</span>
         </a>
 
         <div class="cat-nav-links">
@@ -301,6 +439,10 @@
                            placeholder="Search products…" value="{{ request('q') }}">
                 </form>
             </div>
+            <button type="button" class="btn-order-phone" onclick="openPhoneOrderModal()" title="Order from Phone Number">
+                <i class="bi bi-telephone-fill"></i>
+                <span>051-8891930</span>
+            </button>
             <a href="{{ route('staff') }}" class="btn-login">Log In</a>
             <a href="{{ route('staff') }}" class="btn-signup">Sign Up</a>
         </div>
@@ -320,7 +462,7 @@
             <div class="brand-col">
                 <div class="brand-row">
                     <span class="material-symbols-outlined ms-icon" style="color:var(--primary);font-size:22px;">home_repair_service</span>
-                    <span class="brand-name">Hassan Sanitary and Hardware Store</span>
+                    <span class="brand-name">Hassan & Sons</span>
                 </div>
                 <p>Your trusted partner for quality sanitary ware, hardware tools, plumbing, and building materials.</p>
             </div>
@@ -338,12 +480,12 @@
             {{-- Contact --}}
             <div>
                 <h4>Contact</h4>
-                @if(config('store.phone'))
                 <div class="contact-item">
                     <span class="material-symbols-outlined ms-icon">call</span>
-                    <a href="tel:{{ config('store.phone') }}" style="color:inherit;text-decoration:none;">{{ config('store.phone') }}</a>
+                    <a href="tel:051-8891930" onclick="openPhoneOrderModal(); return false;" style="color:inherit;text-decoration:none;font-weight:600;">
+                        051-8891930
+                    </a>
                 </div>
-                @endif
                 @if(config('store.whatsapp'))
                 <div class="contact-item">
                     <span class="material-symbols-outlined ms-icon">chat</span>
@@ -360,10 +502,124 @@
         </div>
 
         <div class="cat-footer-bottom">
-            <p>&copy; {{ date('Y') }} Hassan Sanitary and Hardware Store. All rights reserved.</p>
+            <p>&copy; {{ date('Y') }} Hassan & Sons. All rights reserved.</p>
         </div>
     </div>
 </footer>
+
+{{-- ── Phone Order Popup Modal ───────────────────── --}}
+<div id="phoneOrderModal" class="phone-modal-overlay" onclick="if(event.target===this) closePhoneOrderModal()">
+    <div class="phone-modal-box">
+        <button type="button" class="phone-modal-close" onclick="closePhoneOrderModal()" aria-label="Close popup">&times;</button>
+        
+        <div class="phone-modal-header">
+            <div class="phone-modal-icon">
+                <i class="bi bi-telephone-outbound-fill"></i>
+            </div>
+            <h3>Order by Phone</h3>
+            <p>Call our direct store phone number to place your order or check product availability.</p>
+        </div>
+
+        {{-- Optional Product Details (populated dynamically if on product page) --}}
+        <div id="phoneModalProductInfo" class="phone-modal-product-info" style="display:none;">
+            <div class="prod-badge-label"><i class="bi bi-box-seam me-1"></i> Ordering Product</div>
+            <div class="prod-info-title" id="modalProdName"></div>
+            <div class="prod-info-sub">
+                SKU: <span id="modalProdSku"></span> &bull; Price: <strong id="modalProdPrice" style="color:#065f46;"></strong>
+            </div>
+        </div>
+
+        {{-- Phone display card --}}
+        <div class="phone-display-card">
+            <div class="phone-tag">Direct Store Helpline</div>
+            <a href="tel:051-8891930" class="phone-number-link">
+                <i class="bi bi-telephone-fill me-1"></i> 051-8891930
+            </a>
+            <div class="phone-actions-row">
+                <a href="tel:051-8891930" class="btn-call-direct">
+                    <i class="bi bi-telephone-forward-fill"></i> Call 051-8891930
+                </a>
+                <button type="button" class="btn-copy-number" id="btnCopyPhone" onclick="copyPhoneNumber('051-8891930')">
+                    <i class="bi bi-clipboard" id="copyIcon"></i> <span id="copyText">Copy Number</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="phone-modal-footer-info">
+            <div class="info-point">
+                <i class="bi bi-geo-alt-fill text-danger"></i>
+                <span>Rafi Commercial, Bahria Town Phase 8, Rawalpindi.</span>
+            </div>
+            <div class="info-point">
+                <i class="bi bi-check-circle-fill text-success"></i>
+                <span>Instant telephone assistance & quick store delivery</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Open Phone Order Modal
+    function openPhoneOrderModal(productName = '', productSku = '', productPrice = '') {
+        const modal = document.getElementById('phoneOrderModal');
+        const prodBox = document.getElementById('phoneModalProductInfo');
+        
+        if (productName) {
+            document.getElementById('modalProdName').textContent = productName;
+            document.getElementById('modalProdSku').textContent = productSku || '—';
+            document.getElementById('modalProdPrice').textContent = productPrice || '—';
+            prodBox.style.display = 'block';
+        } else {
+            prodBox.style.display = 'none';
+        }
+
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    // Close Phone Order Modal
+    function closePhoneOrderModal() {
+        const modal = document.getElementById('phoneOrderModal');
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    // Copy Phone Number to Clipboard with visual feedback
+    function copyPhoneNumber(num) {
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(num).then(() => showCopySuccess());
+        } else {
+            const input = document.createElement('input');
+            input.value = num;
+            document.body.appendChild(input);
+            input.select();
+            document.execCommand('copy');
+            document.body.removeChild(input);
+            showCopySuccess();
+        }
+    }
+
+    function showCopySuccess() {
+        const copyText = document.getElementById('copyText');
+        const copyIcon = document.getElementById('copyIcon');
+        const origText = copyText.textContent;
+        
+        copyText.textContent = 'Copied!';
+        copyIcon.className = 'bi bi-check-lg';
+        
+        setTimeout(() => {
+            copyText.textContent = origText;
+            copyIcon.className = 'bi bi-clipboard';
+        }, 2200);
+    }
+
+    // Close on Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closePhoneOrderModal();
+        }
+    });
+</script>
 
 @stack('scripts')
 </body>

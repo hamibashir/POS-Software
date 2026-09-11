@@ -1,6 +1,6 @@
 @extends('layouts.catalog')
 
-@section('title', $q ? 'Search: "' . $q . '" — Hassan Sanitary and Hardware Store' : 'All Products — Hassan Sanitary and Hardware Store')
+@section('title', $q ? 'Search: "' . $q . '" — Hassan & Sons' : 'All Products — Hassan & Sons')
 @section('meta_description', $q ? 'Search results for "' . $q . '" in our sanitary and hardware product catalog.' : 'Browse all sanitary, hardware, plumbing, electrical, and tool products.')
 
 @push('styles')

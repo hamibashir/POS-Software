@@ -39,4 +39,19 @@ class SaleItem extends Model
     {
         return $this->belongsTo(Product::class);
     }
+
+    public function returnItems(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(SaleReturnItem::class);
+    }
+
+    public function getReturnedQuantityAttribute(): int
+    {
+        return (int) $this->returnItems()->sum('quantity');
+    }
+
+    public function getReturnableQuantityAttribute(): int
+    {
+        return max(0, $this->quantity - $this->returned_quantity);
+    }
 }

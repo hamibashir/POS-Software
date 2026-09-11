@@ -118,6 +118,11 @@ Route::middleware(['auth', 'cashier'])
         Route::get('/pos/receipt/{sale}',         [PosController::class, 'receipt'])->name('pos.receipt');
         Route::get('/pos/suppliers',              [PosController::class, 'getSuppliers'])->name('pos.suppliers');
         Route::post('/pos/supplier-payments',     [PosController::class, 'recordSupplierPayment'])->name('pos.supplier-payments');
+        Route::post('/pos/employee-payments',     [PosController::class, 'recordEmployeePayment'])->name('pos.employee-payments');
+        Route::get('/pos/employee-receipt/{payment}', [PosController::class, 'employeePaymentReceipt'])->name('pos.employee-receipt');
+        Route::get('/pos/lookup-sale',            [PosController::class, 'lookupSale'])->name('pos.lookup-sale');
+        Route::post('/pos/process-return',        [PosController::class, 'processReturn'])->name('pos.process-return');
+        Route::get('/pos/return-receipt/{saleReturn}', [PosController::class, 'returnReceipt'])->name('pos.return-receipt');
     });
 
 /*

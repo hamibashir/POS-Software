@@ -1,7 +1,7 @@
 @extends('layouts.catalog')
 
-@section('title', $product->name . ' — Hassan Sanitary and Hardware Store')
-@section('meta_description', Str::limit(strip_tags($product->description ?? $product->name . ' available at Hassan Sanitary and Hardware Store.'), 155))
+@section('title', $product->name . ' — Hassan & Sons')
+@section('meta_description', Str::limit(strip_tags($product->description ?? $product->name . ' available at Hassan & Sons.'), 155))
 
 @push('styles')
 <style>
@@ -293,10 +293,11 @@
                     <span class="material-symbols-outlined" style="font-size:18px;">chat</span>
                     Chat on WhatsApp
                 </a>
-                <a href="tel:{{ config('store.phone', '+923001234567') }}"
-                   class="btn-call" id="btn-call">
+                <a href="tel:051-8891930"
+                   class="btn-call" id="btn-call"
+                   onclick="openPhoneOrderModal('{{ addslashes($product->name) }}', '{{ $product->sku }}', 'Rs. {{ number_format($product->sale_price, 0) }}'); return false;">
                     <span class="material-symbols-outlined" style="font-size:18px;">call</span>
-                    Call to Order
+                    Call to Order (051-8891930)
                 </a>
             </div>
 

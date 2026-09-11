@@ -32,15 +32,30 @@ class Employee extends Model
         return $this->hasMany(EmployeePayment::class);
     }
 
+    public function returns(): HasMany
+    {
+        return $this->hasMany(SaleReturn::class);
+    }
+
     /**
-     * Total amount of items taken on credit.
+     * Total amount of items returned on credit.
+     */
+    public function getTotalReturnedAttribute(): float
+    {
+        return (float) $this->returns()->sum('total_return_amount');
+    }
+
+    /**
+     * Total amount of items taken on credit (net of returns).
      */
     public function getTotalCreditAttribute(): float
     {
-        return (float) $this->sales()
+        $grossCredit = (float) $this->sales()
             ->where('payment_method', 'credit')
             ->where('status', 'completed')
             ->sum('total_amount');
+
+        return max(0, $grossCredit - $this->total_returned);
     }
 
     /**

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Receipt {{ $sale->invoice_number }} — {{ config('store.name', 'Hassan Sanitary and Hardware Store') }}</title>
+    <title>Receipt {{ $sale->invoice_number }} — {{ config('store.name', 'Hassan & Sons') }}</title>
 
     {{-- Fonts: Inter (UI) + JetBrains Mono (invoice / barcode) --}}
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -507,7 +507,7 @@
     {{-- Store Header --}}
     <div class="receipt-header">
         <span class="store-logo">🔧</span>
-        <div class="store-name">{{ config('store.name', 'Hassan Sanitary and Hardware Store') }}</div>
+        <div class="store-name">{{ config('store.name', 'Hassan & Sons') }}</div>
         <div class="store-tagline">{{ config('store.address', 'Rafi Commercial, Bahria Town Phase 8, Rawalpindi.') }} &bull; {{ config('store.phone', '051-8891930') }}</div>
     </div>
 

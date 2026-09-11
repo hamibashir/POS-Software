@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'POS') — Hassan Sanitary and Hardware Store</title>
+    <title>@yield('title', 'POS') — Hassan & Sons</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
@@ -53,7 +53,7 @@
 <body>
 
 <div class="pos-bar">
-    <div class="brand"><i class="bi bi-tools"></i> Hassan Sanitary and Hardware Store</div>
+    <div class="brand"><i class="bi bi-tools"></i> Hassan & Sons</div>
 
     @if(auth()->user()->isAdmin())
         <a href="{{ route('admin.dashboard') }}" class="btn-admin-back">

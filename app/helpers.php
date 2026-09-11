@@ -8,8 +8,8 @@ if (! function_exists('pkr')) {
      * @param  int              $decimals
      * @return string           e.g. "Rs. 1,250.00"
      */
-    function pkr(float|int|string $amount, int $decimals = 2): string
+    function pkr(float|int|string|null $amount = 0, int $decimals = 2): string
     {
-        return 'Rs. ' . number_format((float) $amount, $decimals);
+        return 'Rs. ' . number_format((float) ($amount ?? 0), $decimals);
     }
 }
