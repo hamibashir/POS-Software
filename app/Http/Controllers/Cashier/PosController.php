@@ -82,13 +82,20 @@ class PosController extends Controller
                     $inner->where('name',    'like', "%{$query}%")
                           ->orWhere('sku',     'like', "%{$query}%")
                           ->orWhere('barcode', $query);
+                    if (is_numeric($query)) {
+                        $inner->orWhere('id', (int)$query);
+                    }
                 });
             })
             ->when($categoryId, fn($q) => $q->where('category_id', $categoryId))
             ->with('category:id,name')
             ->select(['id', 'name', 'sku', 'barcode', 'sale_price', 'cost_price',
                       'stock_quantity', 'low_stock_threshold', 'unit', 'category_id', 'image'])
-            ->orderByRaw("CASE WHEN barcode = ? THEN 0 ELSE 1 END", [$query])
+            ->orderByRaw("CASE WHEN id = ? THEN 0 WHEN barcode = ? THEN 1 WHEN sku = ? THEN 2 ELSE 3 END", [
+                is_numeric($query) ? (int)$query : 0,
+                $query,
+                $query
+            ])
             ->limit(40)
             ->get()
             ->map(fn($p) => [
