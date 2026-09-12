@@ -19,7 +19,7 @@
             --pos-primary-dk:  #0d4a57;
             --pos-primary-lt:  #e8f4f7;
             --pos-sidebar-w:   240px;
-            --pos-topbar-h:    62px;
+            --pos-topbar-h:    58px;
         }
 
         * { font-family: 'Inter', sans-serif; box-sizing: border-box; }
@@ -31,40 +31,39 @@
             background: #ffffff;
             border-bottom: 1px solid #e5e7eb;
             display: flex; align-items: center;
-            padding: 0 16px;
+            padding: 0 14px;
             z-index: 1040;
-            gap: 12px;
+            gap: 8px;
             box-shadow: 0 1px 3px rgba(0,0,0,.04);
         }
 
         .pos-topbar .brand {
-            display: flex; align-items: center; gap: 8px;
-            font-weight: 800; font-size: 16px; color: var(--pos-primary);
+            display: flex; align-items: center; gap: 6px;
+            font-weight: 800; font-size: 15px; color: var(--pos-primary);
             text-decoration: none; white-space: nowrap; flex-shrink: 0;
-            padding-right: 8px;
+            padding-right: 6px;
         }
 
-        .pos-topbar .brand i { font-size: 20px; }
+        .pos-topbar .brand i { font-size: 18px; }
 
-        /* Scrollable & Adaptable Navigation Links Container */
+        /* Direct, clean navigation links row */
         .pos-nav-container {
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 2px;
             flex: 1;
             min-width: 0;
             overflow-x: auto;
-            scrollbar-width: none; /* Firefox */
-            -ms-overflow-style: none; /* IE/Edge */
-            padding: 4px 0;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
         }
-        .pos-nav-container::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+        .pos-nav-container::-webkit-scrollbar { display: none; }
 
         .pos-nav-link {
-            font-size: 13px; font-weight: 600; color: #4b5563;
-            padding: 6px 11px; border-radius: 8px;
+            font-size: 12.5px; font-weight: 600; color: #4b5563;
+            padding: 5px 8px; border-radius: 6px;
             text-decoration: none; transition: all .15s;
-            white-space: nowrap; display: inline-flex; align-items: center; gap: 5px;
+            white-space: nowrap; display: inline-flex; align-items: center; gap: 4px;
             flex-shrink: 0;
         }
 
@@ -79,65 +78,65 @@
             font-weight: 700;
         }
 
-        .pos-nav-link i { font-size: 14px; }
+        .pos-nav-link i { font-size: 13px; }
 
-        /* Right Action Area - Always Flex Pinned */
+        /* Right Action Area */
         .pos-topbar-right {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             margin-left: auto;
             flex-shrink: 0;
         }
 
         .btn-pos-counter {
             background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd;
-            padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700;
-            text-decoration: none; display: inline-flex; align-items: center; gap: 5px;
+            padding: 5px 10px; border-radius: 6px; font-size: 12px; font-weight: 700;
+            text-decoration: none; display: inline-flex; align-items: center; gap: 4px;
             white-space: nowrap; transition: all .15s;
         }
         .btn-pos-counter:hover { background: #bae6fd; color: #0369a1; }
 
         .user-badge {
-            display: flex; align-items: center; gap: 8px;
-            font-size: 13px; color: #374151; white-space: nowrap;
+            display: flex; align-items: center; gap: 6px;
+            font-size: 12px; color: #374151; white-space: nowrap;
         }
 
         .user-badge .avatar {
-            width: 32px; height: 32px; background: var(--pos-primary);
+            width: 28px; height: 28px; background: var(--pos-primary);
             border-radius: 50%; display: flex; align-items: center;
-            justify-content: center; color: #fff; font-size: 13px; font-weight: 700;
+            justify-content: center; color: #fff; font-size: 12px; font-weight: 700;
         }
 
         .btn-logout {
-            display: flex; align-items: center; gap: 6px;
+            display: flex; align-items: center; gap: 5px;
             background: #ef4444; color: #fff !important;
-            border: none; border-radius: 8px;
-            padding: 6px 14px; font-size: 12px; font-weight: 700;
+            border: none; border-radius: 6px;
+            padding: 5px 12px; font-size: 12px; font-weight: 700;
             cursor: pointer; text-decoration: none; transition: opacity .15s;
             white-space: nowrap; flex-shrink: 0;
         }
         .btn-logout:hover { opacity: .88; color: #fff; }
 
         .btn-hamburger {
-            background: none; border: 1px solid #e5e7eb; border-radius: 8px;
-            padding: 6px 10px; font-size: 18px; color: #374151;
+            background: none; border: 1px solid #e5e7eb; border-radius: 6px;
+            padding: 4px 8px; font-size: 18px; color: #374151;
             cursor: pointer; display: none; align-items: center; justify-content: center;
             flex-shrink: 0;
         }
 
         /* ── Responsive breakpoints ─────────────────── */
-        @media (max-width: 1100px) {
+        @media (max-width: 768px) {
             .btn-hamburger { display: flex; }
             .pos-nav-container { display: none; }
             .user-badge .user-meta { display: none; }
         }
 
-        @media (max-width: 600px) {
-            .pos-topbar { padding: 0 10px; gap: 8px; }
+        @media (max-width: 576px) {
+            .pos-topbar { padding: 0 8px; gap: 6px; }
             .btn-pos-counter span { display: none; }
             .btn-logout span { display: none; }
-            .btn-logout { padding: 6px 10px; }
+            .btn-logout { padding: 5px 8px; }
             .brand span { display: none; }
         }
 
@@ -258,7 +257,7 @@
         <span>Hassan <strong style="color:#111827">& Sons</strong></span>
     </a>
 
-    {{-- Adaptable Desktop Navigation Links --}}
+    {{-- All 11 Navigation Links in Direct Top Header --}}
     <div class="pos-nav-container">
         <a href="{{ route('admin.dashboard') }}"
            class="pos-nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
@@ -302,8 +301,9 @@
         </a>
         @if(auth()->user()->isAdmin())
         <a href="{{ route('admin.staff.index') }}"
-           class="pos-nav-link {{ request()->routeIs('admin.staff*') ? 'active' : '' }}">
-            <i class="bi bi-people"></i>Staff
+           class="pos-nav-link {{ request()->routeIs('admin.staff*') ? 'active' : '' }}"
+           style="background: #ede9fe; color: #6d28d9; font-weight: 700;">
+            <i class="bi bi-people-fill"></i>Staff & Admins
         </a>
         @endif
     </div>
@@ -312,7 +312,7 @@
     <div class="pos-topbar-right">
         <a href="{{ route('cashier.pos') }}" class="btn-pos-counter" title="Open POS Counter">
             <i class="bi bi-cart3"></i>
-            <span>POS Counter</span>
+            <span>POS</span>
         </a>
 
         <div class="user-badge">
@@ -333,7 +333,7 @@
     </div>
 </nav>
 
-{{-- ── Mobile Drawer Navigation ──────────────────── --}}
+{{-- ── Mobile Drawer Navigation (Only on mobile phones < 768px) ──── --}}
 <div class="offcanvas offcanvas-start offcanvas-admin" tabindex="-1" id="adminMobileMenu">
     <div class="offcanvas-header border-bottom">
         <div class="d-flex align-items-center gap-2">
@@ -376,8 +376,8 @@
                 <i class="bi bi-wallet2"></i> Daily Expenses
             </a>
             @if(auth()->user()->isAdmin())
-            <a href="{{ route('admin.staff.index') }}" class="nav-mobile-link {{ request()->routeIs('admin.staff*') ? 'active' : '' }}">
-                <i class="bi bi-people"></i> Staff & Admins
+            <a href="{{ route('admin.staff.index') }}" class="nav-mobile-link {{ request()->routeIs('admin.staff*') ? 'active' : '' }}" style="background:#ede9fe; color:#6d28d9; font-weight:700;">
+                <i class="bi bi-people-fill"></i> Staff & Admins
             </a>
             @endif
 
