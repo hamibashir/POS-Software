@@ -35,6 +35,10 @@ class StaffController extends Controller
             ->latest()
             ->get();
 
+        $admins = User::where('role', 'admin')
+            ->latest()
+            ->get();
+
         $totalCredit    = $employees->sum(fn($e) => $e->total_credit);
         $totalPaid      = $employees->sum(fn($e) => $e->total_paid);
         $totalPending   = max(0, $totalCredit - $totalPaid);
@@ -46,9 +50,10 @@ class StaffController extends Controller
             'total_paid'      => $totalPaid,
             'total_pending'   => $totalPending,
             'total_cashiers'  => $cashiers->count(),
+            'total_admins'    => $admins->count(),
         ];
 
-        return view('admin.staff.index', compact('employees', 'cashiers', 'stats'));
+        return view('admin.staff.index', compact('employees', 'cashiers', 'admins', 'stats'));
     }
 
     /**
@@ -231,5 +236,86 @@ class StaffController extends Controller
         $user->delete();
 
         return back()->with('success', "Cashier {$name} removed successfully.");
+    }
+
+    /**
+     * Add a new administrator user.
+     */
+    public function storeAdmin(Request $request)
+    {
+        $this->authorizeAdmin();
+
+        $data = $request->validate([
+            'name'     => ['required', 'string', 'max:150'],
+            'email'    => ['required', 'email', 'unique:users,email', 'max:150'],
+            'password' => ['required', 'string', 'min:6'],
+        ]);
+
+        $admin = User::create([
+            'name'      => $data['name'],
+            'email'     => $data['email'],
+            'password'  => Hash::make($data['password']),
+            'role'      => 'admin',
+            'is_active' => true,
+        ]);
+
+        return back()->with('success', "Administrator {$admin->name} added successfully.");
+    }
+
+    /**
+     * Update administrator details.
+     */
+    public function updateAdmin(Request $request, User $user)
+    {
+        $this->authorizeAdmin();
+
+        abort_unless($user->role === 'admin', 400, 'Only administrator accounts can be edited here.');
+
+        $data = $request->validate([
+            'name'      => ['required', 'string', 'max:150'],
+            'email'     => ['required', 'email', Rule::unique('users', 'email')->ignore($user->id), 'max:150'],
+            'password'  => ['nullable', 'string', 'min:6'],
+            'is_active' => ['required', 'boolean'],
+        ]);
+
+        // Prevent deactivating own account if only 1 active admin
+        if (!$data['is_active'] && $user->id === auth()->id()) {
+            return back()->withErrors(['error' => 'You cannot deactivate your own currently logged in administrator account.']);
+        }
+
+        $updateData = [
+            'name'      => $data['name'],
+            'email'     => $data['email'],
+            'is_active' => $data['is_active'],
+        ];
+
+        if (!empty($data['password'])) {
+            $updateData['password'] = Hash::make($data['password']);
+        }
+
+        $user->update($updateData);
+
+        return back()->with('success', "Administrator {$user->name} updated successfully.");
+    }
+
+    /**
+     * Delete an administrator.
+     */
+    public function destroyAdmin(User $user)
+    {
+        $this->authorizeAdmin();
+
+        abort_if($user->id === auth()->id(), 400, 'You cannot delete your own account.');
+        abort_unless($user->role === 'admin', 400, 'Only administrator accounts can be deleted here.');
+
+        $totalAdmins = User::where('role', 'admin')->count();
+        if ($totalAdmins <= 1) {
+            return back()->withErrors(['error' => 'Cannot delete the last remaining administrator account.']);
+        }
+
+        $name = $user->name;
+        $user->delete();
+
+        return back()->with('success', "Administrator {$name} removed successfully.");
     }
 }

@@ -98,4 +98,65 @@ class SecurityAndAccessTest extends TestCase
             ->assertSee('051-8891930')
             ->assertSee('Call to Order (051-8891930)');
     }
+
+    public function test_admin_can_create_update_and_manage_administrators(): void
+    {
+        // 1. Create new admin
+        $response = $this->actingAs($this->admin)
+            ->post(route('admin.staff.admins.store'), [
+                'name'     => 'New Admin User',
+                'email'    => 'newadmin@hassanandsonscorp.com',
+                'password' => 'SecretAdmin123',
+            ]);
+
+        $response->assertRedirect()
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseHas('users', [
+            'name'  => 'New Admin User',
+            'email' => 'newadmin@hassanandsonscorp.com',
+            'role'  => 'admin',
+        ]);
+
+        $newAdmin = User::where('email', 'newadmin@hassanandsonscorp.com')->first();
+        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('SecretAdmin123', $newAdmin->password));
+
+        // 2. Update admin credentials
+        $responseUpdate = $this->actingAs($this->admin)
+            ->put(route('admin.staff.admins.update', $newAdmin), [
+                'name'      => 'Updated Admin Name',
+                'email'     => 'updatedadmin@hassanandsonscorp.com',
+                'password'  => 'UpdatedSecret456',
+                'is_active' => 1,
+            ]);
+
+        $responseUpdate->assertRedirect()
+            ->assertSessionHas('success');
+
+        $newAdmin->refresh();
+        $this->assertEquals('Updated Admin Name', $newAdmin->name);
+        $this->assertEquals('updatedadmin@hassanandsonscorp.com', $newAdmin->email);
+        $this->assertTrue(\Illuminate\Support\Facades\Hash::check('UpdatedSecret456', $newAdmin->password));
+
+        // 3. Prevent self-deletion
+        $responseSelfDelete = $this->actingAs($this->admin)
+            ->delete(route('admin.staff.admins.destroy', $this->admin));
+
+        $responseSelfDelete->assertStatus(400);
+
+        // 4. Delete the other admin
+        $responseDelete = $this->actingAs($this->admin)
+            ->delete(route('admin.staff.admins.destroy', $newAdmin));
+
+        $responseDelete->assertRedirect()
+            ->assertSessionHas('success');
+
+        $this->assertDatabaseMissing('users', ['id' => $newAdmin->id]);
+
+        // 5. Deleting last remaining admin is blocked
+        $responseLastDelete = $this->actingAs($this->admin)
+            ->delete(route('admin.staff.admins.destroy', $this->admin));
+        $responseLastDelete->assertStatus(400);
+    }
 }
+

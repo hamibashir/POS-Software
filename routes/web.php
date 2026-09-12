@@ -90,7 +90,7 @@ Route::middleware(['auth', 'admin'])
         Route::post('suppliers/{supplier}/payments',     [SupplierController::class, 'recordPayment'])->name('suppliers.payments');
         Route::get('suppliers/{supplier}/ledger',        [SupplierController::class, 'ledger'])->name('suppliers.ledger');
 
-        // Staff Management (Employees & Cashiers) - Admin only
+        // Staff Management (Employees, Cashiers & Administrators) - Admin only
         Route::get('staff',                                    [StaffController::class, 'index'])->name('staff.index');
         Route::post('staff/employees',                         [StaffController::class, 'storeEmployee'])->name('staff.employees.store');
         Route::put('staff/employees/{employee}',               [StaffController::class, 'updateEmployee'])->name('staff.employees.update');
@@ -100,6 +100,9 @@ Route::middleware(['auth', 'admin'])
         Route::post('staff/cashiers',                          [StaffController::class, 'storeCashier'])->name('staff.cashiers.store');
         Route::put('staff/cashiers/{user}',                    [StaffController::class, 'updateCashier'])->name('staff.cashiers.update');
         Route::delete('staff/cashiers/{user}',                 [StaffController::class, 'destroyCashier'])->name('staff.cashiers.destroy');
+        Route::post('staff/admins',                            [StaffController::class, 'storeAdmin'])->name('staff.admins.store');
+        Route::put('staff/admins/{user}',                      [StaffController::class, 'updateAdmin'])->name('staff.admins.update');
+        Route::delete('staff/admins/{user}',                   [StaffController::class, 'destroyAdmin'])->name('staff.admins.destroy');
     });
 
 /*
