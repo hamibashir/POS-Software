@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=1280">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="@yield('meta_description', 'Browse our full range of sanitary and hardware products.')">
     <title>@yield('title', 'Product Catalog') — Hassan & Sons</title>
 
@@ -22,7 +22,7 @@
             --card:        #ffffff;
         }
         * { font-family: 'Inter', sans-serif; box-sizing: border-box; margin: 0; padding: 0; }
-        body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+        body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; }
 
         /* ── Scrollbar ──────────────────── */
         ::-webkit-scrollbar { width: 6px; }
@@ -35,12 +35,13 @@
             border-bottom: 1px solid var(--border);
             position: sticky; top: 0; z-index: 1000;
             box-shadow: 0 1px 4px rgba(0,0,0,.05);
+            width: 100%;
         }
         .cat-nav .inner {
             max-width: 1440px; margin: 0 auto;
-            display: flex; align-items: center; gap: 12px;
+            display: flex; align-items: center; justify-content: space-between; gap: 12px;
             padding: 0 16px; height: 64px;
-            overflow: hidden;   /* ← prevents child overflow causing hscroll */
+            box-sizing: border-box; width: 100%;
         }
         .cat-nav .brand {
             display: flex; align-items: center; gap: 8px;
@@ -51,61 +52,80 @@
 
         /* Category nav links */
         .cat-nav-links {
-            display: flex; gap: 24px; margin: 0 16px;
+            display: flex; gap: 18px; margin: 0 12px;
+            overflow-x: auto; scrollbar-width: none;
+            flex-shrink: 1; min-width: 0;
         }
+        .cat-nav-links::-webkit-scrollbar { display: none; }
         .cat-nav-links a {
-            font-size: 14px; font-weight: 500; color: #475569;
+            font-size: 13px; font-weight: 600; color: #475569;
             text-decoration: none; transition: color .15s; white-space: nowrap;
         }
         .cat-nav-links a:hover { color: var(--primary); }
 
         /* Search + auth buttons */
         .cat-nav-right {
-            flex: 1; min-width: 0;   /* ← allows it to shrink */
+            flex-shrink: 0;
             display: flex; align-items: center; justify-content: flex-end; gap: 8px;
+            margin-left: auto;
         }
         .cat-search-wrap {
-            flex: 1; max-width: 420px; position: relative;
+            width: 220px; position: relative;
         }
         .cat-search-wrap i {
             position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
-            color: #94a3b8; font-size: 16px; pointer-events: none;
+            color: #94a3b8; font-size: 15px; pointer-events: none;
         }
         .cat-search-input {
-            width: 100%; height: 38px;
-            background: #f1f5f9; border: none; border-radius: 8px;
-            padding: 0 14px 0 36px; font-size: 14px; color: var(--text);
-            outline: none; transition: box-shadow .2s;
+            width: 100%; height: 36px;
+            background: #f1f5f9; border: 1px solid transparent; border-radius: 8px;
+            padding: 0 12px 0 34px; font-size: 13px; color: var(--text);
+            outline: none; transition: all .2s;
         }
         .cat-search-input:focus {
             box-shadow: 0 0 0 2px rgba(30,109,138,.25);
+            border-color: var(--primary);
             background: #fff;
         }
         .cat-search-input::placeholder { color: #94a3b8; }
 
+        .btn-order-phone {
+            background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd;
+            padding: 7px 12px; font-size: 12px; font-weight: 700; border-radius: 8px;
+            cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+            white-space: nowrap; flex-shrink: 0; transition: all .15s;
+        }
+        .btn-order-phone:hover { background: #bae6fd; color: #0369a1; }
+
         .btn-login {
-            padding: 7px 14px; font-size: 13px; font-weight: 600;
+            padding: 7px 14px; font-size: 13px; font-weight: 700;
             color: var(--primary); background: var(--primary-lt);
-            border: none; border-radius: 8px; cursor: pointer;
+            border: 1px solid rgba(30,109,138,.2); border-radius: 8px; cursor: pointer;
             text-decoration: none; white-space: nowrap; flex-shrink: 0;
+            display: inline-flex; align-items: center;
             transition: background .15s;
         }
-        .btn-login:hover { background: #c8e4ee; }
+        .btn-login:hover { background: #c8e4ee; color: var(--primary-dk); }
         .btn-signup {
-            padding: 7px 14px; font-size: 13px; font-weight: 600;
+            padding: 7px 14px; font-size: 13px; font-weight: 700;
             color: #fff; background: var(--primary);
             border: none; border-radius: 8px; cursor: pointer;
             text-decoration: none; white-space: nowrap; flex-shrink: 0;
+            display: inline-flex; align-items: center;
             transition: background .15s;
         }
-        .btn-signup:hover { background: var(--primary-dk); }
+        .btn-signup:hover { background: var(--primary-dk); color: #fff; }
 
-        /* ── Mobile nav ─────────────────────── */
+        /* ── Responsive nav ─────────────────── */
+        @media (max-width: 992px) {
+            .cat-nav-links { display: none; }
+            .cat-search-wrap { width: 160px; }
+        }
         @media (max-width: 640px) {
-            .cat-nav-links { display: none; }   /* hide nav links on mobile */
-            .cat-search-wrap { max-width: 100%; flex: 1; }
-            .btn-login { display: none; }       /* keep only Sign Up on mobile */
-            .cat-nav .inner { gap: 10px; padding: 0 12px; }
+            .cat-search-wrap { display: none; }
+            .btn-order-phone span { display: none; }
+            .btn-order-phone { padding: 7px 10px; }
+            .cat-nav .inner { gap: 8px; padding: 0 10px; }
             .cat-nav .brand { font-size: 15px; }
             .cat-nav .brand .ms-icon { font-size: 22px; }
         }
