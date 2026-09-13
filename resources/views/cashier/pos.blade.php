@@ -1333,11 +1333,11 @@
 
                 {{-- Customer Credit Controls --}}
                 <div id="creditControls" style="display:none; margin-top:10px;">
-                    <label style="font-size:12px; font-weight:700; color:#374151; display:flex; align-items:center; gap:4px; margin-bottom:4px;">
+                    <label style="font-size:12px; font-weight:700; color:#374151; display:flex; align-items:center; gap:4px; margin-bottom:6px;">
                         <span class="material-symbols-outlined" style="font-size:16px; color:#0f766e;">person</span>
                         Authorized Customer <span style="color:#ef4444;">*</span>
                     </label>
-                    <select id="employeeSelect" class="pos-field" onchange="onEmployeeSelect()">
+                    <select id="employeeSelect" class="form-select" style="height:44px; border-radius:10px; font-weight:600; font-size:13.5px; color:#1e293b; border:1.5px solid #cbd5e1; background-color:#ffffff;" onchange="onEmployeeSelect()">
                         <option value="">-- Choose Customer --</option>
                         @foreach($employees as $emp)
                         <option value="{{ $emp['id'] }}"
@@ -1345,7 +1345,7 @@
                                 data-phone="{{ $emp['phone'] }}"
                                 data-address="{{ $emp['address'] }}"
                                 data-pending="{{ $emp['pending_payment'] }}">
-                            {{ $emp['name'] }} (Due: Rs. {{ number_format($emp['pending_payment'], 2) }})
+                            {{ $emp['name'] }}
                         </option>
                         @endforeach
                     </select>
@@ -2805,7 +2805,7 @@ async function submitPosEmployeePayment(e) {
             const checkoutOpt = checkoutSelect ? checkoutSelect.querySelector(`option[value="${employeeId}"]`) : null;
             if (checkoutOpt) {
                 checkoutOpt.dataset.pending = data.raw_new_balance;
-                checkoutOpt.textContent = `${data.employee_name} (Due: Rs. ${data.new_balance})`;
+                checkoutOpt.textContent = data.employee_name;
             }
 
             // If currently selected in checkout panel, trigger onEmployeeSelect to refresh balance card
