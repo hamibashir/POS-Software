@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Staff & User Management')
+@section('title', 'Customers & User Management')
 
 @push('styles')
 <style>
@@ -34,8 +34,8 @@
 
 <div class="page-hero d-flex align-items-center justify-content-between flex-wrap gap-2">
     <div>
-        <h1><i class="bi bi-people me-2" style="color:var(--pos-primary)"></i>Staff & User Management</h1>
-        <p>Manage system administrators, cashiers for POS operations, and employees eligible for credit sales.</p>
+        <h1><i class="bi bi-people me-2" style="color:var(--pos-primary)"></i>Customers & User Management</h1>
+        <p>Manage customers eligible for credit sales, POS cashiers, and system administrators.</p>
     </div>
     <div class="d-flex gap-2 flex-wrap">
         <button class="btn-pos-outline" data-bs-toggle="modal" data-bs-target="#addAdminModal">
@@ -45,7 +45,7 @@
             <i class="bi bi-person-badge"></i> Add Cashier
         </button>
         <button class="btn-pos" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
-            <i class="bi bi-person-plus-fill"></i> Add Employee
+            <i class="bi bi-person-plus-fill"></i> Add Customer
         </button>
     </div>
 </div>
@@ -76,7 +76,7 @@
         <div class="stat-card">
             <div class="stat-icon" style="background:#e0f2fe; color:#0284c7;"><i class="bi bi-people"></i></div>
             <div>
-                <div class="stat-label">Credit Employees</div>
+                <div class="stat-label">Credit Customers</div>
                 <div class="stat-value">{{ $stats['total_employees'] }}</div>
                 <div class="stat-sub">{{ $stats['active_employees'] }} active for credit</div>
             </div>
@@ -88,7 +88,7 @@
             <div>
                 <div class="stat-label">Pending Dues</div>
                 <div class="stat-value" style="color:#b91c1c;">{{ pkr($stats['total_pending'], 2) }}</div>
-                <div class="stat-sub">unpaid employee credit</div>
+                <div class="stat-sub">unpaid customer credit</div>
             </div>
         </div>
     </div>
@@ -114,7 +114,7 @@
 {{-- Tabs --}}
 <div class="nav-tabs-custom">
     <button class="nav-tab-btn active" id="tabBtnEmployees" onclick="switchTab('employees')">
-        <i class="bi bi-person-lines-fill"></i> Employees (Credit Dues)
+        <i class="bi bi-person-lines-fill"></i> Customers (Credit Dues)
         <span class="badge" style="background:#f3f4f6; color:#374151; border-radius:10px; font-size:11px;">{{ $employees->count() }}</span>
     </button>
     <button class="nav-tab-btn" id="tabBtnCashiers" onclick="switchTab('cashiers')">
@@ -133,7 +133,7 @@
         <table class="pos-table w-100">
             <thead>
                 <tr>
-                    <th>Employee Name</th>
+                    <th>Customer Name</th>
                     <th>Phone</th>
                     <th>Address</th>
                     <th style="text-align:right;">Total Credit</th>
@@ -195,11 +195,11 @@
 
                             <button class="btn-pos-outline" style="padding:4px 8px; font-size:12px;"
                                 onclick="openEditEmployeeModal({{ $emp->id }}, '{{ addslashes($emp->name) }}', '{{ addslashes($emp->phone) }}', '{{ addslashes($emp->address) }}', {{ $emp->is_active ? 1 : 0 }}, '{{ addslashes($emp->notes ?? '') }}')"
-                                title="Edit Employee">
+                                title="Edit Customer">
                                 <i class="bi bi-pencil"></i>
                             </button>
 
-                            <form method="POST" action="{{ route('admin.staff.employees.destroy', $emp) }}" style="display:inline;" onsubmit="return confirm('Remove this employee?');">
+                            <form method="POST" action="{{ route('admin.staff.employees.destroy', $emp) }}" style="display:inline;" onsubmit="return confirm('Remove this customer?');">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn-pos-outline" style="padding:4px 8px; font-size:12px; border-color:#fee2e2; color:#dc2626;" title="Delete / Deactivate">
@@ -213,8 +213,8 @@
                 <tr>
                     <td colspan="8" style="text-align:center; padding:48px; color:#9ca3af;">
                         <i class="bi bi-people" style="font-size:36px; display:block; margin-bottom:8px; opacity:.5;"></i>
-                        <p style="font-weight:600; color:#374151; margin-bottom:4px;">No employees added yet</p>
-                        <p style="font-size:13px; margin:0;">Add employees who are authorized to take items on credit sale.</p>
+                        <p style="font-weight:600; color:#374151; margin-bottom:4px;">No customers added yet</p>
+                        <p style="font-size:13px; margin:0;">Add customers who are authorized to take items on credit sale.</p>
                     </td>
                 </tr>
                 @endforelse
@@ -365,18 +365,18 @@
 
 {{-- ═══════════════ MODALS ═══════════════ --}}
 
-{{-- 1. Add Employee Modal --}}
+{{-- 1. Add Customer Modal --}}
 <div class="modal fade" id="addEmployeeModal" tabindex="-1">
     <div class="modal-dialog">
         <form method="POST" action="{{ route('admin.staff.employees.store') }}" class="modal-content">
             @csrf
             <div class="modal-header">
-                <h5 class="modal-title"><i class="bi bi-person-plus me-2 text-primary"></i>Add Employee</h5>
+                <h5 class="modal-title"><i class="bi bi-person-plus me-2 text-primary"></i>Add Customer</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body d-flex flex-column gap-3">
                 <div>
-                    <label class="form-label" style="font-size:13px; font-weight:600;">Employee Name <span class="text-danger">*</span></label>
+                    <label class="form-label" style="font-size:13px; font-weight:600;">Customer Name <span class="text-danger">*</span></label>
                     <input type="text" name="name" class="pos-input" required placeholder="e.g. Muhammad Ali">
                 </div>
                 <div>
@@ -385,34 +385,34 @@
                 </div>
                 <div>
                     <label class="form-label" style="font-size:13px; font-weight:600;">Address <span class="text-danger">*</span></label>
-                    <textarea name="address" class="pos-input" rows="2" required placeholder="Home or department address"></textarea>
+                    <textarea name="address" class="pos-input" rows="2" required placeholder="Customer address or location"></textarea>
                 </div>
                 <div>
                     <label class="form-label" style="font-size:13px; font-weight:600;">Notes (Optional)</label>
-                    <input type="text" name="notes" class="pos-input" placeholder="e.g. Workshop Technician, Floor Staff">
+                    <input type="text" name="notes" class="pos-input" placeholder="e.g. Plumber, Electrician, Contractor">
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-pos-outline" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" class="btn-pos"><i class="bi bi-check-lg"></i> Save Employee</button>
+                <button type="submit" class="btn-pos"><i class="bi bi-check-lg"></i> Save Customer</button>
             </div>
         </form>
     </div>
 </div>
 
-{{-- 2. Edit Employee Modal --}}
+{{-- 2. Edit Customer Modal --}}
 <div class="modal fade" id="editEmployeeModal" tabindex="-1">
     <div class="modal-dialog">
         <form method="POST" id="editEmployeeForm" class="modal-content">
             @csrf
             @method('PUT')
             <div class="modal-header">
-                <h5 class="modal-title"><i class="bi bi-pencil-square me-2 text-primary"></i>Edit Employee</h5>
+                <h5 class="modal-title"><i class="bi bi-pencil-square me-2 text-primary"></i>Edit Customer</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body d-flex flex-column gap-3">
                 <div>
-                    <label class="form-label" style="font-size:13px; font-weight:600;">Employee Name <span class="text-danger">*</span></label>
+                    <label class="form-label" style="font-size:13px; font-weight:600;">Customer Name <span class="text-danger">*</span></label>
                     <input type="text" name="name" id="editEmpName" class="pos-input" required>
                 </div>
                 <div>
@@ -437,7 +437,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-pos-outline" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" class="btn-pos"><i class="bi bi-check-lg"></i> Update Employee</button>
+                <button type="submit" class="btn-pos"><i class="bi bi-check-lg"></i> Update Customer</button>
             </div>
         </form>
     </div>
@@ -449,12 +449,12 @@
         <form method="POST" id="paymentForm" class="modal-content">
             @csrf
             <div class="modal-header">
-                <h5 class="modal-title"><i class="bi bi-cash-coin me-2 text-success"></i>Clear / Record Due Payment</h5>
+                <h5 class="modal-title"><i class="bi bi-cash-coin me-2 text-success"></i>Clear / Record Customer Due Payment</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body d-flex flex-column gap-3">
                 <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:10px; padding:12px 16px;">
-                    <div style="font-size:12px; color:#991b1b; font-weight:600;">EMPLOYEE PENDING BALANCE</div>
+                    <div style="font-size:12px; color:#991b1b; font-weight:600;">CUSTOMER PENDING BALANCE</div>
                     <div style="font-size:20px; font-weight:800; color:#b91c1c;" id="payModalPendingAmount">PKR 0.00</div>
                     <div style="font-size:13px; color:#374151; font-weight:600; margin-top:2px;" id="payModalEmpName">—</div>
                 </div>
@@ -469,7 +469,7 @@
                     <select name="payment_method" class="pos-input" required>
                         <option value="cash">💵 Cash Received</option>
                         <option value="bank">🏦 Bank Transfer</option>
-                        <option value="salary_deduction">📋 Salary / Payroll Deduction</option>
+                        <option value="salary_deduction">📋 Salary / Account Deduction</option>
                     </select>
                 </div>
 
@@ -480,7 +480,7 @@
 
                 <div>
                     <label class="form-label" style="font-size:13px; font-weight:600;">Notes / Receipt #</label>
-                    <input type="text" name="notes" class="pos-input" placeholder="e.g. Paid in cash or Deducted from August salary">
+                    <input type="text" name="notes" class="pos-input" placeholder="e.g. Paid in cash at counter">
                 </div>
             </div>
             <div class="modal-footer">

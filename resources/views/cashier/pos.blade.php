@@ -1119,10 +1119,10 @@
                 <span style="font-size:11px; opacity:0.75; margin-left:2px;">[F8]</span>
             </button>
 
-            {{-- Employee Payment Return Trigger --}}
-            <button type="button" class="top-action-btn" id="topEmployeePayBtn" onclick="openEmployeePayModal()" title="Receive Employee Payment / Clear Due (F10)" style="background:#f0fdf4; border-color:#bbf7d0; color:#15803d;">
+            {{-- Customer Payment Return Trigger --}}
+            <button type="button" class="top-action-btn" id="topEmployeePayBtn" onclick="openEmployeePayModal()" title="Receive Customer Payment / Clear Due (F10)" style="background:#f0fdf4; border-color:#bbf7d0; color:#15803d;">
                 <span class="material-symbols-outlined" style="font-size:18px; color:#16a34a;">account_balance_wallet</span>
-                <span>Clear Staff Due</span>
+                <span>Clear Customer Due</span>
                 <span style="font-size:11px; opacity:0.75; margin-left:2px;">[F10]</span>
             </button>
 
@@ -1331,14 +1331,14 @@
                     </div>
                 </div>
 
-                {{-- Employee Credit Controls --}}
+                {{-- Customer Credit Controls --}}
                 <div id="creditControls" style="display:none; margin-top:10px;">
                     <label style="font-size:12px; font-weight:700; color:#374151; display:flex; align-items:center; gap:4px; margin-bottom:4px;">
-                        <span class="material-symbols-outlined" style="font-size:16px; color:#0f766e;">badge</span>
-                        Authorized Staff / Employee <span style="color:#ef4444;">*</span>
+                        <span class="material-symbols-outlined" style="font-size:16px; color:#0f766e;">person</span>
+                        Authorized Customer <span style="color:#ef4444;">*</span>
                     </label>
                     <select id="employeeSelect" class="pos-field" onchange="onEmployeeSelect()">
-                        <option value="">-- Choose Employee --</option>
+                        <option value="">-- Choose Customer --</option>
                         @foreach($employees as $emp)
                         <option value="{{ $emp['id'] }}"
                                 data-name="{{ $emp['name'] }}"
@@ -1579,24 +1579,24 @@
     </div>
 </div>
 
-{{-- ══════════ RECEIVE EMPLOYEE PAYMENT MODAL (POS) ══════════ --}}
+{{-- ══════════ RECEIVE CUSTOMER PAYMENT MODAL (POS) ══════════ --}}
 <div class="modal fade" id="posEmployeePayModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content" style="border-radius:18px; border:none; box-shadow:0 20px 60px rgba(0,0,0,0.25); overflow:hidden;">
             <div class="modal-header px-4 py-3" style="background:#15803d; color:#fff;">
                 <h5 class="modal-title fw-bold" style="color:#fff; display:flex; align-items:center; gap:8px;">
                     <span class="material-symbols-outlined" style="font-size:22px;">account_balance_wallet</span>
-                    Receive Staff Payment / Clear Due
+                    Receive Customer Payment / Clear Due
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
                 <form id="posEmployeePayForm" onsubmit="submitPosEmployeePayment(event)">
-                    {{-- Employee Selector --}}
+                    {{-- Customer Selector --}}
                     <div class="mb-3">
-                        <label class="form-label fw-bold small text-secondary">Select Employee / Staff <span class="text-danger">*</span></label>
+                        <label class="form-label fw-bold small text-secondary">Select Customer <span class="text-danger">*</span></label>
                         <select id="posEmployeeSelect" class="form-select" style="height:44px; border-radius:10px; font-weight:600;" required onchange="onPosEmployeeChange(this)">
-                            <option value="">-- Choose Employee --</option>
+                            <option value="">-- Choose Customer --</option>
                             @if(isset($employees))
                                 @foreach($employees as $e)
                                     <option value="{{ $e['id'] }}" data-pending="{{ $e['pending_payment'] }}" data-name="{{ $e['name'] }}" data-phone="{{ $e['phone'] }}" data-address="{{ $e['address'] }}">
@@ -1735,7 +1735,7 @@
                             <input type="text" id="posReturnCustomerPhone" class="form-control" style="height:42px; border-radius:10px;" placeholder="Optional phone #">
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label fw-bold small text-secondary">Staff / Employee (Optional)</label>
+                            <label class="form-label fw-bold small text-secondary">Customer (Optional)</label>
                             <select id="posReturnEmployeeSelect" class="form-select" style="height:42px; border-radius:10px;" onchange="onReturnEmployeeChange(this)">
                                 <option value="">-- None (Walk-in) --</option>
                                 @if(isset($employees))
@@ -2496,7 +2496,7 @@ async function completeSale() {
     if (paymentMethod === 'credit') {
         const empSelect = document.getElementById('employeeSelect');
         if (!empSelect || !empSelect.value) {
-            toast('Please select an authorized employee for credit sale!', 'w');
+            toast('Please select an authorized customer for credit sale!', 'w');
             empSelect.focus();
             return;
         }
@@ -2759,7 +2759,7 @@ async function submitPosEmployeePayment(e) {
     const notes = document.getElementById('posEmployeeNotes').value.trim();
 
     if (!employeeId) {
-        toast('Please select an employee!', 'w');
+        toast('Please select a customer!', 'w');
         return;
     }
     if (isNaN(amount) || amount <= 0) {

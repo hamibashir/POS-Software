@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Employee Payment Voucher #{{ str_pad($payment->id, 6, '0', STR_PAD_LEFT) }} — {{ config('store.name', 'Hassan & Sons') }}</title>
+    <title>Customer Payment Voucher #{{ str_pad($payment->id, 6, '0', STR_PAD_LEFT) }} — {{ config('store.name', 'Hassan & Sons') }}</title>
 
     {{-- Fonts: Inter (UI) + JetBrains Mono (invoice / barcode) --}}
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -350,8 +350,8 @@
 
         {{-- Voucher number --}}
         <div class="voucher-section">
-            <div class="voucher-label">Staff Credit Clearance Voucher</div>
-            <div class="voucher-number">#EPAY-{{ str_pad($payment->id, 6, '0', STR_PAD_LEFT) }}</div>
+            <div class="voucher-label">Customer Credit Clearance Voucher</div>
+            <div class="voucher-number">#CPAY-{{ str_pad($payment->id, 6, '0', STR_PAD_LEFT) }}</div>
         </div>
 
         {{-- Meta info --}}
@@ -366,7 +366,7 @@
                     <td>{{ $payment->user?->name ?? 'POS Cashier' }}</td>
                 </tr>
                 <tr>
-                    <td>Employee / Staff</td>
+                    <td>Customer</td>
                     <td>
                         <div style="font-weight:700; color:#111827;">{{ $payment->employee->name }}</div>
                         <div style="font-size:10px; color:#4b5563;">{{ $payment->employee->phone }}</div>
@@ -379,7 +379,7 @@
                             {{ match($payment->payment_method) {
                                 'cash' => '💵 CASH (COUNTER)',
                                 'bank' => '🏦 BANK TRANSFER',
-                                'salary_deduction' => '💼 SALARY DEDUCTION',
+                                'salary_deduction' => '💼 ACCOUNT DEDUCTION',
                                 default => strtoupper($payment->payment_method)
                             } }}
                         </span>
@@ -398,7 +398,7 @@
         <div class="payment-box">
             <div class="payment-box-title">Amount Received & Cleared</div>
             <div class="payment-box-amount">{{ pkr($payment->amount, 2) }}</div>
-            <div class="payment-box-sub">Credited towards outstanding store credit balance</div>
+            <div class="payment-box-sub">Credited towards outstanding customer credit balance</div>
         </div>
 
         {{-- Remaining Balance --}}
@@ -417,7 +417,7 @@
         <div class="signatures-wrap">
             <div class="sig-box">
                 <div class="sig-line"></div>
-                <div class="sig-label">Employee Signature</div>
+                <div class="sig-label">Customer Signature</div>
             </div>
             <div class="sig-box">
                 <div class="sig-line"></div>

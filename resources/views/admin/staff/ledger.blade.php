@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Employee Credit Ledger - ' . $employee->name)
+@section('title', 'Customer Credit Ledger - ' . $employee->name)
 
 @push('styles')
 <style>
@@ -18,7 +18,7 @@
 <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
     <nav style="font-size:13px; color:#9ca3af;">
         <a href="{{ route('admin.staff.index') }}" style="color:var(--pos-primary); text-decoration:none; font-weight:600;">
-            <i class="bi bi-arrow-left"></i> Staff Management
+            <i class="bi bi-arrow-left"></i> Customers & Staff
         </a>
         <span class="mx-2">·</span>
         <span style="color:#374151; font-weight:600;">{{ $employee->name }} Ledger</span>
@@ -30,7 +30,7 @@
         </button>
         @endif
         <a href="{{ route('admin.staff.index') }}" class="btn-pos-outline text-decoration-none">
-            Back to Staff
+            Back to Customers
         </a>
     </div>
 </div>
@@ -41,7 +41,7 @@
 </div>
 @endif
 
-{{-- Employee Header Card --}}
+{{-- Customer Header Card --}}
 <div class="emp-card">
     <div class="row align-items-center">
         <div class="col-md-7">
@@ -120,7 +120,7 @@
                         @empty
                         <tr>
                             <td colspan="5" style="text-align:center; padding:30px; color:#9ca3af;">
-                                No credit sales recorded for this employee.
+                                No credit sales recorded for this customer.
                             </td>
                         </tr>
                         @endforelse
@@ -193,7 +193,7 @@
             </div>
             <div class="modal-body d-flex flex-column gap-3">
                 <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:10px; padding:12px 16px;">
-                    <div style="font-size:12px; color:#991b1b; font-weight:600;">EMPLOYEE PENDING BALANCE</div>
+                    <div style="font-size:12px; color:#991b1b; font-weight:600;">CUSTOMER PENDING BALANCE</div>
                     <div style="font-size:20px; font-weight:800; color:#b91c1c;" id="payModalPendingAmount">PKR 0.00</div>
                     <div style="font-size:13px; color:#374151; font-weight:600; margin-top:2px;" id="payModalEmpName">—</div>
                 </div>

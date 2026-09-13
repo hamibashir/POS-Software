@@ -542,7 +542,7 @@
                 </tr>
                 @if($sale->employee)
                 <tr>
-                    <td>Staff Credit</td>
+                    <td>Customer Credit</td>
                     <td>
                         <div style="font-weight:700; color:#111827;">{{ $sale->employee->name }}</div>
                         <div style="font-size:10px; color:#4b5563;">{{ $sale->employee->phone }} · {{ $sale->employee->address }}</div>

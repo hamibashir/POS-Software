@@ -78,7 +78,7 @@ class StaffController extends Controller
             'notes'     => $data['notes'] ?? null,
         ]);
 
-        return back()->with('success', "Employee {$employee->name} added successfully.");
+        return back()->with('success', "Customer {$employee->name} added successfully.");
     }
 
     /**
@@ -98,7 +98,7 @@ class StaffController extends Controller
 
         $employee->update($data);
 
-        return back()->with('success', "Employee {$employee->name} updated successfully.");
+        return back()->with('success', "Customer {$employee->name} updated successfully.");
     }
 
     /**
@@ -110,13 +110,13 @@ class StaffController extends Controller
 
         if ($employee->sales()->exists() || $employee->payments()->exists()) {
             $employee->update(['is_active' => false]);
-            return back()->with('success', "Employee {$employee->name} has transaction history and has been deactivated instead of deleted.");
+            return back()->with('success', "Customer {$employee->name} has transaction history and has been deactivated instead of deleted.");
         }
 
         $name = $employee->name;
         $employee->delete();
 
-        return back()->with('success', "Employee {$name} deleted successfully.");
+        return back()->with('success', "Customer {$name} deleted successfully.");
     }
 
     /**

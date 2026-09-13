@@ -303,7 +303,7 @@
         <a href="{{ route('admin.staff.index') }}"
            class="pos-nav-link {{ request()->routeIs('admin.staff*') ? 'active' : '' }}"
            style="background: #ede9fe; color: #6d28d9; font-weight: 700;">
-            <i class="bi bi-people-fill"></i>Staff & Admins
+            <i class="bi bi-people-fill"></i>Customers & Users
         </a>
         @endif
     </div>
@@ -377,7 +377,7 @@
             </a>
             @if(auth()->user()->isAdmin())
             <a href="{{ route('admin.staff.index') }}" class="nav-mobile-link {{ request()->routeIs('admin.staff*') ? 'active' : '' }}" style="background:#ede9fe; color:#6d28d9; font-weight:700;">
-                <i class="bi bi-people-fill"></i> Staff & Admins
+                <i class="bi bi-people-fill"></i> Customers & Users
             </a>
             @endif
 
