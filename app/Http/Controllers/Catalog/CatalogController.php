@@ -24,7 +24,7 @@ class CatalogController extends Controller
 
         $featured = Product::inCatalog()
             ->with('category')
-            ->orderByDesc('created_at')
+            ->orderBy('id', 'asc')
             ->limit(8)
             ->get();
 

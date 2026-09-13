@@ -22,7 +22,7 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         $query = Product::with('category')
-            ->orderByDesc('created_at');
+            ->orderBy('id', 'asc');
 
         // Search by name, SKU, or barcode
         if ($search = $request->get('search')) {

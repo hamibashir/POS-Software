@@ -96,6 +96,7 @@ class PosController extends Controller
                 $query,
                 $query
             ])
+            ->orderBy('id', 'asc')
             ->limit(40)
             ->get()
             ->map(fn($p) => [
