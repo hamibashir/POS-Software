@@ -3,7 +3,10 @@
     Required variables: $product (optional), $categories, $units, $submitLabel
 --}}
 
-@php $isEdit = isset($product) && $product->exists; @endphp
+@php 
+    $isEdit = isset($product) && $product->exists; 
+    $isAdmin = auth()->check() && auth()->user()->isAdmin();
+@endphp
 
 {{-- Validation errors bar --}}
 @if($errors->any())
@@ -85,7 +88,7 @@
         {{-- Pricing & Unit --}}
         <div class="pos-card p-4 mb-4">
             <h6 class="fw-bold mb-4" style="color:#374151; font-size:14px;">
-                <i class="bi bi-currency-dollar me-2" style="color:var(--pos-primary)"></i>Pricing & Unit
+                <i class="bi bi-currency-rupee me-2" style="color:var(--pos-primary)"></i>Pricing & Unit
             </h6>
 
             <div class="row g-3">
@@ -107,7 +110,7 @@
                         Cost Price <span class="text-danger">*</span>
                     </label>
                     <div class="input-group">
-                        <span class="input-group-text" style="background:#f9fafb; border:1.5px solid #e5e7eb; border-right:none; border-radius:8px 0 0 8px; color:#6b7280; font-size:14px;">$</span>
+                        <span class="input-group-text" style="background:#f9fafb; border:1.5px solid #e5e7eb; border-right:none; border-radius:8px 0 0 8px; color:#6b7280; font-size:14px; font-weight:600;">Rs.</span>
                         <input type="number" name="cost_price" step="0.01" min="0"
                             value="{{ old('cost_price', $product->cost_price ?? '') }}"
                             class="pos-input @error('cost_price') is-invalid @enderror"
@@ -121,7 +124,7 @@
                         Sale Price <span class="text-danger">*</span>
                     </label>
                     <div class="input-group">
-                        <span class="input-group-text" style="background:#f9fafb; border:1.5px solid #e5e7eb; border-right:none; border-radius:8px 0 0 8px; color:#6b7280; font-size:14px;">$</span>
+                        <span class="input-group-text" style="background:#f9fafb; border:1.5px solid #e5e7eb; border-right:none; border-radius:8px 0 0 8px; color:#6b7280; font-size:14px; font-weight:600;">Rs.</span>
                         <input type="number" name="sale_price" step="0.01" min="0"
                             value="{{ old('sale_price', $product->sale_price ?? '') }}"
                             class="pos-input @error('sale_price') is-invalid @enderror"
@@ -153,10 +156,20 @@
                         value="{{ old('stock_quantity', $product->stock_quantity ?? 0) }}"
                         class="pos-input @error('stock_quantity') is-invalid @enderror"
                         placeholder="0"
-                        {{ $isEdit ? 'disabled title=Use stock adjustment for edits' : 'required' }}>
+                        {{ (!$isEdit || $isAdmin) ? 'required' : 'disabled title="Only administrators can edit stock directly"' }}>
                     @if($isEdit)
+                        @if($isAdmin)
+                            <div style="font-size:12px; color:#059669; margin-top:4px;">
+                                <i class="bi bi-shield-check"></i> Admin privilege: You can modify the stock quantity directly.
+                            </div>
+                        @else
+                            <div style="font-size:12px; color:#9ca3af; margin-top:4px;">
+                                <i class="bi bi-lock-fill"></i> Only administrators can change stock directly. Use Stock Adjustments or Purchase Entry.
+                            </div>
+                        @endif
+                    @else
                         <div style="font-size:12px; color:#9ca3af; margin-top:4px;">
-                            <i class="bi bi-info-circle"></i> Use Purchase Entry to adjust stock after creation.
+                            Initial opening inventory count for this product.
                         </div>
                     @endif
                     @error('stock_quantity')<div class="invalid-feedback">{{ $message }}</div>@enderror
@@ -299,7 +312,7 @@
         const margin  = ((sale - cost) / sale * 100).toFixed(1);
         const profit  = (sale - cost).toFixed(2);
         const color   = margin >= 0 ? '#065f46' : '#991b1b';
-        el.innerHTML  = `<span style="color:${color}">${margin}%</span> &nbsp;·&nbsp; $${profit} per unit`;
+        el.innerHTML  = `<span style="color:${color}">${margin}%</span> &nbsp;·&nbsp; Rs. ${profit} per unit`;
     }
     document.getElementById('costPrice').addEventListener('input', updateMargin);
     document.getElementById('salePrice').addEventListener('input', updateMargin);

@@ -27,7 +27,7 @@ class UpdateProductRequest extends FormRequest
             'unit'                => ['required', 'string', 'in:pc,kg,meter,box,liter,pair,set,roll,sheet,bag'],
             'cost_price'          => ['required', 'numeric', 'min:0', 'max:9999999.99'],
             'sale_price'          => ['required', 'numeric', 'min:0', 'max:9999999.99'],
-            'stock_quantity'      => ['required', 'integer', 'min:0'],
+            'stock_quantity'      => [auth()->user()?->isAdmin() ? 'required' : 'nullable', 'integer', 'min:0'],
             'low_stock_threshold' => ['required', 'integer', 'min:0'],
             'image'               => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:2048'],
             'remove_image'        => ['nullable', 'boolean'],

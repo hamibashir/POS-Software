@@ -3,7 +3,9 @@
 namespace App\Services;
 
 use App\Models\Product;
+use App\Models\StockMovement;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -66,27 +68,50 @@ class ProductService
      */
     public function update(Product $product, array $data, ?UploadedFile $image = null, bool $removeImage = false): Product
     {
-        if ($removeImage && $product->image) {
-            $this->deleteImage($product->image);
-            $data['image'] = null;
-        }
+        return DB::transaction(function () use ($product, $data, $image, $removeImage) {
+            if ($removeImage && $product->image) {
+                $this->deleteImage($product->image);
+                $data['image'] = null;
+            }
 
-        if ($image) {
-            // Delete old image before replacing
-            $this->deleteImage($product->image);
-            $data['image'] = $this->uploadImage($image);
-        }
+            if ($image) {
+                // Delete old image before replacing
+                $this->deleteImage($product->image);
+                $data['image'] = $this->uploadImage($image);
+            }
 
-        // Regenerate slug if name changed
-        if (isset($data['name']) && $data['name'] !== $product->name) {
-            $data['slug'] = Product::generateSlug($data['name'], $product->id);
-        }
+            // Regenerate slug if name changed
+            if (isset($data['name']) && $data['name'] !== $product->name) {
+                $data['slug'] = Product::generateSlug($data['name'], $product->id);
+            }
 
-        $data['show_in_catalog'] = isset($data['show_in_catalog']) ? (bool)$data['show_in_catalog'] : false;
-        $data['is_active']       = isset($data['is_active']) ? (bool)$data['is_active'] : false;
+            $data['show_in_catalog'] = isset($data['show_in_catalog']) ? (bool)$data['show_in_catalog'] : false;
+            $data['is_active']       = isset($data['is_active']) ? (bool)$data['is_active'] : false;
 
-        $product->update($data);
-        return $product->fresh();
+            // Only administrators (or system processes) can modify stock quantity directly
+            $isAdmin = !auth()->check() || auth()->user()->isAdmin();
+            if (!$isAdmin) {
+                unset($data['stock_quantity']);
+            } elseif (isset($data['stock_quantity']) && (int)$data['stock_quantity'] !== (int)$product->stock_quantity) {
+                $stockBefore = (int)$product->stock_quantity;
+                $stockAfter  = (int)$data['stock_quantity'];
+                $diff        = $stockAfter - $stockBefore;
+                $type        = $diff > 0 ? 'adjustment_in' : 'adjustment_out';
+
+                StockMovement::create([
+                    'product_id'   => $product->id,
+                    'type'         => $type,
+                    'quantity'     => abs($diff),
+                    'stock_before' => $stockBefore,
+                    'stock_after'  => $stockAfter,
+                    'user_id'      => auth()->id(),
+                    'notes'        => 'Stock quantity updated directly via product management by admin',
+                ]);
+            }
+
+            $product->update($data);
+            return $product->fresh();
+        });
     }
 
     /**
