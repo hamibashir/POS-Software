@@ -1337,18 +1337,33 @@
                         <span class="material-symbols-outlined" style="font-size:16px; color:#0f766e;">person</span>
                         Authorized Customer <span style="color:#ef4444;">*</span>
                     </label>
-                    <select id="employeeSelect" class="form-select" style="height:44px; border-radius:10px; font-weight:600; font-size:13.5px; color:#1e293b; border:1.5px solid #cbd5e1; background-color:#ffffff;" onchange="onEmployeeSelect()">
-                        <option value="">-- Choose Customer --</option>
-                        @foreach($employees as $emp)
-                        <option value="{{ $emp['id'] }}"
-                                data-name="{{ $emp['name'] }}"
-                                data-phone="{{ $emp['phone'] }}"
-                                data-address="{{ $emp['address'] }}"
-                                data-pending="{{ $emp['pending_payment'] }}">
-                            {{ $emp['name'] }}
-                        </option>
-                        @endforeach
-                    </select>
+                    <input type="hidden" id="employeeSelect" value="">
+                    
+                    {{-- Search Bar Input --}}
+                    <div class="position-relative">
+                        <div class="input-group" style="border-radius:10px; overflow:hidden; border:1.5px solid #cbd5e1; background:#ffffff;">
+                            <span class="input-group-text bg-white border-0 pe-1" style="color:#64748b;">
+                                <span class="material-symbols-outlined" style="font-size:18px;">search</span>
+                            </span>
+                            <input type="text" id="customerSearchInput" class="form-control border-0 px-2 fw-semibold text-dark shadow-none"
+                                   placeholder="Search customer by name or phone..."
+                                   autocomplete="off"
+                                   style="height:42px; font-size:13.5px; background:transparent;"
+                                   oninput="filterCustomerSearch(this.value)"
+                                   onfocus="filterCustomerSearch(this.value)"
+                                   onkeydown="handleCustomerSearchKey(event)">
+                            <button type="button" id="clearCustomerBtn" class="btn btn-sm btn-link text-secondary text-decoration-none px-3"
+                                    style="display:none;"
+                                    onclick="clearSelectedCustomer()" title="Clear Selection">
+                                <i class="bi bi-x-circle-fill fs-6"></i>
+                            </button>
+                        </div>
+
+                        {{-- Dropdown Search Results Popup --}}
+                        <div id="customerSearchResults" class="shadow-lg border rounded-3 bg-white"
+                             style="display:none; position:absolute; top:46px; left:0; right:0; max-height:240px; overflow-y:auto; z-index:1050; border-color:#e2e8f0;">
+                        </div>
+                    </div>
 
                     <div id="employeeDetailsCard" class="emp-credit-box" style="display:none;">
                         <div style="display:flex; justify-content:space-between; align-items:flex-start;">
@@ -2426,6 +2441,180 @@ function clearCashPaid() {
     updateChange();
 }
 
+/* ── Customer Credit Search & Selection ───────── */
+let currentCustomerList = @json($employees ?? []);
+let selectedCustomer = null;
+let activeCustomerSearchIdx = -1;
+let currentCustomerFilterResults = [];
+
+function filterCustomerSearch(rawQuery) {
+    const query = (rawQuery || '').trim().toLowerCase();
+    const resultsBox = document.getElementById('customerSearchResults');
+    if (!resultsBox) return;
+
+    if (!query) {
+        currentCustomerFilterResults = [...currentCustomerList];
+    } else {
+        currentCustomerFilterResults = currentCustomerList.filter(c => {
+            const name = (c.name || '').toLowerCase();
+            const phone = (c.phone || '').toLowerCase();
+            const address = (c.address || '').toLowerCase();
+            return name.includes(query) || phone.includes(query) || address.includes(query);
+        });
+    }
+
+    activeCustomerSearchIdx = -1;
+
+    if (currentCustomerFilterResults.length === 0) {
+        resultsBox.innerHTML = `
+            <div class="p-3 text-center text-muted" style="font-size:12.5px;">
+                <span class="material-symbols-outlined d-block mb-1" style="font-size:24px; opacity:0.5;">person_off</span>
+                No authorized customers found for "${escapeHtml(rawQuery)}"
+            </div>
+        `;
+        resultsBox.style.display = 'block';
+        return;
+    }
+
+    let html = '';
+    currentCustomerFilterResults.forEach((c, idx) => {
+        html += `
+            <div class="customer-search-item px-3 py-2 border-bottom d-flex justify-content-between align-items-center"
+                 id="custSearchItem_${idx}"
+                 style="cursor:pointer; transition:background .15s; background:#ffffff;"
+                 onmouseenter="highlightCustomerItem(${idx})"
+                 onclick="selectCustomerById(${c.id})">
+                <div>
+                    <div class="fw-bold text-dark" style="font-size:13px;">${escapeHtml(c.name)}</div>
+                    <div class="text-secondary" style="font-size:11.5px; display:flex; gap:8px; align-items:center; margin-top:2px;">
+                        ${c.phone ? `<span><i class="bi bi-telephone-fill text-muted" style="font-size:10px;"></i> ${escapeHtml(c.phone)}</span>` : ''}
+                        ${c.address ? `<span><i class="bi bi-geo-alt-fill text-muted" style="font-size:10px;"></i> ${escapeHtml(c.address)}</span>` : ''}
+                    </div>
+                </div>
+                <div>
+                    <span class="badge bg-light text-primary border" style="font-size:10.5px; font-weight:600;">Select</span>
+                </div>
+            </div>
+        `;
+    });
+
+    resultsBox.innerHTML = html;
+    resultsBox.style.display = 'block';
+}
+
+function highlightCustomerItem(idx) {
+    activeCustomerSearchIdx = idx;
+    const items = document.querySelectorAll('.customer-search-item');
+    items.forEach((el, i) => {
+        if (i === idx) {
+            el.style.background = '#f1f5f9';
+        } else {
+            el.style.background = '#ffffff';
+        }
+    });
+}
+
+function handleCustomerSearchKey(e) {
+    const resultsBox = document.getElementById('customerSearchResults');
+    if (!resultsBox || resultsBox.style.display === 'none') return;
+
+    const count = currentCustomerFilterResults.length;
+    if (!count) return;
+
+    if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        activeCustomerSearchIdx = (activeCustomerSearchIdx + 1) % count;
+        highlightCustomerItem(activeCustomerSearchIdx);
+        const activeEl = document.getElementById(`custSearchItem_${activeCustomerSearchIdx}`);
+        if (activeEl) activeEl.scrollIntoView({ block: 'nearest' });
+    } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        activeCustomerSearchIdx = (activeCustomerSearchIdx - 1 + count) % count;
+        highlightCustomerItem(activeCustomerSearchIdx);
+        const activeEl = document.getElementById(`custSearchItem_${activeCustomerSearchIdx}`);
+        if (activeEl) activeEl.scrollIntoView({ block: 'nearest' });
+    } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (activeCustomerSearchIdx >= 0 && activeCustomerSearchIdx < count) {
+            selectCustomerById(currentCustomerFilterResults[activeCustomerSearchIdx].id);
+        } else if (count === 1) {
+            selectCustomerById(currentCustomerFilterResults[0].id);
+        }
+    } else if (e.key === 'Escape') {
+        hideCustomerResults();
+    }
+}
+
+function selectCustomerById(id) {
+    const cust = currentCustomerList.find(c => c.id == id);
+    if (!cust) return;
+
+    selectedCustomer = cust;
+    const empSelect = document.getElementById('employeeSelect');
+    if (empSelect) empSelect.value = cust.id;
+
+    const searchInput = document.getElementById('customerSearchInput');
+    if (searchInput) searchInput.value = cust.name;
+
+    const clearBtn = document.getElementById('clearCustomerBtn');
+    if (clearBtn) clearBtn.style.display = 'inline-block';
+
+    hideCustomerResults();
+    renderSelectedCustomerCard();
+}
+
+function clearSelectedCustomer() {
+    selectedCustomer = null;
+    const empSelect = document.getElementById('employeeSelect');
+    if (empSelect) empSelect.value = '';
+
+    const searchInput = document.getElementById('customerSearchInput');
+    if (searchInput) searchInput.value = '';
+
+    const clearBtn = document.getElementById('clearCustomerBtn');
+    if (clearBtn) clearBtn.style.display = 'none';
+
+    hideCustomerResults();
+    renderSelectedCustomerCard();
+}
+
+function hideCustomerResults() {
+    const resultsBox = document.getElementById('customerSearchResults');
+    if (resultsBox) resultsBox.style.display = 'none';
+}
+
+function renderSelectedCustomerCard() {
+    const card = document.getElementById('employeeDetailsCard');
+    if (!card) return;
+
+    if (!selectedCustomer) {
+        card.style.display = 'none';
+        return;
+    }
+
+    const pending = parseCleanNumber(selectedCustomer.pending_payment);
+    const newTotal = pending + currentGrandTotal;
+
+    document.getElementById('cardEmpName').textContent    = selectedCustomer.name || '—';
+    document.getElementById('cardEmpPhone').textContent   = selectedCustomer.phone ? '📞 ' + selectedCustomer.phone : '';
+    document.getElementById('cardEmpAddress').textContent = selectedCustomer.address ? '📍 ' + selectedCustomer.address : '';
+    document.getElementById('cardEmpPending').textContent = formatRs(pending);
+    document.getElementById('cardEmpNewTotal').textContent = formatRs(newTotal);
+    card.style.display = 'block';
+}
+
+function onEmployeeSelect() {
+    renderSelectedCustomerCard();
+}
+
+// Click outside listener for customer search dropdown
+document.addEventListener('click', (e) => {
+    const wrap = e.target.closest('#creditControls');
+    if (!wrap) {
+        hideCustomerResults();
+    }
+});
+
 /* ── Payment Method Switcher ─────────────────── */
 function selectPayment(method) {
     paymentMethod = method;
@@ -2441,35 +2630,15 @@ function selectPayment(method) {
 
     if (method === 'credit') {
         paidInput.value = '0.00';
-        onEmployeeSelect();
+        renderSelectedCustomerCard();
+        setTimeout(() => {
+            const input = document.getElementById('customerSearchInput');
+            if (input) input.focus();
+        }, 50);
     } else if (method === 'card') {
         paidInput.value = currentGrandTotal.toFixed(2);
     }
     updateChange();
-}
-
-function onEmployeeSelect() {
-    const sel = document.getElementById('employeeSelect');
-    const opt = sel ? sel.selectedOptions[0] : null;
-    const card = document.getElementById('employeeDetailsCard');
-
-    if (!opt || !opt.value) {
-        if (card) card.style.display = 'none';
-        return;
-    }
-
-    const name      = opt.dataset.name || '';
-    const phone     = opt.dataset.phone || '';
-    const address   = opt.dataset.address || '';
-    const pending   = parseCleanNumber(opt.dataset.pending);
-    const newTotal  = pending + currentGrandTotal;
-
-    document.getElementById('cardEmpName').textContent    = name;
-    document.getElementById('cardEmpPhone').textContent   = phone ? '📞 ' + phone : '';
-    document.getElementById('cardEmpAddress').textContent = address ? '📍 ' + address : '';
-    document.getElementById('cardEmpPending').textContent = formatRs(pending);
-    document.getElementById('cardEmpNewTotal').textContent = formatRs(newTotal);
-    card.style.display = 'flex';
 }
 
 /* ── Customer Section Toggle ─────────────────── */
@@ -2567,10 +2736,7 @@ function closeReceipt() {
     document.getElementById('customerName').value  = '';
     document.getElementById('customerPhone').value = '';
 
-    const empSel = document.getElementById('employeeSelect');
-    if (empSel) empSel.value = '';
-    const empCard = document.getElementById('employeeDetailsCard');
-    if (empCard) empCard.style.display = 'none';
+    clearSelectedCustomer();
 
     if (custSectionOpen) toggleCustomerSection();
     selectPayment('cash');
@@ -2800,17 +2966,14 @@ async function submitPosEmployeePayment(e) {
                 modalOpt.textContent = `${data.employee_name} — Due: PKR ${data.new_balance}`;
             }
 
-            // Update checkout employee select dropdown as well
-            const checkoutSelect = document.getElementById('employeeSelect');
-            const checkoutOpt = checkoutSelect ? checkoutSelect.querySelector(`option[value="${employeeId}"]`) : null;
-            if (checkoutOpt) {
-                checkoutOpt.dataset.pending = data.raw_new_balance;
-                checkoutOpt.textContent = data.employee_name;
+            // Update in-memory customer list
+            const foundCust = currentCustomerList.find(c => c.id == employeeId);
+            if (foundCust) {
+                foundCust.pending_payment = data.raw_new_balance;
             }
-
-            // If currently selected in checkout panel, trigger onEmployeeSelect to refresh balance card
-            if (checkoutSelect && checkoutSelect.value == employeeId) {
-                onEmployeeSelect();
+            if (selectedCustomer && selectedCustomer.id == employeeId) {
+                selectedCustomer.pending_payment = data.raw_new_balance;
+                renderSelectedCustomerCard();
             }
 
             // Reset modal form
