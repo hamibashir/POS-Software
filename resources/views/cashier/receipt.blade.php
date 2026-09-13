@@ -636,7 +636,7 @@
             </div>
             <div class="change-box" style="background:#fef2f2; color:#b91c1c; border:1px solid #fecaca;">
                 <span>📋 Payment Status</span>
-                <span>Unpaid (Staff Credit)</span>
+                <span>Unpaid (Credit)</span>
             </div>
             @else
             <div class="t-row paid-row">

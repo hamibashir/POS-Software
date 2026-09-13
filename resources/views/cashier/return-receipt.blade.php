@@ -384,7 +384,7 @@
                             {{ match($saleReturn->refund_method) {
                                 'cash' => '💵 CASH REFUND',
                                 'card' => '💳 CARD / BANK',
-                                'credit_adjustment' => '💼 STAFF CREDIT ADJUSTMENT',
+                                'credit_adjustment' => '💼 CREDIT ADJUSTMENT',
                                 default => strtoupper($saleReturn->refund_method)
                             } }}
                         </span>

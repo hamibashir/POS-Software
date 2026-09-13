@@ -1309,8 +1309,8 @@
                         Card
                     </button>
                     <button type="button" class="pay-tab-btn" data-method="credit" onclick="selectPayment('credit')">
-                        <span class="material-symbols-outlined si">badge</span>
-                        Staff Credit
+                        <span class="material-symbols-outlined si">account_balance_wallet</span>
+                        Credit
                     </button>
                 </div>
 
@@ -1754,7 +1754,7 @@
                             <select id="posReturnRefundMethod" class="form-select" style="height:42px; border-radius:10px;" required>
                                 <option value="cash" selected>💵 Cash Refund (Counter Drawer)</option>
                                 <option value="card">💳 Card / Bank Transfer</option>
-                                <option value="credit_adjustment" id="posReturnOptionCreditAdj" style="display:none;">💼 Adjust Staff Credit Balance</option>
+                                <option value="credit_adjustment" id="posReturnOptionCreditAdj" style="display:none;">💼 Adjust Credit Balance</option>
                             </select>
                         </div>
                         <div class="col-md-6">
