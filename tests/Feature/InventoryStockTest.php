@@ -25,11 +25,10 @@ class InventoryStockTest extends TestCase
             'is_active' => true,
         ]);
 
-        $category = Category::create([
-            'name'      => 'Plumbing',
-            'slug'      => 'plumbing',
-            'is_active' => true,
-        ]);
+        $category = Category::firstOrCreate(
+            ['slug' => 'sanitary'],
+            ['name' => 'Sanitary', 'is_active' => true]
+        );
 
         $this->product = Product::create([
             'category_id'         => $category->id,

@@ -327,19 +327,16 @@
 
         @php
         $iconMap = [
-            'power'     => 'handyman',
-            'hand'      => 'construction',
-            'electric'  => 'bolt',
-            'plumb'     => 'plumbing',
-            'sanitary'  => 'plumbing',
-            'paint'     => 'format_paint',
-            'garden'    => 'yard',
-            'fastener'  => 'settings',
-            'screw'     => 'settings',
-            'lumber'    => 'forest',
-            'wood'      => 'forest',
-            'safety'    => 'shield',
-            'tool'      => 'handyman',
+            'electric tool' => 'handyman',
+            'hand tool'     => 'construction',
+            'sanitary'      => 'plumbing',
+            'paint'         => 'format_paint',
+            'hardware'      => 'hardware',
+            'appliance'     => 'kitchen',
+            'light'         => 'lightbulb',
+            'electric'      => 'bolt',
+            'power'         => 'handyman',
+            'tool'          => 'construction',
         ];
         @endphp
 

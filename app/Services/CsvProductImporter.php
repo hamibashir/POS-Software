@@ -23,28 +23,16 @@ class CsvProductImporter
         $skipped = 0;
         $now = now();
 
-        // Default category
-        $defaultCat = DB::table('categories')->where('slug', 'hardware-sanitary')->first();
-        if (!$defaultCat) {
-            $defaultCatId = DB::table('categories')->insertGetId([
-                'name' => 'Hardware & Sanitary',
-                'slug' => 'hardware-sanitary',
-                'is_active' => 1,
-                'created_at' => $now,
-                'updated_at' => $now,
-            ]);
-        } else {
-            $defaultCatId = $defaultCat->id;
-        }
-
-        // Category mapping
+        // Target 8 categories definition
         $categoryMap = [
-            'pipes'      => ['name' => 'Pipes & Fittings', 'slug' => 'pipes-fittings'],
-            'valves'     => ['name' => 'Valves & Taps', 'slug' => 'valves-taps'],
-            'electrical' => ['name' => 'Electrical & Lighting', 'slug' => 'electrical-lighting'],
-            'tools'      => ['name' => 'Tools & Hardware', 'slug' => 'tools-hardware'],
-            'paints'     => ['name' => 'Paints & Adhesives', 'slug' => 'paints-adhesives'],
-            'bathroom'   => ['name' => 'Bathroom & Sanitary', 'slug' => 'bathroom-sanitary'],
+            'sanitary'       => ['name' => 'Sanitary',       'slug' => 'sanitary',       'icon' => 'bi-droplet-half'],
+            'paint'          => ['name' => 'Paint',          'slug' => 'paint',          'icon' => 'bi-paint-bucket'],
+            'hardware'       => ['name' => 'Hardware',       'slug' => 'hardware',       'icon' => 'bi-tools'],
+            'hand_tools'     => ['name' => 'Hand Tools',     'slug' => 'hand-tools',     'icon' => 'bi-hammer'],
+            'appliances'     => ['name' => 'Appliances',     'slug' => 'appliances',     'icon' => 'bi-plug-fill'],
+            'electric_tools' => ['name' => 'Electric Tools', 'slug' => 'electric-tools', 'icon' => 'bi-wrench-adjustable'],
+            'electric'       => ['name' => 'Electric',       'slug' => 'electric',       'icon' => 'bi-lightning-charge-fill'],
+            'lights'         => ['name' => 'Lights',         'slug' => 'lights',         'icon' => 'bi-lightbulb-fill'],
         ];
 
         $catIds = [];
@@ -52,16 +40,20 @@ class CsvProductImporter
             $c = DB::table('categories')->where('slug', $data['slug'])->first();
             if (!$c) {
                 $catIds[$key] = DB::table('categories')->insertGetId([
-                    'name' => $data['name'],
-                    'slug' => $data['slug'],
-                    'is_active' => 1,
-                    'created_at' => $now,
-                    'updated_at' => $now,
+                    'name'        => $data['name'],
+                    'slug'        => $data['slug'],
+                    'icon'        => $data['icon'],
+                    'description' => $data['name'] . ' products and supplies',
+                    'is_active'   => 1,
+                    'created_at'  => $now,
+                    'updated_at'  => $now,
                 ]);
             } else {
                 $catIds[$key] = $c->id;
             }
         }
+
+        $defaultCatId = $catIds['hardware'];
 
         DB::beginTransaction();
         try {
@@ -129,20 +121,24 @@ class CsvProductImporter
                 $lname = strtolower($name);
                 $isDummy = in_array($lname, ['aa', 'cc']) && $cost == 0 && $sale == 0;
 
-                // Categorize
+                // Categorize into the 8 core categories
                 $catId = $defaultCatId;
-                if (preg_match('/pvc|ppr|pipe|socket|elbow|tee|yee|bend|union|end cap|reducer|u clamp/i', $lname)) {
-                    $catId = $catIds['pipes'];
-                } elseif (preg_match('/valve|cock|mixer|faucet|spindal|nozzle|bib|shower/i', $lname)) {
-                    $catId = $catIds['valves'];
-                } elseif (preg_match('/bulb|led|smd|light|switch|breaker|socket|holder|plug|cable|wire|capacitor|dimer|bell/i', $lname)) {
-                    $catId = $catIds['electrical'];
-                } elseif (preg_match('/screw|bolt|nut|plier|cutter|drill|warma|disc|grinder|spaner|chabi|wrench|lock|hinges|hammer|hamer/i', $lname)) {
-                    $catId = $catIds['tools'];
-                } elseif (preg_match('/paint|glue|elfy|silicone|varnish|thinner|seal|tape|bond|solution|cement|putty/i', $lname)) {
-                    $catId = $catIds['paints'];
-                } elseif (preg_match('/sink|basin|waste|seat cover|flush|toilet|comode|man hole|trap|cabinet|mirror/i', $lname)) {
-                    $catId = $catIds['bathroom'];
+                if (preg_match('/bulb|led|smd|light|lamp|tube|ceiling light|panel light|flood light|holder|spot light/i', $lname)) {
+                    $catId = $catIds['lights'];
+                } elseif (preg_match('/drill|grinder|cutter machine|sander|saw electric|marble cutter|heat gun|blower|rotary hammer|welding|jigsaw|machine|electric tool/i', $lname)) {
+                    $catId = $catIds['electric_tools'];
+                } elseif (preg_match('/switch|breaker|socket|plug|cable|wire|capacitor|dimer|bell|conduit|db box|board|tape electric|mcb|main switch|insulation|electric/i', $lname)) {
+                    $catId = $catIds['electric'];
+                } elseif (preg_match('/fan|geyser|heater|exhaust|pump|motor|cooler|dispenser|filter|iron|kettle|stove|appliance/i', $lname)) {
+                    $catId = $catIds['appliances'];
+                } elseif (preg_match('/paint|glue|elfy|silicone|varnish|thinner|seal|tape|bond|solution|cement|putty|brush|roller|primer|spray paint/i', $lname)) {
+                    $catId = $catIds['paint'];
+                } elseif (preg_match('/plier|cutter|wrench|chabi|spaner|hammer|hamer|screwdriver|test pen|tape measure|hacksaw|level|trowel|allen key|pipe wrench|hand tool|saw/i', $lname)) {
+                    $catId = $catIds['hand_tools'];
+                } elseif (preg_match('/sink|basin|waste|seat cover|flush|toilet|comode|man hole|trap|cabinet|mirror|pvc|ppr|pipe|socket|elbow|tee|yee|bend|union|end cap|reducer|u clamp|valve|cock|mixer|faucet|spindal|nozzle|bib|shower|sanitary|plumb/i', $lname)) {
+                    $catId = $catIds['sanitary'];
+                } elseif (preg_match('/screw|bolt|nut|lock|hinges|padlock|handle|anchor|fastener|clamp|wire mesh|chain|bracket|curtain rod|rivet|washer|hardware/i', $lname)) {
+                    $catId = $catIds['hardware'];
                 }
 
                 $sku = 'PRD-' . str_pad((string)$codeInt, 4, '0', STR_PAD_LEFT);

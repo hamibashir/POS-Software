@@ -45,11 +45,10 @@ class SupplierLedgerTest extends TestCase
             'is_active'       => true,
         ]);
 
-        $category = Category::create([
-            'name'      => 'Hardware',
-            'slug'      => 'hardware',
-            'is_active' => true,
-        ]);
+        $category = Category::firstOrCreate(
+            ['slug' => 'hardware'],
+            ['name' => 'Hardware', 'is_active' => true]
+        );
 
         $this->product = Product::create([
             'category_id'         => $category->id,

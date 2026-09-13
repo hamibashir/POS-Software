@@ -37,87 +37,87 @@
         overflow: hidden;
     }
 
-    /* ── Top Search & Quick Action Header ───────────────── */
+    /* ── Top Quick Action Header ───────────────── */
     .pos-top-header {
         background: #ffffff;
         border-bottom: 1px solid var(--pos-border);
-        padding: 10px 20px;
+        padding: 9px 20px;
         display: flex;
         align-items: center;
+        justify-content: space-between;
         gap: 12px;
         flex-shrink: 0;
         z-index: 50;
         box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     }
-
-    .scanner-box {
-        width: 270px;
-        position: relative;
-        flex-shrink: 0;
+    .top-header-brand {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 800;
+        font-size: 15px;
+        color: #0f172a;
     }
-    .scanner-box .ico {
+    .top-header-brand .brand-ico {
+        font-size: 22px;
+        color: #0f766e;
+    }
+    .top-header-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    /* ── Big Long Product Search Bar Under Current Order ── */
+    .stage-search-container {
+        padding: 12px 20px;
+        background: #ffffff;
+        border-bottom: 1px solid var(--pos-border);
+        position: relative;
+        z-index: 45;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+    }
+    .stage-search-wrap {
+        position: relative;
+        width: 100%;
+    }
+    .stage-search-wrap .ico {
         position: absolute;
-        left: 12px;
+        left: 16px;
         top: 50%;
         transform: translateY(-50%);
-        font-size: 20px;
+        font-size: 26px;
         color: #0f766e;
         pointer-events: none;
     }
-    .scanner-input {
+    .stage-search-input {
         width: 100%;
-        height: 42px;
-        padding: 0 14px 0 40px;
+        height: 52px;
+        padding: 0 48px 0 54px;
         border: 2px solid #cbd5e1;
-        border-radius: 10px;
+        border-radius: 12px;
         background: #f8fafc;
-        font-size: 13.5px;
+        font-size: 15.5px;
         font-weight: 600;
         color: #0f172a;
         outline: none;
-        transition: all 0.2s;
+        transition: all 0.2s ease-in-out;
+        box-shadow: inset 0 1px 2px rgba(0,0,0,0.03);
     }
-    .scanner-input:focus {
+    .stage-search-input:focus {
         border-color: #0f766e;
         background: #ffffff;
-        box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.15);
+        box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.15), 0 4px 12px rgba(15, 118, 110, 0.08);
     }
-
-    .search-box-wrap {
-        position: relative;
-        flex: 1;
-        min-width: 220px;
-    }
-    .search-box-wrap .ico {
-        position: absolute;
-        left: 14px;
-        top: 50%;
-        transform: translateY(-50%);
-        font-size: 22px;
-        color: #64748b;
-        pointer-events: none;
-    }
-    .search-input {
-        width: 100%;
-        height: 42px;
-        padding: 0 40px 0 44px;
-        border: 2px solid #cbd5e1;
-        border-radius: 10px;
-        background: #f8fafc;
-        font-size: 14px;
+    .stage-search-input::placeholder {
+        color: #94a3b8;
         font-weight: 500;
-        color: #0f172a;
-        outline: none;
-        transition: all 0.2s;
+        font-size: 14.5px;
     }
-    .search-input:focus {
-        border-color: #0f766e;
-        background: #ffffff;
-        box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.15);
-    }
-    .search-clear-btn {
+    .stage-search-wrap .search-clear-btn {
         position: absolute;
-        right: 12px;
+        right: 14px;
         top: 50%;
         transform: translateY(-50%);
         background: none;
@@ -127,17 +127,52 @@
         display: none;
         align-items: center;
         justify-content: center;
-        padding: 2px;
+        padding: 4px;
+        border-radius: 50%;
+        transition: all 0.15s;
     }
-    .search-clear-btn:hover { color: #475569; }
+    .stage-search-wrap .search-clear-btn:hover {
+        background: #e2e8f0;
+        color: #0f172a;
+    }
 
     /* Autocomplete Dropdown */
     .search-dropdown {
         position: absolute;
-        top: calc(100% + 6px);
+        top: calc(100% + 8px);
         left: 0;
         right: 0;
         background: #ffffff;
+        border-radius: 14px;
+        border: 1.5px solid #cbd5e1;
+        box-shadow: 0 16px 40px rgba(15, 23, 42, 0.18);
+        max-height: 440px;
+        overflow-y: auto;
+        z-index: 1000;
+        display: none;
+    }
+    .search-item {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 12px 16px;
+        border-bottom: 1px solid #f1f5f9;
+        cursor: pointer;
+        transition: background 0.12s;
+    }
+    .search-item:last-child { border-bottom: none; }
+    .search-item:hover, .search-item.active {
+        background: #f0fdfa;
+    }
+    .search-item .thumb {
+        width: 44px;
+        height: 44px;
+        border-radius: 8px;
+        object-fit: cover;
+        background: #f1f5f9;
+        flex-shrink: 0;
+        border: 1px solid #e2e8f0;
+    }
         border-radius: 12px;
         border: 1px solid #cbd5e1;
         box-shadow: 0 12px 32px rgba(15, 23, 42, 0.16);
@@ -1062,76 +1097,61 @@
 
 <div class="pos-layout">
 
-    {{-- ══════════ TOP ACTION & SEARCH HEADER ══════════ --}}
+    {{-- ══════════ TOP ACTION HEADER ══════════ --}}
     <header class="pos-top-header">
-
-        {{-- Barcode input --}}
-        <div class="scanner-box">
-            <span class="material-symbols-outlined ico">qr_code_scanner</span>
-            <input type="text" id="barcodeInput" class="scanner-input"
-                   placeholder="Scan Barcode [Enter]..." autocomplete="off" autofocus>
+        <div class="top-header-brand">
+            <span class="material-symbols-outlined brand-ico">point_of_sale</span>
+            <span>POS Workstation</span>
         </div>
 
-        {{-- Live Search Autocomplete Box --}}
-        <div class="search-box-wrap">
-            <span class="material-symbols-outlined ico">search</span>
-            <input type="text" id="productSearch" class="search-input"
-                   placeholder="Search products by Name, SKU, Barcode, or Category... (Press F2)"
-                   autocomplete="off">
-            <button type="button" class="search-clear-btn" id="searchClearBtn" onclick="clearSearchInput()">
-                <span class="material-symbols-outlined" style="font-size:18px;">close</span>
+        <div class="top-header-actions">
+            {{-- Held Orders Queue Trigger --}}
+            <button type="button" class="top-action-btn hold-badge-btn" id="topHoldBtn" onclick="openHeldOrdersModal()" title="Held Orders Queue (F7)">
+                <span class="material-symbols-outlined" style="font-size:18px;">pause_circle</span>
+                <span>Hold Queue</span>
+                <span class="count-chip" id="topHoldCountBadge" style="display:none;">0</span>
             </button>
 
-            {{-- Floating Dropdown for Results --}}
-            <div class="search-dropdown" id="searchDropdown"></div>
+            {{-- Pay Supplier Trigger --}}
+            <button type="button" class="top-action-btn" id="topSupplierPayBtn" onclick="openSupplierPayModal()" title="Pay Supplier / Clear Balance (F8)" style="background:#fffbeb; border-color:#fde68a; color:#b45309;">
+                <span class="material-symbols-outlined" style="font-size:18px; color:#d97706;">payments</span>
+                <span>Pay Supplier</span>
+                <span style="font-size:11px; opacity:0.75; margin-left:2px;">[F8]</span>
+            </button>
+
+            {{-- Employee Payment Return Trigger --}}
+            <button type="button" class="top-action-btn" id="topEmployeePayBtn" onclick="openEmployeePayModal()" title="Receive Employee Payment / Clear Due (F10)" style="background:#f0fdf4; border-color:#bbf7d0; color:#15803d;">
+                <span class="material-symbols-outlined" style="font-size:18px; color:#16a34a;">account_balance_wallet</span>
+                <span>Clear Staff Due</span>
+                <span style="font-size:11px; opacity:0.75; margin-left:2px;">[F10]</span>
+            </button>
+
+            {{-- Customer Product Return Trigger --}}
+            <button type="button" class="top-action-btn" id="topCustomerReturnBtn" onclick="openCustomerReturnModal()" title="Customer Product Return / Restore Stock (F11)" style="background:#fef2f2; border-color:#fecaca; color:#b91c1c;">
+                <span class="material-symbols-outlined" style="font-size:18px; color:#ef4444;">assignment_return</span>
+                <span>Customer Return</span>
+                <span style="font-size:11px; opacity:0.75; margin-left:2px;">[F11]</span>
+            </button>
+
+            {{-- Browse Visual Catalog Drawer Trigger --}}
+            <button type="button" class="top-action-btn" data-bs-toggle="offcanvas" data-bs-target="#catalogOffcanvas" title="Open Visual Catalog (F3)">
+                <span class="material-symbols-outlined" style="font-size:18px; color:#0f766e;">grid_view</span>
+                <span>Browse Catalog</span>
+                <span style="font-size:11px; opacity:0.6; margin-left:2px;">[F3]</span>
+            </button>
+
+            {{-- Quick Customer Toggle --}}
+            <button type="button" class="top-action-btn" id="topCustomerBtn" onclick="toggleCustomerSection()">
+                <span class="material-symbols-outlined" style="font-size:18px;">person</span>
+                <span id="topCustomerBtnLabel">Customer</span>
+            </button>
+
+            {{-- Clear Cart Action --}}
+            <button type="button" class="top-action-btn" onclick="clearCart()" title="Clear Current Order">
+                <span class="material-symbols-outlined" style="font-size:18px; color:#ef4444;">delete_sweep</span>
+                <span>Clear</span>
+            </button>
         </div>
-
-        {{-- Held Orders Queue Trigger --}}
-        <button type="button" class="top-action-btn hold-badge-btn" id="topHoldBtn" onclick="openHeldOrdersModal()" title="Held Orders Queue (F7)">
-            <span class="material-symbols-outlined" style="font-size:18px;">pause_circle</span>
-            <span>Hold Queue</span>
-            <span class="count-chip" id="topHoldCountBadge" style="display:none;">0</span>
-        </button>
-
-        {{-- Pay Supplier Trigger --}}
-        <button type="button" class="top-action-btn" id="topSupplierPayBtn" onclick="openSupplierPayModal()" title="Pay Supplier / Clear Balance (F8)" style="background:#fffbeb; border-color:#fde68a; color:#b45309;">
-            <span class="material-symbols-outlined" style="font-size:18px; color:#d97706;">payments</span>
-            <span>Pay Supplier</span>
-            <span style="font-size:11px; opacity:0.75; margin-left:2px;">[F8]</span>
-        </button>
-
-        {{-- Employee Payment Return Trigger --}}
-        <button type="button" class="top-action-btn" id="topEmployeePayBtn" onclick="openEmployeePayModal()" title="Receive Employee Payment / Clear Due (F10)" style="background:#f0fdf4; border-color:#bbf7d0; color:#15803d;">
-            <span class="material-symbols-outlined" style="font-size:18px; color:#16a34a;">account_balance_wallet</span>
-            <span>Clear Staff Due</span>
-            <span style="font-size:11px; opacity:0.75; margin-left:2px;">[F10]</span>
-        </button>
-
-        {{-- Customer Product Return Trigger --}}
-        <button type="button" class="top-action-btn" id="topCustomerReturnBtn" onclick="openCustomerReturnModal()" title="Customer Product Return / Restore Stock (F11)" style="background:#fef2f2; border-color:#fecaca; color:#b91c1c;">
-            <span class="material-symbols-outlined" style="font-size:18px; color:#ef4444;">assignment_return</span>
-            <span>Customer Return</span>
-            <span style="font-size:11px; opacity:0.75; margin-left:2px;">[F11]</span>
-        </button>
-
-        {{-- Browse Visual Catalog Drawer Trigger --}}
-        <button type="button" class="top-action-btn" data-bs-toggle="offcanvas" data-bs-target="#catalogOffcanvas" title="Open Visual Catalog (F3)">
-            <span class="material-symbols-outlined" style="font-size:18px; color:#0f766e;">grid_view</span>
-            <span>Browse Catalog</span>
-            <span style="font-size:11px; opacity:0.6; margin-left:2px;">[F3]</span>
-        </button>
-
-        {{-- Quick Customer Toggle --}}
-        <button type="button" class="top-action-btn" id="topCustomerBtn" onclick="toggleCustomerSection()">
-            <span class="material-symbols-outlined" style="font-size:18px;">person</span>
-            <span id="topCustomerBtnLabel">Customer</span>
-        </button>
-
-        {{-- Clear Cart Action --}}
-        <button type="button" class="top-action-btn" onclick="clearCart()" title="Clear Current Order">
-            <span class="material-symbols-outlined" style="font-size:18px; color:#ef4444;">delete_sweep</span>
-            <span>Clear</span>
-        </button>
     </header>
 
     {{-- ══════════ MAIN WORKSPACE ══════════ --}}
@@ -1159,6 +1179,22 @@
                         <span class="material-symbols-outlined" style="font-size:16px;">calculate</span>
                         <span id="metricUnitsCount">0 Units</span>
                     </div>
+                </div>
+            </div>
+
+            {{-- ────── BIG LONG PRODUCT SEARCH BAR UNDER CURRENT ORDER ────── --}}
+            <div class="stage-search-container">
+                <div class="search-box-wrap stage-search-wrap">
+                    <span class="material-symbols-outlined ico">search</span>
+                    <input type="text" id="productSearch" class="search-input stage-search-input"
+                           placeholder="Scan Barcode or Search Products by Name, SKU, Barcode, Category... (Press F2 to focus)"
+                           autocomplete="off" autofocus>
+                    <button type="button" class="search-clear-btn" id="searchClearBtn" onclick="clearSearchInput()">
+                        <span class="material-symbols-outlined" style="font-size:20px;">close</span>
+                    </button>
+
+                    {{-- Floating Dropdown for Results --}}
+                    <div class="search-dropdown" id="searchDropdown"></div>
                 </div>
             </div>
 
@@ -1286,17 +1322,7 @@
                                min="0" step="any" placeholder="0.00" oninput="updateChange()">
                     </div>
 
-                    {{-- Quick Cash Presets --}}
-                    <div class="cash-chips">
-                        <button type="button" class="cash-chip-btn" onclick="setExactCash()">Exact</button>
-                        <button type="button" class="cash-chip-btn" onclick="addCashPreset(100)">+100</button>
-                        <button type="button" class="cash-chip-btn" onclick="addCashPreset(500)">+500</button>
-                        <button type="button" class="cash-chip-btn" onclick="addCashPreset(1000)">+1000</button>
-                        <button type="button" class="cash-chip-btn" onclick="addCashPreset(5000)">+5000</button>
-                        <button type="button" class="cash-chip-btn" onclick="setCashRound(500)">Round 500</button>
-                        <button type="button" class="cash-chip-btn" onclick="setCashRound(1000)">Round 1K</button>
-                        <button type="button" class="cash-chip-btn" onclick="clearCashPaid()">Clear</button>
-                    </div>
+
 
                     {{-- Change / Balance Due Display --}}
                     <div class="change-box" id="changeDisplay">
@@ -1792,7 +1818,6 @@ let heldOrders = [];
 const CSRF = document.querySelector('meta[name="csrf-token"]').content;
 
 /* ── DOM References ──────────────────────────── */
-const barcodeInput    = document.getElementById('barcodeInput');
 const productSearch   = document.getElementById('productSearch');
 const searchDropdown  = document.getElementById('searchDropdown');
 const searchClearBtn  = document.getElementById('searchClearBtn');
@@ -1804,7 +1829,7 @@ const discountInput   = document.getElementById('discountInput');
 
 /* ── Initial Load & Hold Queue Sync ───────────── */
 window.addEventListener('DOMContentLoaded', () => {
-    if (barcodeInput) barcodeInput.focus();
+    if (productSearch) productSearch.focus();
     loadDrawerCatalog('');
     loadHeldOrdersFromStorage();
 
@@ -1887,7 +1912,7 @@ function holdCurrentOrder() {
     renderCart();
 
     toast(`Order held as ${heldItem.ticketNo} (${custName})`, 's');
-    barcodeInput.focus();
+    if (productSearch) productSearch.focus();
 }
 
 function resumeHeldOrder(holdId) {
@@ -1922,7 +1947,7 @@ function resumeHeldOrder(holdId) {
 
     renderCart();
     toast(`Resumed held order ${held.ticketNo}`, 's');
-    barcodeInput.focus();
+    if (productSearch) productSearch.focus();
 }
 
 function discardHeldOrder(holdId) {
@@ -2019,27 +2044,6 @@ function renderHeldOrdersModalBody() {
     `).join('');
 }
 
-/* ── Barcode Scanner ─────────────────────────── */
-barcodeInput.addEventListener('keydown', async (e) => {
-    if (e.key !== 'Enter') return;
-    e.preventDefault();
-    const barcode = barcodeInput.value.trim();
-    if (!barcode) return;
-
-    try {
-        const url = `{{ route('cashier.pos.search') }}?q=${encodeURIComponent(barcode)}`;
-        const res = await (await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })).json();
-        barcodeInput.value = '';
-        if (res && res.length > 0) {
-            addToCart(res[0]);
-        } else {
-            toast(`No product found with barcode "${barcode}"`, 'e');
-        }
-    } catch(err) {
-        toast('Error searching barcode', 'e');
-    }
-});
-
 /* ── Live Product Search & Autocomplete ──────── */
 productSearch.addEventListener('input', () => {
     clearTimeout(searchTimeout);
@@ -2062,18 +2066,18 @@ productSearch.addEventListener('input', () => {
     }, 200);
 });
 
-productSearch.addEventListener('keydown', (e) => {
+productSearch.addEventListener('keydown', async (e) => {
     const items = searchDropdown.querySelectorAll('.search-item');
-    if (!items.length || searchDropdown.style.display === 'none') {
-        if (e.key === 'Escape') hideDropdown();
+    if (e.key === 'Escape') {
+        hideDropdown();
         return;
     }
 
-    if (e.key === 'ArrowDown') {
+    if (e.key === 'ArrowDown' && items.length && searchDropdown.style.display !== 'none') {
         e.preventDefault();
         activeDropdownIdx = (activeDropdownIdx + 1) % items.length;
         updateActiveDropdownItem(items);
-    } else if (e.key === 'ArrowUp') {
+    } else if (e.key === 'ArrowUp' && items.length && searchDropdown.style.display !== 'none') {
         e.preventDefault();
         activeDropdownIdx = (activeDropdownIdx - 1 + items.length) % items.length;
         updateActiveDropdownItem(items);
@@ -2087,9 +2091,22 @@ productSearch.addEventListener('keydown', (e) => {
             addToCart(currentSearchResults[0]);
             hideDropdown();
             clearSearchInput();
+        } else if (productSearch.value.trim()) {
+            const q = productSearch.value.trim();
+            try {
+                const url = `{{ route('cashier.pos.search') }}?q=${encodeURIComponent(q)}`;
+                const list = await (await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })).json();
+                if (list && list.length > 0) {
+                    addToCart(list[0]);
+                    hideDropdown();
+                    clearSearchInput();
+                } else {
+                    toast(`No product found for "${q}"`, 'e');
+                }
+            } catch(err) {
+                console.error(err);
+            }
         }
-    } else if (e.key === 'Escape') {
-        hideDropdown();
     }
 });
 
@@ -2563,7 +2580,7 @@ function closeReceipt() {
     completeSaleBtn.innerHTML = '<span id="completeSaleLabel">Complete Sale</span><span class="material-symbols-outlined si">check_circle</span><span style="font-size:12px; opacity:0.7; margin-left:4px;">[F9]</span>';
 
     clearSearchInput();
-    barcodeInput.focus();
+    if (productSearch) productSearch.focus();
 }
 
 /* ── Supplier Payment (POS Counter) ──────────── */

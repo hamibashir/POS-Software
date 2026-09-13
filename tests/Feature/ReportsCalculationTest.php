@@ -29,17 +29,15 @@ class ReportsCalculationTest extends TestCase
             'is_active' => true,
         ]);
 
-        $this->categoryTools = Category::create([
-            'name'      => 'Power Tools',
-            'slug'      => 'power-tools',
-            'is_active' => true,
-        ]);
+        $this->categoryTools = Category::firstOrCreate(
+            ['slug' => 'electric-tools'],
+            ['name' => 'Electric Tools', 'is_active' => true]
+        );
 
-        $this->categoryPipes = Category::create([
-            'name'      => 'Pipes & Fittings',
-            'slug'      => 'pipes-fittings',
-            'is_active' => true,
-        ]);
+        $this->categoryPipes = Category::firstOrCreate(
+            ['slug' => 'sanitary'],
+            ['name' => 'Sanitary', 'is_active' => true]
+        );
 
         $this->productA = Product::create([
             'category_id'         => $this->categoryTools->id,
@@ -167,8 +165,8 @@ class ReportsCalculationTest extends TestCase
 
         $response->assertOk()
             ->assertSee('Category-Wise Sales Summary')
-            ->assertSee('Power Tools')
-            ->assertSee('Pipes & Fittings')
+            ->assertSee('Electric Tools')
+            ->assertSee('Sanitary')
             ->assertSee('UPVC Bend 4 inch')
             ->assertSee('10'); // 10 units sold
     }

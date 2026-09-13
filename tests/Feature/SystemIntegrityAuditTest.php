@@ -46,7 +46,10 @@ class SystemIntegrityAuditTest extends TestCase
      */
     public function test_all_admin_get_routes_render_cleanly_for_admin(): void
     {
-        $category = Category::create(['name' => 'General Hardware', 'slug' => 'general-hardware', 'is_active' => true]);
+        $category = Category::firstOrCreate(
+            ['slug' => 'hardware'],
+            ['name' => 'Hardware', 'is_active' => true]
+        );
         $product = Product::create([
             'category_id'         => $category->id,
             'name'                => 'Steel Screws 100pk',
@@ -125,7 +128,10 @@ class SystemIntegrityAuditTest extends TestCase
      */
     public function test_financial_precision_under_complex_multi_item_discounts(): void
     {
-        $category = Category::create(['name' => 'Fasteners', 'slug' => 'fasteners', 'is_active' => true]);
+        $category = Category::firstOrCreate(
+            ['slug' => 'hardware'],
+            ['name' => 'Hardware', 'is_active' => true]
+        );
         $prod1 = Product::create([
             'category_id'         => $category->id,
             'name'                => 'Item 1',
@@ -190,7 +196,10 @@ class SystemIntegrityAuditTest extends TestCase
      */
     public function test_purchase_return_reduces_stock_and_logs_movement(): void
     {
-        $category = Category::create(['name' => 'Plumbing', 'slug' => 'plumbing', 'is_active' => true]);
+        $category = Category::firstOrCreate(
+            ['slug' => 'sanitary'],
+            ['name' => 'Sanitary', 'is_active' => true]
+        );
         $product = Product::create([
             'category_id'         => $category->id,
             'name'                => 'PVC Pipe 10ft',

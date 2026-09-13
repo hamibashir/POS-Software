@@ -252,12 +252,16 @@
     @if(!$q && $categories->count())
     @php
     $iconMap = [
-        'power'    => 'handyman',   'hand'     => 'construction',
-        'electric' => 'bolt',       'plumb'    => 'plumbing',
-        'sanitary' => 'plumbing',   'paint'    => 'format_paint',
-        'garden'   => 'yard',       'fastener' => 'settings',
-        'screw'    => 'settings',   'safety'   => 'shield',
-        'tool'     => 'handyman',
+        'electric tool' => 'handyman',
+        'hand tool'     => 'construction',
+        'sanitary'      => 'plumbing',
+        'paint'         => 'format_paint',
+        'hardware'      => 'hardware',
+        'appliance'     => 'kitchen',
+        'light'         => 'lightbulb',
+        'electric'      => 'bolt',
+        'power'         => 'handyman',
+        'tool'          => 'construction',
     ];
     @endphp
     <div class="cat-banner-grid">
@@ -295,7 +299,20 @@
                 <span class="badge">{{ $products->total() }}</span>
             </a>
 
-            @php $iconMap2 = ['power'=>'handyman','hand'=>'construction','electric'=>'bolt','plumb'=>'plumbing','sanitary'=>'plumbing','paint'=>'format_paint','garden'=>'yard','fastener'=>'settings','screw'=>'settings','safety'=>'shield','tool'=>'handyman']; @endphp
+            @php
+            $iconMap2 = [
+                'electric tool' => 'handyman',
+                'hand tool'     => 'construction',
+                'sanitary'      => 'plumbing',
+                'paint'         => 'format_paint',
+                'hardware'      => 'hardware',
+                'appliance'     => 'kitchen',
+                'light'         => 'lightbulb',
+                'electric'      => 'bolt',
+                'power'         => 'handyman',
+                'tool'          => 'construction',
+            ];
+            @endphp
             @foreach($categories as $cat)
             @php
                 $msIcon = 'category';

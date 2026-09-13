@@ -446,7 +446,7 @@
         </a>
 
         <div class="cat-nav-links">
-            @foreach(\App\Models\Category::where('is_active', true)->orderBy('name')->take(5)->get() as $navCat)
+            @foreach(\App\Models\Category::where('is_active', true)->orderBy('name')->get() as $navCat)
             <a href="{{ route('catalog.category', $navCat->slug) }}">{{ $navCat->name }}</a>
             @endforeach
         </div>
@@ -491,7 +491,7 @@
             <div>
                 <h4>Shop</h4>
                 <ul>
-                    @foreach(\App\Models\Category::where('is_active', true)->orderBy('name')->take(4)->get() as $fc)
+                    @foreach(\App\Models\Category::where('is_active', true)->orderBy('name')->get() as $fc)
                     <li><a href="{{ route('catalog.category', $fc->slug) }}">{{ $fc->name }}</a></li>
                     @endforeach
                 </ul>

@@ -34,11 +34,10 @@ class ProductManagementTest extends TestCase
             'is_active' => true,
         ]);
 
-        $this->category = Category::create([
-            'name'      => 'Sanitary & Fittings',
-            'slug'      => 'sanitary-fittings',
-            'is_active' => true,
-        ]);
+        $this->category = Category::firstOrCreate(
+            ['slug' => 'sanitary'],
+            ['name' => 'Sanitary', 'is_active' => true]
+        );
 
         $this->product = Product::create([
             'category_id'         => $this->category->id,
