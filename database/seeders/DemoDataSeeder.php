@@ -206,7 +206,12 @@ class DemoDataSeeder extends Seeder
         }
 
         // ── 4. Purchases ─────────────────────────────────────────
-        $suppliers = ['Al-Baraka Traders', 'National Hardware', 'Pak Electrical Supplies', 'City Builders Mart'];
+        $suppliers = DB::table('suppliers')->pluck('name')->toArray();
+        if (empty($suppliers)) {
+            $suppliers = ['Malik Idrees', 'Ghulam Nabi & Sons', 'Riaz Motor', 'Sea Star'];
+        } else {
+            $suppliers = array_slice($suppliers, 0, 6);
+        }
 
         foreach ($suppliers as $i => $supplier) {
             $date    = Carbon::now()->subDays(rand(5, 25));
