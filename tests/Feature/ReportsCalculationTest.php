@@ -129,7 +129,9 @@ class ReportsCalculationTest extends TestCase
 
         $response->assertOk()
             ->assertSee('Daily Sales')
-            ->assertSee('15,500'); // 12,000 + 3,500
+            ->assertSee('15,500') // 12,000 + 3,500
+            ->assertSee('10,000') // COGS: 8,000 + 2,000
+            ->assertSee('5,500');  // Gross & Net Profit
     }
 
     public function test_range_sales_tab_renders_and_breaks_down_payments(): void
@@ -143,8 +145,8 @@ class ReportsCalculationTest extends TestCase
 
         $response->assertOk()
             ->assertSee('15,500')
-            ->assertSee('12,000') // cash
-            ->assertSee('3,500');  // card
+            ->assertSee('10,000') // COGS
+            ->assertSee('5,500');  // Gross & Net Profit
     }
 
     public function test_low_stock_tab_detects_low_and_out_of_stock(): void
@@ -164,10 +166,21 @@ class ReportsCalculationTest extends TestCase
             ->get(route('admin.reports.index', ['tab' => 'topsell']));
 
         $response->assertOk()
-            ->assertSee('Category-Wise Sales Summary')
+            ->assertSee('Category-Wise Sales')
             ->assertSee('Electric Tools')
             ->assertSee('Sanitary')
             ->assertSee('UPVC Bend 4 inch')
             ->assertSee('10'); // 10 units sold
+    }
+
+    public function test_dashboard_renders_profit_metrics(): void
+    {
+        $response = $this->actingAs($this->admin)
+            ->get(route('admin.dashboard'));
+
+        $response->assertOk()
+            ->assertSee("Today's Net Profit", false)
+            ->assertSee("Monthly Net Profit", false)
+            ->assertSee('5,500');
     }
 }

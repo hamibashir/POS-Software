@@ -122,10 +122,10 @@
 </div>
 
 {{-- ── KPI Cards ────────────────────────────────────────── --}}
-<div class="row g-4 mb-4">
+<div class="row g-3 mb-3">
 
     {{-- Today's Sales --}}
-    <div class="col-6 col-lg-3">
+    <div class="col-12 col-sm-6 col-lg-4">
         <div class="dash-card">
             <div class="card-bg-icon text-primary"><i class="bi bi-cash-stack"></i></div>
             <p class="label">Today's Sales</p>
@@ -138,23 +138,57 @@
                 </span>
                 @endif
             </div>
-        </div>
-    </div>
-
-    {{-- Today's Expenses --}}
-    <div class="col-6 col-lg-3">
-        <div class="dash-card">
-            <div class="card-bg-icon text-danger" style="color:#ef4444;"><i class="bi bi-wallet2"></i></div>
-            <p class="label">Today's Expenses</p>
-            <div class="d-flex align-items-baseline gap-2 flex-wrap">
-                <p class="value text-danger">Rs. {{ number_format($todayExpenses, 0) }}</p>
-                <a href="{{ route('admin.expenses.index', ['preset' => 'today']) }}" style="font-size:11px; text-decoration:none; font-weight:600; color:var(--pos-primary);">View &rarr;</a>
+            <div style="font-size:11.5px; color:#64748b; margin-top:6px;">
+                COGS: <span class="fw-semibold">Rs. {{ number_format($todayCogs, 0) }}</span>
             </div>
         </div>
     </div>
 
+    {{-- Today's Expenses --}}
+    <div class="col-12 col-sm-6 col-lg-4">
+        <div class="dash-card">
+            <div class="card-bg-icon text-danger" style="color:#ef4444;"><i class="bi bi-wallet2"></i></div>
+            <p class="label">Today's Expenses</p>
+            <div class="d-flex align-items-baseline gap-2 flex-wrap justify-content-between">
+                <p class="value text-danger">Rs. {{ number_format($todayExpenses, 0) }}</p>
+                <a href="{{ route('admin.expenses.index', ['preset' => 'today']) }}" style="font-size:11px; text-decoration:none; font-weight:600; color:var(--pos-primary);">View &rarr;</a>
+            </div>
+            <div style="font-size:11.5px; color:#64748b; margin-top:6px;">
+                Daily store operating expenses
+            </div>
+        </div>
+    </div>
+
+    {{-- Today's Profit --}}
+    <div class="col-12 col-sm-6 col-lg-4">
+        <div class="dash-card" style="border-left: 4px solid {{ $todayNetProfit >= 0 ? '#10b981' : '#ef4444' }};">
+            <div class="card-bg-icon text-success" style="color:{{ $todayNetProfit >= 0 ? '#10b981' : '#ef4444' }};"><i class="bi bi-cash-coin"></i></div>
+            <p class="label">Today's Net Profit</p>
+            <div class="d-flex align-items-baseline gap-2 flex-wrap">
+                <p class="value" style="color:{{ $todayNetProfit >= 0 ? '#059669' : '#dc2626' }};">
+                    Rs. {{ number_format($todayNetProfit, 0) }}
+                </p>
+                <span class="badge-trend {{ $todayNetMargin >= 0 ? 'badge-pos' : 'badge-neg' }}">
+                    {{ $todayNetMargin }}% Net Margin
+                </span>
+            </div>
+            <div style="font-size:11.5px; color:#64748b; margin-top:6px; display:flex; justify-content:space-between;">
+                <span>Gross: <strong class="text-dark">Rs. {{ number_format($todayGrossProfit, 0) }}</strong> ({{ $todayMargin }}%)</span>
+                @if($profitVsYesterday !== null)
+                <span class="{{ $profitVsYesterday >= 0 ? 'text-success' : 'text-danger' }} fw-bold" style="font-size:11px;">
+                    <i class="bi bi-arrow-{{ $profitVsYesterday >= 0 ? 'up' : 'down' }}"></i> {{ abs($profitVsYesterday) }}% vs yest.
+                </span>
+                @endif
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="row g-3 mb-4">
+
     {{-- Monthly Revenue --}}
-    <div class="col-6 col-lg-3">
+    <div class="col-12 col-sm-6 col-lg-4">
         <div class="dash-card">
             <div class="card-bg-icon text-primary"><i class="bi bi-graph-up"></i></div>
             <p class="label">Monthly Revenue</p>
@@ -167,17 +201,47 @@
                 </span>
                 @endif
             </div>
+            <div style="font-size:11.5px; color:#64748b; margin-top:6px;">
+                Month COGS: <span class="fw-semibold">Rs. {{ number_format($thisMonthCogs, 0) }}</span>
+            </div>
         </div>
     </div>
 
     {{-- Monthly Expenses --}}
-    <div class="col-6 col-lg-3">
+    <div class="col-12 col-sm-6 col-lg-4">
         <div class="dash-card">
             <div class="card-bg-icon" style="color:#d97706;"><i class="bi bi-pie-chart"></i></div>
             <p class="label">Monthly Expenses</p>
-            <div class="d-flex align-items-baseline gap-2 flex-wrap">
+            <div class="d-flex align-items-baseline gap-2 flex-wrap justify-content-between">
                 <p class="value" style="color:#b45309;">Rs. {{ number_format($thisMonthExpenses, 0) }}</p>
                 <a href="{{ route('admin.expenses.index', ['preset' => 'this_month']) }}" style="font-size:11px; text-decoration:none; font-weight:600; color:var(--pos-primary);">Details &rarr;</a>
+            </div>
+            <div style="font-size:11.5px; color:#64748b; margin-top:6px;">
+                Month-to-date operating expenses
+            </div>
+        </div>
+    </div>
+
+    {{-- Monthly Net Profit --}}
+    <div class="col-12 col-sm-6 col-lg-4">
+        <div class="dash-card" style="border-left: 4px solid {{ $thisMonthNetProfit >= 0 ? '#10b981' : '#ef4444' }};">
+            <div class="card-bg-icon text-success" style="color:{{ $thisMonthNetProfit >= 0 ? '#10b981' : '#ef4444' }};"><i class="bi bi-piggy-bank"></i></div>
+            <p class="label">Monthly Net Profit</p>
+            <div class="d-flex align-items-baseline gap-2 flex-wrap">
+                <p class="value" style="color:{{ $thisMonthNetProfit >= 0 ? '#059669' : '#dc2626' }};">
+                    Rs. {{ number_format($thisMonthNetProfit, 0) }}
+                </p>
+                <span class="badge-trend {{ $thisMonthNetMargin >= 0 ? 'badge-pos' : 'badge-neg' }}">
+                    {{ $thisMonthNetMargin }}% Net Margin
+                </span>
+            </div>
+            <div style="font-size:11.5px; color:#64748b; margin-top:6px; display:flex; justify-content:space-between;">
+                <span>Gross: <strong class="text-dark">Rs. {{ number_format($thisMonthGrossProfit, 0) }}</strong> ({{ $thisMonthMargin }}%)</span>
+                @if($monthProfitVsLast !== null)
+                <span class="{{ $monthProfitVsLast >= 0 ? 'text-success' : 'text-danger' }} fw-bold" style="font-size:11px;">
+                    <i class="bi bi-arrow-{{ $monthProfitVsLast >= 0 ? 'up' : 'down' }}"></i> {{ abs($monthProfitVsLast) }}% vs last mo.
+                </span>
+                @endif
             </div>
         </div>
     </div>

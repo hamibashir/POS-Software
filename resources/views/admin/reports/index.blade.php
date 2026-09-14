@@ -97,50 +97,87 @@
         </div>
     </form>
 
-    <div class="stat-grid">
-        <div class="stat-card">
-            <div class="stat-label">Total Transactions</div>
-            <div class="stat-value">{{ number_format($totals['transactions']) }}</div>
-            <div class="stat-sub">in last {{ $days }} days</div>
-        </div>
+    <div class="stat-grid" style="grid-template-columns:repeat(auto-fill,minmax(210px,1fr));">
         <div class="stat-card">
             <div class="stat-label">Total Revenue</div>
-            <div class="stat-value">{{ pkr($totals['revenue'], 2) }}</div>
-            <div class="stat-sub">completed sales</div>
+            <div class="stat-value" style="color:#0f766e;">{{ pkr($totals['revenue'], 2) }}</div>
+            <div class="stat-sub">{{ number_format($totals['transactions']) }} transactions</div>
         </div>
         <div class="stat-card">
-            <div class="stat-label">Avg Sale Value</div>
-            <div class="stat-value">{{ pkr($totals['avg_sale'], 2) }}</div>
-            <div class="stat-sub">per transaction</div>
+            <div class="stat-label">Cost of Goods (COGS)</div>
+            <div class="stat-value" style="color:#475569;">{{ pkr($totals['cogs'], 2) }}</div>
+            <div class="stat-sub">product acquisition cost</div>
         </div>
         <div class="stat-card">
-            <div class="stat-label">Active Days</div>
-            <div class="stat-value">{{ $rows->count() }}</div>
-            <div class="stat-sub">days with sales</div>
+            <div class="stat-label">Operating Expenses</div>
+            <div class="stat-value text-danger">{{ pkr($totals['expense'], 2) }}</div>
+            <div class="stat-sub">recorded daily expenses</div>
+        </div>
+        <div class="stat-card" style="border-left:4px solid #0d9488;">
+            <div class="stat-label" style="color:#0f766e;">Gross Profit</div>
+            <div class="stat-value" style="color:{{ $totals['gross_profit'] >= 0 ? '#0d9488' : '#dc2626' }};">
+                {{ pkr($totals['gross_profit'], 2) }}
+            </div>
+            <div class="stat-sub">{{ $totals['gross_margin'] }}% Gross Margin</div>
+        </div>
+        <div class="stat-card" style="border-left:4px solid {{ $totals['net_profit'] >= 0 ? '#10b981' : '#ef4444' }};">
+            <div class="stat-label" style="color:{{ $totals['net_profit'] >= 0 ? '#047857' : '#b91c1c' }};">Net Profit</div>
+            <div class="stat-value" style="color:{{ $totals['net_profit'] >= 0 ? '#059669' : '#dc2626' }};">
+                {{ pkr($totals['net_profit'], 2) }}
+            </div>
+            <div class="stat-sub">{{ $totals['net_margin'] }}% Net Margin</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Avg Sale & Days</div>
+            <div class="stat-value" style="font-size:18px;">{{ pkr($totals['avg_sale'], 2) }}</div>
+            <div class="stat-sub">{{ $rows->count() }} active sales days</div>
         </div>
     </div>
 
     <div class="report-card">
-        <div class="report-card-header"><span>Sales by Day</span><span>{{ $rows->count() }} days</span></div>
+        <div class="report-card-header">
+            <span><i class="bi bi-calendar-check me-1 text-primary"></i> Daily Sales & Profit Breakdown</span>
+            <span>{{ $rows->count() }} days</span>
+        </div>
         @if($rows->isEmpty())
             <div style="padding:40px;text-align:center;color:#9ca3af;">No sales in this period.</div>
         @else
-        <table class="rpt-table">
-            <thead><tr>
-                <th>Date</th><th style="text-align:right">Transactions</th>
-                <th style="text-align:right">Revenue</th><th style="text-align:right">Avg Sale</th>
-            </tr></thead>
-            <tbody>
-                @foreach($rows as $row)
-                <tr>
-                    <td style="font-weight:600;">{{ \Carbon\Carbon::parse($row->date)->format('D, d M Y') }}</td>
-                    <td style="text-align:right;">{{ $row->transactions }}</td>
-                    <td style="text-align:right;font-weight:700;">{{ pkr($row->revenue,2) }}</td>
-                    <td style="text-align:right;color:#6b7280;">{{ pkr($row->avg_sale,2) }}</td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
+        <div style="overflow-x:auto;">
+            <table class="rpt-table">
+                <thead><tr>
+                    <th>Date</th>
+                    <th style="text-align:right">Txns</th>
+                    <th style="text-align:right">Revenue</th>
+                    <th style="text-align:right">COGS</th>
+                    <th style="text-align:right">Expenses</th>
+                    <th style="text-align:right">Gross Profit</th>
+                    <th style="text-align:right">Net Profit</th>
+                    <th style="text-align:right">Net Margin</th>
+                </tr></thead>
+                <tbody>
+                    @foreach($rows as $row)
+                    <tr>
+                        <td style="font-weight:600;">{{ \Carbon\Carbon::parse($row->date)->format('D, d M Y') }}</td>
+                        <td style="text-align:right;color:#6b7280;">{{ $row->transactions }}</td>
+                        <td style="text-align:right;font-weight:700;color:#0f766e;">{{ pkr($row->revenue,2) }}</td>
+                        <td style="text-align:right;color:#64748b;">{{ pkr($row->cogs,2) }}</td>
+                        <td style="text-align:right;color:#ef4444;">{{ $row->expense > 0 ? pkr($row->expense,2) : '—' }}</td>
+                        <td style="text-align:right;font-weight:700;color:{{ $row->gross_profit >= 0 ? '#0d9488' : '#dc2626' }};">
+                            {{ pkr($row->gross_profit,2) }}
+                        </td>
+                        <td style="text-align:right;font-weight:800;color:{{ $row->net_profit >= 0 ? '#059669' : '#dc2626' }};">
+                            {{ pkr($row->net_profit,2) }}
+                        </td>
+                        <td style="text-align:right;">
+                            <span class="badge {{ $row->net_margin >= 0 ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' }} border" style="font-size:11px; font-weight:700;">
+                                {{ $row->net_margin }}%
+                            </span>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
         @endif
     </div>
 
@@ -166,55 +203,88 @@
     </form>
 
     @if($summary)
-    <div class="stat-grid">
-        <div class="stat-card">
-            <div class="stat-label">Transactions</div>
-            <div class="stat-value">{{ number_format($summary->transactions) }}</div>
-        </div>
+    <div class="stat-grid" style="grid-template-columns:repeat(auto-fill,minmax(210px,1fr));">
         <div class="stat-card">
             <div class="stat-label">Total Revenue</div>
-            <div class="stat-value">{{ pkr($summary->revenue,2) }}</div>
+            <div class="stat-value" style="color:#0f766e;">{{ pkr($summary->revenue,2) }}</div>
+            <div class="stat-sub">{{ number_format($summary->transactions) }} transactions</div>
         </div>
         <div class="stat-card">
-            <div class="stat-label">Cash Revenue</div>
-            <div class="stat-value">{{ pkr($summary->cash_revenue,2) }}</div>
-            <div class="stat-sub">💵 cash payments</div>
+            <div class="stat-label">Cost of Goods (COGS)</div>
+            <div class="stat-value" style="color:#475569;">{{ pkr($summary->cogs ?? 0,2) }}</div>
+            <div class="stat-sub">acquisition cost of sold goods</div>
         </div>
         <div class="stat-card">
-            <div class="stat-label">Card Revenue</div>
-            <div class="stat-value">{{ pkr($summary->card_revenue,2) }}</div>
-            <div class="stat-sub">💳 card payments</div>
+            <div class="stat-label">Operating Expenses</div>
+            <div class="stat-value text-danger">{{ pkr($summary->expense ?? 0,2) }}</div>
+            <div class="stat-sub">period operating costs</div>
+        </div>
+        <div class="stat-card" style="border-left:4px solid #0d9488;">
+            <div class="stat-label" style="color:#0f766e;">Gross Profit</div>
+            <div class="stat-value" style="color:{{ ($summary->gross_profit ?? 0) >= 0 ? '#0d9488' : '#dc2626' }};">
+                {{ pkr($summary->gross_profit ?? 0,2) }}
+            </div>
+            <div class="stat-sub">{{ $summary->gross_margin ?? 0 }}% Gross Margin</div>
+        </div>
+        <div class="stat-card" style="border-left:4px solid {{ ($summary->net_profit ?? 0) >= 0 ? '#10b981' : '#ef4444' }};">
+            <div class="stat-label" style="color:{{ ($summary->net_profit ?? 0) >= 0 ? '#047857' : '#b91c1c' }};">Net Profit</div>
+            <div class="stat-value" style="color:{{ ($summary->net_profit ?? 0) >= 0 ? '#059669' : '#dc2626' }};">
+                {{ pkr($summary->net_profit ?? 0,2) }}
+            </div>
+            <div class="stat-sub">{{ $summary->net_margin ?? 0 }}% Net Margin</div>
         </div>
         <div class="stat-card">
-            <div class="stat-label">Avg Sale</div>
-            <div class="stat-value">{{ pkr($summary->avg_sale,2) }}</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-label">Discounts Given</div>
-            <div class="stat-value">{{ pkr($summary->discounts,2) }}</div>
+            <div class="stat-label">Discounts & Avg Sale</div>
+            <div class="stat-value" style="font-size:18px;">{{ pkr($summary->avg_sale,2) }}</div>
+            <div class="stat-sub">Discounts: {{ pkr($summary->discounts,2) }}</div>
         </div>
     </div>
     @endif
 
     <div class="report-card">
-        <div class="report-card-header"><span>Day-by-Day Breakdown</span><span>{{ $byDay->count() }} days</span></div>
+        <div class="report-card-header">
+            <span><i class="bi bi-calendar3-range me-1 text-primary"></i> Day-by-Day Sales & Profit Breakdown</span>
+            <span>{{ $byDay->count() }} days</span>
+        </div>
         @if($byDay->isEmpty())
             <div style="padding:40px;text-align:center;color:#9ca3af;">No sales in this date range.</div>
         @else
-        <table class="rpt-table">
-            <thead><tr>
-                <th>Date</th><th style="text-align:right">Transactions</th><th style="text-align:right">Revenue</th>
-            </tr></thead>
-            <tbody>
-                @foreach($byDay as $row)
-                <tr>
-                    <td style="font-weight:600;">{{ \Carbon\Carbon::parse($row->date)->format('D, d M Y') }}</td>
-                    <td style="text-align:right;">{{ $row->transactions }}</td>
-                    <td style="text-align:right;font-weight:700;">{{ pkr($row->revenue,2) }}</td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
+        <div style="overflow-x:auto;">
+            <table class="rpt-table">
+                <thead><tr>
+                    <th>Date</th>
+                    <th style="text-align:right">Txns</th>
+                    <th style="text-align:right">Revenue</th>
+                    <th style="text-align:right">COGS</th>
+                    <th style="text-align:right">Expenses</th>
+                    <th style="text-align:right">Gross Profit</th>
+                    <th style="text-align:right">Net Profit</th>
+                    <th style="text-align:right">Margin</th>
+                </tr></thead>
+                <tbody>
+                    @foreach($byDay as $row)
+                    <tr>
+                        <td style="font-weight:600;">{{ \Carbon\Carbon::parse($row->date)->format('D, d M Y') }}</td>
+                        <td style="text-align:right;color:#6b7280;">{{ $row->transactions }}</td>
+                        <td style="text-align:right;font-weight:700;color:#0f766e;">{{ pkr($row->revenue,2) }}</td>
+                        <td style="text-align:right;color:#64748b;">{{ pkr($row->cogs,2) }}</td>
+                        <td style="text-align:right;color:#ef4444;">{{ $row->expense > 0 ? pkr($row->expense,2) : '—' }}</td>
+                        <td style="text-align:right;font-weight:700;color:{{ $row->gross_profit >= 0 ? '#0d9488' : '#dc2626' }};">
+                            {{ pkr($row->gross_profit,2) }}
+                        </td>
+                        <td style="text-align:right;font-weight:800;color:{{ $row->net_profit >= 0 ? '#059669' : '#dc2626' }};">
+                            {{ pkr($row->net_profit,2) }}
+                        </td>
+                        <td style="text-align:right;">
+                            <span class="badge {{ $row->net_margin >= 0 ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' }} border" style="font-size:11px; font-weight:700;">
+                                {{ $row->net_margin }}%
+                            </span>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
         @endif
     </div>
 
@@ -415,82 +485,106 @@
     @if(isset($categoryBreakdown) && $categoryBreakdown->isNotEmpty())
     <div class="report-card" style="margin-bottom:20px;">
         <div class="report-card-header">
-            <span><i class="bi bi-tags me-1 text-primary"></i> Category-Wise Sales Summary</span>
+            <span><i class="bi bi-tags me-1 text-primary"></i> Category-Wise Sales & Profit Summary</span>
             <span style="color:#9ca3af;">{{ $from }} &mdash; {{ $to }}</span>
         </div>
-        <table class="rpt-table">
-            <thead>
-                <tr>
-                    <th>Category</th>
-                    <th style="text-align:right">Products Sold</th>
-                    <th style="text-align:right">Units Sold</th>
-                    <th style="text-align:right">Orders Count</th>
-                    <th style="text-align:right">Total Revenue</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($categoryBreakdown as $cb)
-                <tr>
-                    <td style="font-weight:700;">
-                        <span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;">
-                            <i class="bi bi-tag me-1"></i>{{ $cb->category_name }}
-                        </span>
-                    </td>
-                    <td style="text-align:right;color:#6b7280;">{{ $cb->total_products_sold }} products</td>
-                    <td style="text-align:right;font-weight:800;color:#111827;">{{ number_format($cb->total_qty) }}</td>
-                    <td style="text-align:right;color:#6b7280;">{{ $cb->order_count }}</td>
-                    <td style="text-align:right;font-weight:700;color:#065f46;">{{ pkr($cb->total_revenue, 2) }}</td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
+        <div style="overflow-x:auto;">
+            <table class="rpt-table">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th style="text-align:right">Products Sold</th>
+                        <th style="text-align:right">Units Sold</th>
+                        <th style="text-align:right">Total Revenue</th>
+                        <th style="text-align:right">Total Cost</th>
+                        <th style="text-align:right">Gross Profit</th>
+                        <th style="text-align:right">Margin</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($categoryBreakdown as $cb)
+                    <tr>
+                        <td style="font-weight:700;">
+                            <span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;">
+                                <i class="bi bi-tag me-1"></i>{{ $cb->category_name }}
+                            </span>
+                        </td>
+                        <td style="text-align:right;color:#6b7280;">{{ $cb->total_products_sold }} items</td>
+                        <td style="text-align:right;font-weight:800;color:#111827;">{{ number_format($cb->total_qty) }}</td>
+                        <td style="text-align:right;font-weight:700;color:#0f766e;">{{ pkr($cb->total_revenue, 2) }}</td>
+                        <td style="text-align:right;color:#64748b;">{{ pkr($cb->total_cost, 2) }}</td>
+                        <td style="text-align:right;font-weight:800;color:{{ $cb->gross_profit >= 0 ? '#059669' : '#dc2626' }};">
+                            {{ pkr($cb->gross_profit, 2) }}
+                        </td>
+                        <td style="text-align:right;">
+                            <span class="badge {{ $cb->profit_margin >= 0 ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' }} border" style="font-size:11px; font-weight:700;">
+                                {{ $cb->profit_margin }}%
+                            </span>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
     </div>
     @endif
 
     {{-- Main Top Products Table --}}
     <div class="report-card" style="margin-bottom:20px;">
         <div class="report-card-header">
-            <span><i class="bi bi-trophy me-1 text-warning"></i> Top {{ $limit }} Products by Units Sold</span>
+            <span><i class="bi bi-trophy me-1 text-warning"></i> Top {{ $limit }} Products by Units Sold & Profit</span>
             <span style="color:#9ca3af;">{{ $from }} &mdash; {{ $to }}</span>
         </div>
         @if($products->isEmpty())
             <div style="padding:40px;text-align:center;color:#9ca3af;">No sales data in this period.</div>
         @else
-        <table class="rpt-table">
-            <thead><tr>
-                <th>#</th>
-                <th>Product</th>
-                <th>Category</th>
-                <th style="text-align:right">Units Sold</th>
-                <th style="text-align:right">Orders</th>
-                <th style="text-align:right">Avg Price</th>
-                <th style="text-align:right">Total Revenue</th>
-            </tr></thead>
-            <tbody>
-                @foreach($products as $i => $p)
-                <tr>
-                    <td>
-                        <span class="rank {{ $i===0 ? 'rank-1' : ($i===1 ? 'rank-2' : ($i===2 ? 'rank-3' : 'rank-n')) }}">
-                            {{ $i+1 }}
-                        </span>
-                    </td>
-                    <td>
-                        <div style="font-weight:700;">{{ $p->product_name }}</div>
-                        <div style="font-size:11px;color:#9ca3af;font-family:monospace;">{{ $p->product_sku }} &middot; {{ strtoupper($p->product_unit) }}</div>
-                    </td>
-                    <td>
-                        <span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;">
-                            {{ $p->category_name }}
-                        </span>
-                    </td>
-                    <td style="text-align:right;font-size:16px;font-weight:800;color:#111827;">{{ number_format($p->total_qty) }}</td>
-                    <td style="text-align:right;color:#6b7280;">{{ $p->order_count }}</td>
-                    <td style="text-align:right;color:#6b7280;">{{ pkr($p->avg_price,2) }}</td>
-                    <td style="text-align:right;font-weight:700;color:#065f46;">{{ pkr($p->total_revenue,2) }}</td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
+        <div style="overflow-x:auto;">
+            <table class="rpt-table">
+                <thead><tr>
+                    <th>#</th>
+                    <th>Product</th>
+                    <th>Category</th>
+                    <th style="text-align:right">Units Sold</th>
+                    <th style="text-align:right">Avg Price</th>
+                    <th style="text-align:right">Total Revenue</th>
+                    <th style="text-align:right">Total Cost</th>
+                    <th style="text-align:right">Gross Profit</th>
+                    <th style="text-align:right">Margin</th>
+                </tr></thead>
+                <tbody>
+                    @foreach($products as $i => $p)
+                    <tr>
+                        <td>
+                            <span class="rank {{ $i===0 ? 'rank-1' : ($i===1 ? 'rank-2' : ($i===2 ? 'rank-3' : 'rank-n')) }}">
+                                {{ $i+1 }}
+                            </span>
+                        </td>
+                        <td>
+                            <div style="font-weight:700;">{{ $p->product_name }}</div>
+                            <div style="font-size:11px;color:#9ca3af;font-family:monospace;">{{ $p->product_sku }} &middot; {{ strtoupper($p->product_unit) }}</div>
+                        </td>
+                        <td>
+                            <span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;">
+                                {{ $p->category_name }}
+                            </span>
+                        </td>
+                        <td style="text-align:right;font-size:15px;font-weight:800;color:#111827;">{{ number_format($p->total_qty) }}</td>
+                        <td style="text-align:right;color:#6b7280;">{{ pkr($p->avg_price,2) }}</td>
+                        <td style="text-align:right;font-weight:700;color:#0f766e;">{{ pkr($p->total_revenue,2) }}</td>
+                        <td style="text-align:right;color:#64748b;">{{ pkr($p->total_cost,2) }}</td>
+                        <td style="text-align:right;font-weight:800;color:{{ $p->gross_profit >= 0 ? '#059669' : '#dc2626' }};">
+                            {{ pkr($p->gross_profit,2) }}
+                        </td>
+                        <td style="text-align:right;">
+                            <span class="badge {{ $p->profit_margin >= 0 ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' }} border" style="font-size:11px; font-weight:700;">
+                                {{ $p->profit_margin }}%
+                            </span>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
         @endif
     </div>
 
@@ -498,50 +592,72 @@
     @if(isset($categoryWiseProducts) && $categoryWiseProducts->isNotEmpty())
         <div style="margin:24px 0 12px 0;">
             <h5 style="font-weight:800;color:#1e293b;display:flex;align-items:center;gap:8px;font-size:16px;">
-                <i class="bi bi-grid text-primary"></i> Category-Wise Product Rankings
+                <i class="bi bi-grid text-primary"></i> Category-Wise Product Rankings & Margins
             </h5>
         </div>
 
         @foreach($categoryWiseProducts as $categoryName => $catProducts)
+            @php
+                $catRev = $catProducts->sum('total_revenue');
+                $catCost = $catProducts->sum('total_cost');
+                $catProfit = $catRev - $catCost;
+                $catMargin = $catRev > 0 ? round(($catProfit / $catRev) * 100, 1) : 0;
+            @endphp
             <div class="report-card" style="margin-bottom:16px;">
-                <div class="report-card-header" style="background:#f8fafc;">
+                <div class="report-card-header" style="background:#f8fafc; flex-wrap:wrap; gap:8px;">
                     <div style="font-weight:700;color:#1e293b;font-size:13px;display:flex;align-items:center;gap:8px;">
                         <span style="display:inline-block;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:700;background:#e0e7ff;color:#4338ca;border:1px solid #c7d2fe;">
                             <i class="bi bi-folder2-open me-1"></i>{{ $categoryName }}
                         </span>
                         <span style="font-size:12px;color:#64748b;font-weight:500;">({{ $catProducts->count() }} distinct products sold)</span>
                     </div>
-                    <span style="font-weight:700;color:#065f46;font-size:12px;">
-                        Total Sales: {{ pkr($catProducts->sum('total_revenue'), 2) }}
-                    </span>
+                    <div style="font-weight:700;font-size:12px;display:flex;gap:12px;align-items:center;">
+                        <span style="color:#0f766e;">Sales: {{ pkr($catRev, 2) }}</span>
+                        <span style="color:#64748b;">Cost: {{ pkr($catCost, 2) }}</span>
+                        <span style="color:{{ $catProfit >= 0 ? '#059669' : '#dc2626' }};">
+                            Profit: {{ pkr($catProfit, 2) }} ({{ $catMargin }}%)
+                        </span>
+                    </div>
                 </div>
-                <table class="rpt-table">
-                    <thead>
-                        <tr>
-                            <th style="width:40px;">#</th>
-                            <th>Product</th>
-                            <th style="text-align:right">Units Sold</th>
-                            <th style="text-align:right">Orders</th>
-                            <th style="text-align:right">Avg Price</th>
-                            <th style="text-align:right">Total Revenue</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($catProducts as $idx => $cp)
-                        <tr>
-                            <td style="color:#9ca3af;font-weight:700;">{{ $idx + 1 }}</td>
-                            <td>
-                                <div style="font-weight:700;">{{ $cp->product_name }}</div>
-                                <div style="font-size:11px;color:#9ca3af;font-family:monospace;">{{ $cp->product_sku }} &middot; {{ strtoupper($cp->product_unit) }}</div>
-                            </td>
-                            <td style="text-align:right;font-weight:800;color:#111827;">{{ number_format($cp->total_qty) }}</td>
-                            <td style="text-align:right;color:#6b7280;">{{ $cp->order_count }}</td>
-                            <td style="text-align:right;color:#6b7280;">{{ pkr($cp->avg_price, 2) }}</td>
-                            <td style="text-align:right;font-weight:700;color:#065f46;">{{ pkr($cp->total_revenue, 2) }}</td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                <div style="overflow-x:auto;">
+                    <table class="rpt-table">
+                        <thead>
+                            <tr>
+                                <th style="width:40px;">#</th>
+                                <th>Product</th>
+                                <th style="text-align:right">Units Sold</th>
+                                <th style="text-align:right">Avg Price</th>
+                                <th style="text-align:right">Total Revenue</th>
+                                <th style="text-align:right">Total Cost</th>
+                                <th style="text-align:right">Gross Profit</th>
+                                <th style="text-align:right">Margin</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($catProducts as $idx => $cp)
+                            <tr>
+                                <td style="color:#9ca3af;font-weight:700;">{{ $idx + 1 }}</td>
+                                <td>
+                                    <div style="font-weight:700;">{{ $cp->product_name }}</div>
+                                    <div style="font-size:11px;color:#9ca3af;font-family:monospace;">{{ $cp->product_sku }} &middot; {{ strtoupper($cp->product_unit) }}</div>
+                                </td>
+                                <td style="text-align:right;font-weight:800;color:#111827;">{{ number_format($cp->total_qty) }}</td>
+                                <td style="text-align:right;color:#6b7280;">{{ pkr($cp->avg_price, 2) }}</td>
+                                <td style="text-align:right;font-weight:700;color:#0f766e;">{{ pkr($cp->total_revenue, 2) }}</td>
+                                <td style="text-align:right;color:#64748b;">{{ pkr($cp->total_cost, 2) }}</td>
+                                <td style="text-align:right;font-weight:800;color:{{ $cp->gross_profit >= 0 ? '#059669' : '#dc2626' }};">
+                                    {{ pkr($cp->gross_profit, 2) }}
+                                </td>
+                                <td style="text-align:right;">
+                                    <span class="badge {{ $cp->profit_margin >= 0 ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' }} border" style="font-size:11px; font-weight:700;">
+                                        {{ $cp->profit_margin }}%
+                                    </span>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
             </div>
         @endforeach
     @endif
