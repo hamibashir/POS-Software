@@ -70,6 +70,11 @@ class SaleService
             $paidAmount  = $saleData['paid_amount']  ?? $totalAmount;
             $change      = max(0, $paidAmount - $totalAmount);
 
+            $paymentMethod = $saleData['payment_method'] ?? 'cash';
+            $status = ($paymentMethod === 'credit' && $paidAmount < $totalAmount)
+                ? 'pending'
+                : 'completed';
+
             // Create the sale
             $sale = Sale::create([
                 'invoice_number'  => $this->generateInvoiceNumber(),
@@ -83,8 +88,8 @@ class SaleService
                 'total_amount'    => $totalAmount,
                 'paid_amount'     => $paidAmount,
                 'change_amount'   => $change,
-                'payment_method'  => $saleData['payment_method'] ?? 'cash',
-                'status'          => 'completed',
+                'payment_method'  => $paymentMethod,
+                'status'          => $status,
                 'notes'           => $saleData['notes'] ?? null,
             ]);
 

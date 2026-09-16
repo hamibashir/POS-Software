@@ -62,8 +62,34 @@ class Sale extends Model
         return (float) $this->returns()->sum('total_return_amount');
     }
 
+    /**
+     * Get computed status for display (checks if credit sale is still unpaid/pending).
+     */
+    public function getDisplayStatusAttribute(): string
+    {
+        if ($this->status === 'voided') {
+            return 'voided';
+        }
+
+        if ($this->payment_method === 'credit') {
+            if ($this->status === 'pending' || (float)$this->paid_amount <= 0) {
+                return 'pending';
+            }
+            if ((float)$this->paid_amount < (float)$this->total_amount) {
+                return 'pending';
+            }
+        }
+
+        return $this->status ?? 'completed';
+    }
+
     public function scopeCompleted($query)
     {
         return $query->where('status', 'completed');
+    }
+
+    public function scopeValid($query)
+    {
+        return $query->where('status', '!=', 'voided');
     }
 }

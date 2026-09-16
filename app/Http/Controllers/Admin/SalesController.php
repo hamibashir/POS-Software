@@ -44,18 +44,51 @@ class SalesController extends Controller
 
         // — Filter by status
         if ($status = $request->get('status')) {
-            $query->where('status', $status);
+            if ($status === 'pending') {
+                $query->where(function($q) {
+                    $q->where('status', 'pending')
+                      ->orWhere(function($sub) {
+                          $sub->where('payment_method', 'credit')->whereColumn('paid_amount', '<', 'total_amount');
+                      });
+                });
+            } elseif ($status === 'completed') {
+                $query->where('status', 'completed')
+                      ->where(function($sub) {
+                          $sub->where('payment_method', '!=', 'credit')
+                              ->orWhereColumn('paid_amount', '>=', 'total_amount');
+                      });
+            } else {
+                $query->where('status', $status);
+            }
         }
 
         $sales = $query->paginate(20)->withQueryString();
 
         // Summary stats (for the filtered query — without pagination)
-        $statsQuery = Sale::where('status', 'completed');
+        $statsQuery = Sale::where('status', '!=', 'voided');
         if ($from)    { $statsQuery->whereDate('created_at', '>=', $from); }
         if ($to)      { $statsQuery->whereDate('created_at', '<=', $to); }
         if ($payment) { $statsQuery->where('payment_method', $payment); }
+        if ($status)  {
+            if ($status === 'pending') {
+                $statsQuery->where(function($q) {
+                    $q->where('status', 'pending')
+                      ->orWhere(function($sub) {
+                          $sub->where('payment_method', 'credit')->whereColumn('paid_amount', '<', 'total_amount');
+                      });
+                });
+            } elseif ($status === 'completed') {
+                $statsQuery->where('status', 'completed')
+                           ->where(function($sub) {
+                               $sub->where('payment_method', '!=', 'credit')
+                                   ->orWhereColumn('paid_amount', '>=', 'total_amount');
+                           });
+            } else {
+                $statsQuery->where('status', $status);
+            }
+        }
 
-        $todayDirectRevenue = (float) Sale::where('status', 'completed')
+        $todayDirectRevenue = (float) Sale::where('status', '!=', 'voided')
             ->whereDate('created_at', today())
             ->sum(DB::raw("CASE WHEN payment_method != 'credit' THEN total_amount ELSE paid_amount END"));
 
@@ -66,7 +99,7 @@ class SalesController extends Controller
         $stats = [
             'total_sales'    => $statsQuery->count(),
             'total_revenue'  => $statsQuery->sum('total_amount'),
-            'today_sales'    => Sale::where('status', 'completed')->whereDate('created_at', today())->count(),
+            'today_sales'    => Sale::where('status', '!=', 'voided')->whereDate('created_at', today())->count(),
             'today_revenue'  => $todayDirectRevenue + $todayCreditCleared,
         ];
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use App\Models\EmployeePayment;
+use App\Models\Sale;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -29,7 +30,7 @@ class StaffController extends Controller
 
         $search = trim($request->get('search', ''));
 
-        $employeesQuery = Employee::with(['sales' => fn($q) => $q->where('payment_method', 'credit')->where('status', 'completed'), 'payments']);
+        $employeesQuery = Employee::with(['sales' => fn($q) => $q->where('payment_method', 'credit')->where('status', '!=', 'voided'), 'payments']);
         $cashiersQuery  = User::where('role', 'cashier');
         $adminsQuery    = User::where('role', 'admin');
 
@@ -57,7 +58,7 @@ class StaffController extends Controller
         $admins    = $adminsQuery->latest()->get();
 
         // Calculate overall store stats
-        $allEmployees = Employee::with(['sales' => fn($q) => $q->where('payment_method', 'credit')->where('status', 'completed'), 'payments'])->get();
+        $allEmployees = Employee::with(['sales' => fn($q) => $q->where('payment_method', 'credit')->where('status', '!=', 'voided'), 'payments'])->get();
         $totalCredit  = $allEmployees->sum(fn($e) => $e->total_credit);
         $totalPaid    = $allEmployees->sum(fn($e) => $e->total_paid);
         $totalPending = max(0, $totalCredit - $totalPaid);
@@ -161,6 +162,37 @@ class StaffController extends Controller
             'notes'          => $data['notes'] ?? null,
         ]);
 
+        // Allocate clearance payment to pending credit sales (FIFO)
+        $pendingSales = Sale::where('employee_id', $employee->id)
+            ->where('payment_method', 'credit')
+            ->where('status', '!=', 'voided')
+            ->orderBy('created_at', 'asc')
+            ->get()
+            ->filter(fn($s) => $s->status === 'pending' || (float)$s->paid_amount < (float)$s->total_amount);
+
+        $remainingPayment = (float) $data['amount'];
+        foreach ($pendingSales as $sale) {
+            if ($remainingPayment <= 0) break;
+            $unpaid = (float) ($sale->total_amount - $sale->paid_amount);
+            if ($unpaid <= 0) {
+                $sale->update(['status' => 'completed']);
+                continue;
+            }
+            if ($remainingPayment >= $unpaid) {
+                $sale->update([
+                    'paid_amount' => $sale->total_amount,
+                    'status'      => 'completed',
+                ]);
+                $remainingPayment -= $unpaid;
+            } else {
+                $sale->update([
+                    'paid_amount' => (float) $sale->paid_amount + $remainingPayment,
+                    'status'      => 'pending',
+                ]);
+                $remainingPayment = 0;
+            }
+        }
+
         return back()->with('success', "Payment of PKR " . number_format($data['amount'], 2) . " recorded for {$employee->name}. Pending dues updated.");
     }
 
@@ -173,7 +205,7 @@ class StaffController extends Controller
 
         $creditSales = $employee->sales()
             ->where('payment_method', 'credit')
-            ->where('status', 'completed')
+            ->where('status', '!=', 'voided')
             ->with(['items', 'user:id,name'])
             ->latest()
             ->get();

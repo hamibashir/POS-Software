@@ -43,9 +43,10 @@
     .pay-credit { background:#fef3c7; color:#92400e; }
     .pay-badge  { display:inline-flex; align-items:center; gap:4px; border-radius:20px; padding:4px 12px; font-size:12px; font-weight:700; }
 
-    .status-completed { background:#d1fae5; color:#065f46; }
-    .status-voided    { background:#fee2e2; color:#991b1b; }
-    .status-badge     { border-radius:20px; padding:4px 12px; font-size:12px; font-weight:700; }
+    .status-completed { background:#d1fae5; color:#065f46; border:1px solid #a7f3d0; }
+    .status-pending   { background:#fef3c7; color:#92400e; border:1px solid #fde68a; }
+    .status-voided    { background:#fee2e2; color:#991b1b; border:1px solid #fecaca; }
+    .status-badge     { border-radius:20px; padding:4px 12px; font-size:12px; font-weight:700; display:inline-flex; align-items:center; gap:4px; }
 
     /* Items table */
     .items-detail-table { width:100%; border-collapse:collapse; }
@@ -106,9 +107,22 @@
 
 <div class="mb-3">
     <div class="inv-hero">{{ $sale->invoice_number }}</div>
-    <span class="status-badge {{ $sale->status === 'completed' ? 'status-completed' : 'status-voided' }} ms-2">
-        {{ ucfirst($sale->status) }}
-    </span>
+    @php
+        $st = $sale->display_status;
+    @endphp
+    @if($st === 'pending')
+        <span class="status-badge status-pending ms-2">
+            <i class="bi bi-clock-history"></i> Pending
+        </span>
+    @elseif($st === 'voided')
+        <span class="status-badge status-voided ms-2">
+            <i class="bi bi-x-circle"></i> Voided
+        </span>
+    @else
+        <span class="status-badge status-completed ms-2">
+            <i class="bi bi-check-circle"></i> Completed
+        </span>
+    @endif
 </div>
 
 {{-- ── Info grid ──────────────────────────────────────────────── --}}

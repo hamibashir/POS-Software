@@ -30,8 +30,8 @@ class PosController extends Controller
      */
     public function receipt(Sale $sale)
     {
-        // Only allow viewing receipts for completed sales
-        abort_unless($sale->status === 'completed', 404);
+        // Only allow viewing receipts for valid (non-voided) sales
+        abort_if($sale->status === 'voided', 404);
 
         $sale->load(['items', 'user', 'employee']);
         return view('cashier.receipt', compact('sale'));
@@ -43,7 +43,7 @@ class PosController extends Controller
     public function index()
     {
         $employees = Employee::where('is_active', true)
-            ->with(['sales' => fn($q) => $q->where('payment_method', 'credit')->where('status', 'completed'), 'payments'])
+            ->with(['sales' => fn($q) => $q->where('payment_method', 'credit')->where('status', '!=', 'voided'), 'payments'])
             ->orderBy('name')
             ->get()
             ->map(fn($e) => [
@@ -330,6 +330,37 @@ class PosController extends Controller
             'user_id'        => auth()->id(),
             'notes'          => $data['notes'] ?? 'Received & Cleared at POS Counter',
         ]);
+
+        // Allocate clearance payment to pending credit sales (FIFO)
+        $pendingSales = Sale::where('employee_id', $employee->id)
+            ->where('payment_method', 'credit')
+            ->where('status', '!=', 'voided')
+            ->orderBy('created_at', 'asc')
+            ->get()
+            ->filter(fn($s) => $s->status === 'pending' || (float)$s->paid_amount < (float)$s->total_amount);
+
+        $remainingPayment = (float) $data['amount'];
+        foreach ($pendingSales as $sale) {
+            if ($remainingPayment <= 0) break;
+            $unpaid = (float) ($sale->total_amount - $sale->paid_amount);
+            if ($unpaid <= 0) {
+                $sale->update(['status' => 'completed']);
+                continue;
+            }
+            if ($remainingPayment >= $unpaid) {
+                $sale->update([
+                    'paid_amount' => $sale->total_amount,
+                    'status'      => 'completed',
+                ]);
+                $remainingPayment -= $unpaid;
+            } else {
+                $sale->update([
+                    'paid_amount' => (float) $sale->paid_amount + $remainingPayment,
+                    'status'      => 'pending',
+                ]);
+                $remainingPayment = 0;
+            }
+        }
 
         $employee->refresh();
         $newBalance = $employee->pending_payment;

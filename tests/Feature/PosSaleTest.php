@@ -319,4 +319,73 @@ class PosSaleTest extends TestCase
             ->assertSee('INV-CASH-001')
             ->assertDontSee('INV-CREDIT-001');
     }
+
+    public function test_unpaid_credit_sale_displays_pending_status_in_sales_window(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin', 'is_active' => true]);
+
+        $employee = Employee::create([
+            'name'       => 'Zubair Shah',
+            'phone'      => '03221122334',
+            'address'    => 'Rawalpindi',
+            'is_active'  => true,
+        ]);
+
+        // Unpaid credit sale
+        $creditSale = Sale::create([
+            'invoice_number'  => 'INV-CREDIT-PENDING-001',
+            'user_id'         => $admin->id,
+            'employee_id'     => $employee->id,
+            'customer_name'   => $employee->name,
+            'subtotal'        => 2500,
+            'discount_amount' => 0,
+            'tax_amount'      => 0,
+            'total_amount'    => 2500,
+            'paid_amount'     => 0,
+            'change_amount'   => 0,
+            'payment_method'  => 'credit',
+            'status'          => 'pending',
+        ]);
+
+        // Sales listing should display "Pending"
+        $response = $this->actingAs($admin)
+            ->get(route('admin.sales.index'));
+
+        $response->assertOk()
+            ->assertSee('INV-CREDIT-PENDING-001')
+            ->assertSee('Pending');
+
+        // Filter by pending status
+        $pendingFilterResponse = $this->actingAs($admin)
+            ->get(route('admin.sales.index', ['status' => 'pending']));
+
+        $pendingFilterResponse->assertOk()
+            ->assertSee('INV-CREDIT-PENDING-001');
+
+        // Show view should also display "Pending"
+        $showResponse = $this->actingAs($admin)
+            ->get(route('admin.sales.show', $creditSale->id));
+
+        $showResponse->assertOk()
+            ->assertSee('Pending');
+
+        // Now clear the credit payment
+        $payRes = $this->actingAs($admin)
+            ->post(route('admin.staff.employees.payments', $employee->id), [
+                'amount'         => 2500,
+                'payment_method' => 'cash',
+                'payment_date'   => now()->toDateString(),
+            ]);
+
+        $payRes->assertSessionHasNoErrors();
+        $creditSale->refresh();
+        $this->assertEquals('completed', $creditSale->status);
+
+        // Sales listing should now display "Completed"
+        $afterPaymentResponse = $this->actingAs($admin)
+            ->get(route('admin.sales.show', $creditSale->id));
+
+        $afterPaymentResponse->assertOk()
+            ->assertSee('Completed');
+    }
 }

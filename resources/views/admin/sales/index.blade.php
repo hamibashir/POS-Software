@@ -40,9 +40,10 @@
     .pay-credit { background:#fef3c7; color:#92400e; }
     .pay-badge  { display:inline-flex; align-items:center; gap:4px; border-radius:20px; padding:3px 10px; font-size:11px; font-weight:700; }
 
-    .status-completed { background:#d1fae5; color:#065f46; }
-    .status-voided    { background:#fee2e2; color:#991b1b; }
-    .status-badge     { border-radius:20px; padding:3px 10px; font-size:11px; font-weight:700; }
+    .status-completed { background:#d1fae5; color:#065f46; border:1px solid #a7f3d0; }
+    .status-pending   { background:#fef3c7; color:#92400e; border:1px solid #fde68a; }
+    .status-voided    { background:#fee2e2; color:#991b1b; border:1px solid #fecaca; }
+    .status-badge     { border-radius:20px; padding:3px 10px; font-size:11px; font-weight:700; display:inline-flex; align-items:center; gap:4px; }
 
     .total-amount { font-size:15px; font-weight:700; color:#111827; }
     .action-btns  { display:flex; gap:6px; }
@@ -152,6 +153,7 @@
             <select id="status" name="status" class="pos-input" style="width:130px;">
                 <option value="">All</option>
                 <option value="completed" {{ request('status') === 'completed' ? 'selected' : '' }}>Completed</option>
+                <option value="pending"   {{ request('status') === 'pending'   ? 'selected' : '' }}>Pending</option>
                 <option value="voided"    {{ request('status') === 'voided'    ? 'selected' : '' }}>Voided</option>
             </select>
         </div>
@@ -252,9 +254,22 @@
 
                 {{-- Status --}}
                 <td>
-                    <span class="status-badge {{ $sale->status === 'completed' ? 'status-completed' : 'status-voided' }}">
-                        {{ ucfirst($sale->status) }}
-                    </span>
+                    @php
+                        $st = $sale->display_status;
+                    @endphp
+                    @if($st === 'pending')
+                        <span class="status-badge status-pending" title="Payment Pending">
+                            <i class="bi bi-clock-history"></i> Pending
+                        </span>
+                    @elseif($st === 'voided')
+                        <span class="status-badge status-voided">
+                            <i class="bi bi-x-circle"></i> Voided
+                        </span>
+                    @else
+                        <span class="status-badge status-completed">
+                            <i class="bi bi-check-circle"></i> Completed
+                        </span>
+                    @endif
                 </td>
 
                 {{-- Actions --}}

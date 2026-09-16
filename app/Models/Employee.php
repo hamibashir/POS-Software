@@ -52,7 +52,7 @@ class Employee extends Model
     {
         $grossCredit = (float) $this->sales()
             ->where('payment_method', 'credit')
-            ->where('status', 'completed')
+            ->where('status', '!=', 'voided')
             ->sum('total_amount');
 
         return max(0, $grossCredit - $this->total_returned);
