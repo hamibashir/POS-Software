@@ -1505,7 +1505,7 @@
 
 {{-- ══════════ PAY SUPPLIER MODAL (POS) ══════════ --}}
 <div class="modal fade" id="posSupplierPayModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content" style="border-radius:18px; border:none; box-shadow:0 20px 60px rgba(0,0,0,0.25); overflow:hidden;">
             <div class="modal-header px-4 py-3" style="background:#0f766e; color:#fff;">
                 <h5 class="modal-title fw-bold" style="color:#fff; display:flex; align-items:center; gap:8px;">
@@ -1542,6 +1542,20 @@
                                 <div class="text-muted small fw-semibold">Pending Due:</div>
                                 <div class="fs-5 fw-bold text-danger" id="posSupplierCardDue">PKR 0.00</div>
                             </div>
+                        </div>
+                    </div>
+
+                    {{-- Low Stock Items Card for Selected Supplier --}}
+                    <div id="posSupplierLowStockCard" class="mb-3 rounded-3 p-3" style="background:#fffbeb; border:1.5px solid #fde68a; display:none;">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <div class="fw-bold d-flex align-items-center gap-1" style="color:#92400e; font-size:13px;">
+                                <span class="material-symbols-outlined" style="font-size:18px; color:#d97706;">warning</span>
+                                <span>Short / Low Stock Items From This Supplier</span>
+                            </div>
+                            <span id="posSupplierLowStockBadge" class="badge" style="background:#fef3c7; color:#92400e; font-size:11px; border:1px solid #fde68a;">Checking...</span>
+                        </div>
+                        <div id="posSupplierLowStockContent" style="max-height:190px; overflow-y:auto;">
+                            {{-- Loaded dynamically via JS --}}
                         </div>
                     </div>
 
@@ -2752,6 +2766,7 @@ function closeReceipt() {
 /* ── Supplier Payment (POS Counter) ──────────── */
 const posSupplierModal = new bootstrap.Modal(document.getElementById('posSupplierPayModal'));
 let posSelectedSupplierDue = 0;
+let supplierLowStockAbortController = null;
 
 function openSupplierPayModal() {
     posSupplierModal.show();
@@ -2761,13 +2776,109 @@ function openSupplierPayModal() {
     }, 200);
 }
 
+async function loadSupplierLowStock(supplierId) {
+    const card = document.getElementById('posSupplierLowStockCard');
+    const badge = document.getElementById('posSupplierLowStockBadge');
+    const content = document.getElementById('posSupplierLowStockContent');
+
+    if (!supplierId) {
+        if (card) card.style.display = 'none';
+        return;
+    }
+
+    if (card) card.style.display = 'block';
+    if (badge) {
+        badge.className = 'badge bg-secondary';
+        badge.textContent = 'Checking...';
+    }
+    if (content) {
+        content.innerHTML = '<div class="text-center py-2 text-muted small"><span class="spinner-border spinner-border-sm me-1"></span> Checking low stock items for this supplier...</div>';
+    }
+
+    if (supplierLowStockAbortController) {
+        supplierLowStockAbortController.abort();
+    }
+    supplierLowStockAbortController = new AbortController();
+
+    try {
+        const res = await fetch(`{{ url('cashier/pos/suppliers') }}/${supplierId}/low-stock`, {
+            signal: supplierLowStockAbortController.signal,
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': CSRF
+            }
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            const count = data.count || 0;
+            if (count === 0) {
+                if (badge) {
+                    badge.className = 'badge bg-success text-white';
+                    badge.textContent = 'All In Stock';
+                }
+                if (content) {
+                    content.innerHTML = '<div class="p-2 rounded text-center small fw-semibold" style="background:#f0fdf4; color:#166534; border:1px solid #bbf7d0;"><i class="bi bi-check-circle me-1"></i> No short/low stock items found. All items from this supplier are well-stocked.</div>';
+                }
+            } else {
+                if (badge) {
+                    badge.className = 'badge bg-danger text-white';
+                    badge.textContent = `${count} Short Item${count > 1 ? 's' : ''}`;
+                }
+                let tableHtml = `
+                    <table class="table table-sm table-bordered mb-0 bg-white" style="font-size:12px; border-radius:8px; overflow:hidden;">
+                        <thead style="background:#fef3c7; color:#78350f;">
+                            <tr>
+                                <th style="padding:6px 8px;">Product / Item</th>
+                                <th style="padding:6px 8px;">SKU</th>
+                                <th style="text-align:center; padding:6px 8px;">Current Stock</th>
+                                <th style="text-align:center; padding:6px 8px;">Min Alert</th>
+                                <th style="text-align:right; padding:6px 8px;">Cost Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                data.items.forEach(item => {
+                    const stockBadge = item.is_out_of_stock
+                        ? '<span class="badge bg-danger" style="font-size:10px;">0 (Out of Stock)</span>'
+                        : `<span class="badge" style="background:#fee2e2; color:#b91c1c; font-weight:700; font-size:10px;">${item.stock_quantity} ${item.unit}</span>`;
+
+                    tableHtml += `
+                        <tr>
+                            <td style="padding:6px 8px;">
+                                <div class="fw-bold text-dark">${escapeHtml(item.name)}</div>
+                                <div class="text-muted" style="font-size:10px;">${escapeHtml(item.category)}</div>
+                            </td>
+                            <td class="text-muted font-monospace" style="padding:6px 8px; font-size:11px;">${escapeHtml(item.sku || '—')}</td>
+                            <td style="text-align:center; padding:6px 8px;">${stockBadge}</td>
+                            <td style="text-align:center; color:#6b7280; padding:6px 8px;">${item.low_stock_threshold} ${item.unit}</td>
+                            <td style="text-align:right; font-weight:600; padding:6px 8px;">PKR ${item.cost_price.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
+                        </tr>
+                    `;
+                });
+                tableHtml += '</tbody></table>';
+                if (content) {
+                    content.innerHTML = tableHtml;
+                }
+            }
+        }
+    } catch (err) {
+        if (err.name === 'AbortError') return;
+        if (content) {
+            content.innerHTML = '<div class="text-danger small py-1 text-center">Unable to load stock items for this supplier.</div>';
+        }
+    }
+}
+
 function onPosSupplierChange(sel) {
     const opt = sel.options[sel.selectedIndex];
     const card = document.getElementById('posSupplierBalanceCard');
     const amountInput = document.getElementById('posSupplierAmount');
+    const lowStockCard = document.getElementById('posSupplierLowStockCard');
 
     if (!opt || !opt.value) {
         if (card) card.style.display = 'none';
+        if (lowStockCard) lowStockCard.style.display = 'none';
         posSelectedSupplierDue = 0;
         return;
     }
@@ -2785,6 +2896,9 @@ function onPosSupplierChange(sel) {
     if (balance > 0) {
         amountInput.value = balance.toFixed(2);
     }
+
+    // Fetch and display low stock items for this supplier
+    loadSupplierLowStock(parseInt(opt.value));
 }
 
 function fillPosSupplierFullPayment() {
@@ -2848,6 +2962,8 @@ async function submitPosSupplierPayment(e) {
             // Reset form
             document.getElementById('posSupplierPayForm').reset();
             document.getElementById('posSupplierBalanceCard').style.display = 'none';
+            const lowStockCard = document.getElementById('posSupplierLowStockCard');
+            if (lowStockCard) lowStockCard.style.display = 'none';
             posSelectedSupplierDue = 0;
         } else {
             toast(data.message || 'Payment submission failed.', 'e');

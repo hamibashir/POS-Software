@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use App\Models\EmployeePayment;
 use App\Models\Product;
+use App\Models\Purchase;
+use App\Models\PurchaseItem;
 use App\Models\Sale;
 use App\Models\SaleReturn;
 use App\Models\SaleReturnItem;
@@ -202,6 +204,56 @@ class PosController extends Controller
             ]);
 
         return response()->json($suppliers);
+    }
+
+    /**
+     * AJAX: Get low stock or out-of-stock items for a specific supplier.
+     */
+    public function getSupplierLowStock(Supplier $supplier)
+    {
+        // 1. Fetch product IDs linked to purchases from this supplier
+        $purchasesQuery = Purchase::where(function ($q) use ($supplier) {
+            $q->where('supplier_id', $supplier->id);
+            if (!empty($supplier->name)) {
+                $q->orWhere('supplier_name', 'like', "%{$supplier->name}%");
+            }
+        });
+
+        $productIds = PurchaseItem::whereIn('purchase_id', $purchasesQuery->pluck('id'))
+            ->pluck('product_id')
+            ->filter()
+            ->unique();
+
+        // 2. Fetch products that are low in stock or out of stock
+        $lowStockProducts = Product::whereIn('id', $productIds)
+            ->where('is_active', true)
+            ->where(function ($q) {
+                $q->whereColumn('stock_quantity', '<=', 'low_stock_threshold')
+                  ->orWhere('stock_quantity', '<=', 0);
+            })
+            ->with('category:id,name')
+            ->orderBy('stock_quantity', 'asc')
+            ->get()
+            ->map(fn($p) => [
+                'id'                  => $p->id,
+                'name'                => $p->name,
+                'sku'                 => $p->sku,
+                'unit'                => $p->unit,
+                'category'            => $p->category?->name ?? 'General',
+                'stock_quantity'      => $p->stock_quantity,
+                'low_stock_threshold' => $p->low_stock_threshold ?? 5,
+                'is_out_of_stock'     => $p->stock_quantity <= 0,
+                'cost_price'          => (float) $p->cost_price,
+                'sale_price'          => (float) $p->sale_price,
+            ]);
+
+        return response()->json([
+            'success'       => true,
+            'supplier_id'   => $supplier->id,
+            'supplier_name' => $supplier->name,
+            'count'         => $lowStockProducts->count(),
+            'items'         => $lowStockProducts,
+        ]);
     }
 
     /**

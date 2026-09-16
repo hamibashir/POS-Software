@@ -120,6 +120,7 @@ Route::middleware(['auth', 'cashier'])
         Route::post('/pos/complete-sale',         [PosController::class, 'completeSale'])->name('pos.complete-sale');
         Route::get('/pos/receipt/{sale}',         [PosController::class, 'receipt'])->name('pos.receipt');
         Route::get('/pos/suppliers',              [PosController::class, 'getSuppliers'])->name('pos.suppliers');
+        Route::get('/pos/suppliers/{supplier}/low-stock', [PosController::class, 'getSupplierLowStock'])->name('pos.supplier-low-stock');
         Route::post('/pos/supplier-payments',     [PosController::class, 'recordSupplierPayment'])->name('pos.supplier-payments');
         Route::post('/pos/employee-payments',     [PosController::class, 'recordEmployeePayment'])->name('pos.employee-payments');
         Route::get('/pos/employee-receipt/{payment}', [PosController::class, 'employeePaymentReceipt'])->name('pos.employee-receipt');

@@ -140,4 +140,52 @@ class SupplierLedgerTest extends TestCase
             ->assertSee('Apex Hardware Importers')
             ->assertSee('5,000');
     }
+
+    public function test_pos_can_fetch_supplier_low_stock_items(): void
+    {
+        // 1. Create a purchase from this supplier for $this->product
+        $purchase = Purchase::create([
+            'reference_number' => 'PUR-TEST-001',
+            'user_id'          => $this->admin->id,
+            'supplier_id'      => $this->supplier->id,
+            'supplier_name'    => $this->supplier->name,
+            'payment_method'   => 'cash',
+            'total_amount'     => 1000,
+            'paid_amount'      => 1000,
+            'status'           => 'completed',
+            'received_at'      => now(),
+        ]);
+
+        PurchaseItem::create([
+            'purchase_id'  => $purchase->id,
+            'product_id'   => $this->product->id,
+            'product_name' => $this->product->name,
+            'product_sku'  => $this->product->sku,
+            'product_unit' => $this->product->unit,
+            'quantity'     => 10,
+            'unit_cost'    => 1000,
+            'total_cost'   => 10000,
+        ]);
+
+        // When stock is normal (20 > 5), low stock count is 0
+        $response1 = $this->actingAs($this->cashier)
+            ->getJson(route('cashier.pos.supplier-low-stock', $this->supplier->id));
+
+        $response1->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('count', 0);
+
+        // When stock is reduced to low stock (3 <= 5)
+        $this->product->update(['stock_quantity' => 3]);
+
+        $response2 = $this->actingAs($this->cashier)
+            ->getJson(route('cashier.pos.supplier-low-stock', $this->supplier->id));
+
+        $response2->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('count', 1)
+            ->assertJsonPath('items.0.name', 'High Tensile Bolts')
+            ->assertJsonPath('items.0.stock_quantity', 3)
+            ->assertJsonPath('items.0.is_out_of_stock', false);
+    }
 }
