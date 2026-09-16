@@ -88,6 +88,32 @@ class SalesController extends Controller
             }
         }
 
+        // Filtered revenue calculation (Direct Cash/Card + Upfront Credit + Cleared Credit Payments)
+        $filteredDirectRevenue = (float) (clone $statsQuery)
+            ->sum(DB::raw("CASE WHEN payment_method != 'credit' THEN total_amount ELSE paid_amount END"));
+
+        $filteredCreditCleared = 0.0;
+        if (!$payment || $payment === 'credit') {
+            if (!$status || $status === 'completed') {
+                $creditClearedQuery = \App\Models\EmployeePayment::query();
+                if ($from) {
+                    $creditClearedQuery->whereDate(DB::raw('COALESCE(payment_date, created_at)'), '>=', $from);
+                }
+                if ($to) {
+                    $creditClearedQuery->whereDate(DB::raw('COALESCE(payment_date, created_at)'), '<=', $to);
+                }
+                if ($search) {
+                    $creditClearedQuery->whereHas('employee', function($eq) use ($search) {
+                        $eq->where('name', 'like', "%{$search}%")
+                           ->orWhere('phone', 'like', "%{$search}%");
+                    });
+                }
+                $filteredCreditCleared = (float) $creditClearedQuery->sum('amount');
+            }
+        }
+
+        $filteredRevenue = $filteredDirectRevenue + $filteredCreditCleared;
+
         $todayDirectRevenue = (float) Sale::where('status', '!=', 'voided')
             ->whereDate('created_at', today())
             ->sum(DB::raw("CASE WHEN payment_method != 'credit' THEN total_amount ELSE paid_amount END"));
@@ -98,7 +124,7 @@ class SalesController extends Controller
 
         $stats = [
             'total_sales'    => $statsQuery->count(),
-            'total_revenue'  => $statsQuery->sum('total_amount'),
+            'total_revenue'  => $filteredRevenue,
             'today_sales'    => Sale::where('status', '!=', 'voided')->whereDate('created_at', today())->count(),
             'today_revenue'  => $todayDirectRevenue + $todayCreditCleared,
         ];

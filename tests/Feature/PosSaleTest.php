@@ -388,4 +388,70 @@ class PosSaleTest extends TestCase
         $afterPaymentResponse->assertOk()
             ->assertSee('Completed');
     }
+
+    public function test_sales_window_today_revenue_and_filtered_revenue_align_on_same_day(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin', 'is_active' => true]);
+
+        $employee = Employee::create([
+            'name'       => 'Imran Qureshi',
+            'phone'      => '03451122334',
+            'address'    => 'Islamabad',
+            'is_active'  => true,
+        ]);
+
+        // Cash sale today: 1000
+        Sale::create([
+            'invoice_number'  => 'INV-CASH-TODAY-001',
+            'user_id'         => $admin->id,
+            'subtotal'        => 1000,
+            'discount_amount' => 0,
+            'tax_amount'      => 0,
+            'total_amount'    => 1000,
+            'paid_amount'     => 1000,
+            'change_amount'   => 0,
+            'payment_method'  => 'cash',
+            'status'          => 'completed',
+            'created_at'      => now(),
+        ]);
+
+        // Unpaid credit sale today: 3000 (paid 0 upfront)
+        Sale::create([
+            'invoice_number'  => 'INV-CREDIT-TODAY-001',
+            'user_id'         => $admin->id,
+            'employee_id'     => $employee->id,
+            'customer_name'   => $employee->name,
+            'subtotal'        => 3000,
+            'discount_amount' => 0,
+            'tax_amount'      => 0,
+            'total_amount'    => 3000,
+            'paid_amount'     => 0,
+            'change_amount'   => 0,
+            'payment_method'  => 'credit',
+            'status'          => 'pending',
+            'created_at'      => now(),
+        ]);
+
+        // Credit clearance payment today: 1500
+        $this->actingAs($admin)->post(route('admin.staff.employees.payments', $employee->id), [
+            'amount'         => 1500,
+            'payment_method' => 'cash',
+            'payment_date'   => now()->toDateString(),
+        ]);
+
+        // When viewing sales page with Date From = Today & Date To = Today
+        $response = $this->actingAs($admin)
+            ->get(route('admin.sales.index', [
+                'date_from' => now()->toDateString(),
+                'date_to'   => now()->toDateString(),
+            ]));
+
+        $response->assertOk();
+
+        // Expected collected revenue today: 1000 (cash) + 1500 (credit cleared) = 2500
+        $stats = $response->viewData('stats');
+        $this->assertEquals(2500.00, (float) $stats['today_revenue']);
+        $this->assertEquals(2500.00, (float) $stats['total_revenue']);
+        $this->assertEquals($stats['today_revenue'], $stats['total_revenue']);
+    }
 }

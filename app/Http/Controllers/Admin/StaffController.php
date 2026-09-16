@@ -162,36 +162,7 @@ class StaffController extends Controller
             'notes'          => $data['notes'] ?? null,
         ]);
 
-        // Allocate clearance payment to pending credit sales (FIFO)
-        $pendingSales = Sale::where('employee_id', $employee->id)
-            ->where('payment_method', 'credit')
-            ->where('status', '!=', 'voided')
-            ->orderBy('created_at', 'asc')
-            ->get()
-            ->filter(fn($s) => $s->status === 'pending' || (float)$s->paid_amount < (float)$s->total_amount);
-
-        $remainingPayment = (float) $data['amount'];
-        foreach ($pendingSales as $sale) {
-            if ($remainingPayment <= 0) break;
-            $unpaid = (float) ($sale->total_amount - $sale->paid_amount);
-            if ($unpaid <= 0) {
-                $sale->update(['status' => 'completed']);
-                continue;
-            }
-            if ($remainingPayment >= $unpaid) {
-                $sale->update([
-                    'paid_amount' => $sale->total_amount,
-                    'status'      => 'completed',
-                ]);
-                $remainingPayment -= $unpaid;
-            } else {
-                $sale->update([
-                    'paid_amount' => (float) $sale->paid_amount + $remainingPayment,
-                    'status'      => 'pending',
-                ]);
-                $remainingPayment = 0;
-            }
-        }
+        $employee->reconcileCreditSales();
 
         return back()->with('success', "Payment of PKR " . number_format($data['amount'], 2) . " recorded for {$employee->name}. Pending dues updated.");
     }

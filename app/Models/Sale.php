@@ -72,12 +72,10 @@ class Sale extends Model
         }
 
         if ($this->payment_method === 'credit') {
-            if ($this->status === 'pending' || (float)$this->paid_amount <= 0) {
-                return 'pending';
+            if ($this->status === 'completed' || (float)$this->paid_amount >= (float)$this->total_amount) {
+                return 'completed';
             }
-            if ((float)$this->paid_amount < (float)$this->total_amount) {
-                return 'pending';
-            }
+            return 'pending';
         }
 
         return $this->status ?? 'completed';
