@@ -187,5 +187,26 @@ class SupplierLedgerTest extends TestCase
             ->assertJsonPath('items.0.name', 'High Tensile Bolts')
             ->assertJsonPath('items.0.stock_quantity', 3)
             ->assertJsonPath('items.0.is_out_of_stock', false);
+
+        // Also test a product assigned directly via supplier_id without purchase history
+        $directProduct = Product::create([
+            'category_id'         => $this->product->category_id,
+            'supplier_id'         => $this->supplier->id,
+            'name'                => 'Direct Supplier Nut M8',
+            'sku'                 => 'NUT-M8',
+            'cost_price'          => 50,
+            'sale_price'          => 80,
+            'stock_quantity'      => 0,
+            'low_stock_threshold' => 10,
+            'unit'                => 'pcs',
+            'is_active'           => true,
+        ]);
+
+        $response3 = $this->actingAs($this->cashier)
+            ->getJson(route('cashier.pos.supplier-low-stock', $this->supplier->id));
+
+        $response3->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('count', 2);
     }
 }

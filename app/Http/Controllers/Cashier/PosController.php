@@ -211,24 +211,36 @@ class PosController extends Controller
      */
     public function getSupplierLowStock(Supplier $supplier)
     {
-        // 1. Fetch product IDs linked to purchases from this supplier
-        $purchasesQuery = Purchase::where(function ($q) use ($supplier) {
-            $q->where('supplier_id', $supplier->id);
-            if (!empty($supplier->name)) {
-                $q->orWhere('supplier_name', 'like', "%{$supplier->name}%");
-            }
-        });
+        // 1. Direct products assigned to this supplier
+        $directProductIds = Product::where('supplier_id', $supplier->id)->pluck('id');
 
-        $productIds = PurchaseItem::whereIn('purchase_id', $purchasesQuery->pluck('id'))
+        // 2. Product IDs linked via purchases from this supplier
+        $supplierTerms = array_filter([$supplier->name, $supplier->company_name]);
+
+        $purchasesQuery = Purchase::where('supplier_id', $supplier->id);
+        if (!empty($supplierTerms)) {
+            $purchasesQuery->orWhere(function ($q) use ($supplierTerms) {
+                foreach ($supplierTerms as $term) {
+                    $cleanTerm = trim($term);
+                    if ($cleanTerm !== '') {
+                        $q->orWhere('supplier_name', 'like', "%{$cleanTerm}%");
+                    }
+                }
+            });
+        }
+
+        $purchaseProductIds = PurchaseItem::whereIn('purchase_id', $purchasesQuery->pluck('id'))
             ->pluck('product_id')
-            ->filter()
-            ->unique();
+            ->filter();
 
-        // 2. Fetch products that are low in stock or out of stock
-        $lowStockProducts = Product::whereIn('id', $productIds)
+        // Merge all unique product IDs
+        $allProductIds = $directProductIds->merge($purchaseProductIds)->unique()->filter()->values();
+
+        // 3. Fetch products that are low in stock or out of stock
+        $lowStockProducts = Product::whereIn('id', $allProductIds)
             ->where('is_active', true)
             ->where(function ($q) {
-                $q->whereColumn('stock_quantity', '<=', 'low_stock_threshold')
+                $q->whereRaw('stock_quantity <= COALESCE(low_stock_threshold, 10)')
                   ->orWhere('stock_quantity', '<=', 0);
             })
             ->with('category:id,name')
@@ -238,11 +250,11 @@ class PosController extends Controller
                 'id'                  => $p->id,
                 'name'                => $p->name,
                 'sku'                 => $p->sku,
-                'unit'                => $p->unit,
+                'unit'                => $p->unit ?? 'pcs',
                 'category'            => $p->category?->name ?? 'General',
-                'stock_quantity'      => $p->stock_quantity,
-                'low_stock_threshold' => $p->low_stock_threshold ?? 5,
-                'is_out_of_stock'     => $p->stock_quantity <= 0,
+                'stock_quantity'      => (int) $p->stock_quantity,
+                'low_stock_threshold' => (int) ($p->low_stock_threshold ?? 10),
+                'is_out_of_stock'     => (int) $p->stock_quantity <= 0,
                 'cost_price'          => (float) $p->cost_price,
                 'sale_price'          => (float) $p->sale_price,
             ]);

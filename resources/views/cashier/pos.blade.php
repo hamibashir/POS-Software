@@ -1519,6 +1519,12 @@
                     {{-- Supplier Selector --}}
                     <div class="mb-3">
                         <label class="form-label fw-bold small text-secondary">Select Supplier <span class="text-danger">*</span></label>
+                        <div class="input-group input-group-sm mb-2">
+                            <span class="input-group-text bg-light text-muted border-end-0" style="border-radius:8px 0 0 8px;">
+                                <i class="bi bi-search"></i>
+                            </span>
+                            <input type="text" id="posSupplierFilterSearch" class="form-control border-start-0" placeholder="Type to filter supplier names..." style="border-radius:0 8px 8px 0; font-size:12px;" oninput="filterPosSupplierSelect(this.value)">
+                        </div>
                         <select id="posSupplierSelect" class="form-select" style="height:44px; border-radius:10px; font-weight:600;" required onchange="onPosSupplierChange(this)">
                             <option value="">-- Choose Supplier --</option>
                             @if(isset($suppliers))
@@ -2767,13 +2773,38 @@ function closeReceipt() {
 const posSupplierModal = new bootstrap.Modal(document.getElementById('posSupplierPayModal'));
 let posSelectedSupplierDue = 0;
 let supplierLowStockAbortController = null;
+const supplierLowStockUrlTemplate = "{{ route('cashier.pos.supplier-low-stock', ['supplier' => '__SUPPLIER_ID__']) }}";
 
 function openSupplierPayModal() {
     posSupplierModal.show();
     setTimeout(() => {
-        const sel = document.getElementById('posSupplierSelect');
-        if (sel) sel.focus();
+        const searchInput = document.getElementById('posSupplierFilterSearch');
+        if (searchInput) {
+            searchInput.value = '';
+            filterPosSupplierSelect('');
+            searchInput.focus();
+        } else {
+            const sel = document.getElementById('posSupplierSelect');
+            if (sel) sel.focus();
+        }
     }, 200);
+}
+
+function filterPosSupplierSelect(query) {
+    const q = (query || '').toLowerCase().trim();
+    const select = document.getElementById('posSupplierSelect');
+    if (!select) return;
+    const options = select.querySelectorAll('option');
+    let firstMatch = null;
+    options.forEach(opt => {
+        if (!opt.value) return; // Always keep the placeholder option visible
+        const text = (opt.textContent || '').toLowerCase();
+        const matches = !q || text.includes(q);
+        opt.style.display = matches ? '' : 'none';
+        if (matches && !firstMatch && q) {
+            firstMatch = opt;
+        }
+    });
 }
 
 async function loadSupplierLowStock(supplierId) {
@@ -2801,7 +2832,8 @@ async function loadSupplierLowStock(supplierId) {
     supplierLowStockAbortController = new AbortController();
 
     try {
-        const res = await fetch(`{{ url('cashier/pos/suppliers') }}/${supplierId}/low-stock`, {
+        const fetchUrl = supplierLowStockUrlTemplate.replace('__SUPPLIER_ID__', encodeURIComponent(supplierId));
+        const res = await fetch(fetchUrl, {
             signal: supplierLowStockAbortController.signal,
             headers: {
                 'Accept': 'application/json',
