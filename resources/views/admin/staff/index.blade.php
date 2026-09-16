@@ -111,19 +111,54 @@
 </div>
 @endif
 
+{{-- Search Bar across Customers, Cashiers, and Admins --}}
+<div class="pos-card mb-4" style="padding: 16px 20px; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+    <form method="GET" action="{{ route('admin.staff.index') }}" id="staffSearchForm" class="d-flex align-items-center gap-2 flex-wrap">
+        <div style="position:relative; flex: 1; min-width: 260px;">
+            <i class="bi bi-search" style="position:absolute; left:14px; top:50%; transform:translateY(-50%); color:#9ca3af; font-size:15px;"></i>
+            <input type="text"
+                   name="search"
+                   id="staffSearchInput"
+                   value="{{ $search ?? '' }}"
+                   placeholder="Search customers, cashiers, or admins by name, phone, address, email, notes..."
+                   class="pos-input"
+                   style="padding-left: 40px; padding-right: 36px; height: 44px; font-size: 14px; border-radius: 8px; width: 100%; border: 1.5px solid #d1d5db;"
+                   autocomplete="off">
+            <button type="button"
+                    id="clearSearchBtn"
+                    onclick="clearStaffSearch()"
+                    style="position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; color:#9ca3af; font-size:16px; cursor:pointer; display: {{ !empty($search) ? 'block' : 'none' }}; line-height: 1;"
+                    title="Clear search">
+                <i class="bi bi-x-circle-fill"></i>
+            </button>
+        </div>
+        <button type="submit" class="btn-pos" style="height: 44px; padding: 0 20px; display:flex; align-items:center; gap:6px;">
+            <i class="bi bi-search"></i> Search
+        </button>
+        @if(!empty($search))
+        <a href="{{ route('admin.staff.index') }}" class="btn-pos-outline" style="height: 44px; padding: 0 16px; display:flex; align-items:center; gap:6px; text-decoration:none;">
+            <i class="bi bi-arrow-counterclockwise"></i> Reset
+        </a>
+        @endif
+    </form>
+    <div id="searchMatchNotice" style="font-size: 12px; color: #6b7280; margin-top: 8px; display: none;">
+        <i class="bi bi-info-circle me-1"></i> Live filter active: matching <span id="searchMatchCount" style="font-weight:700; color:#111827;">0</span> total records across all tabs.
+    </div>
+</div>
+
 {{-- Tabs --}}
 <div class="nav-tabs-custom">
     <button class="nav-tab-btn active" id="tabBtnEmployees" onclick="switchTab('employees')">
         <i class="bi bi-person-lines-fill"></i> Customers (Credit Dues)
-        <span class="badge" style="background:#f3f4f6; color:#374151; border-radius:10px; font-size:11px;">{{ $employees->count() }}</span>
+        <span class="badge" id="badgeEmployeesCount" style="background:#f3f4f6; color:#374151; border-radius:10px; font-size:11px;">{{ $employees->count() }}</span>
     </button>
     <button class="nav-tab-btn" id="tabBtnCashiers" onclick="switchTab('cashiers')">
         <i class="bi bi-person-badge"></i> Cashiers (POS Users)
-        <span class="badge" style="background:#f3f4f6; color:#374151; border-radius:10px; font-size:11px;">{{ $cashiers->count() }}</span>
+        <span class="badge" id="badgeCashiersCount" style="background:#f3f4f6; color:#374151; border-radius:10px; font-size:11px;">{{ $cashiers->count() }}</span>
     </button>
     <button class="nav-tab-btn" id="tabBtnAdmins" onclick="switchTab('admins')">
         <i class="bi bi-shield-lock-fill"></i> Administrators
-        <span class="badge" style="background:#f3f4f6; color:#374151; border-radius:10px; font-size:11px;">{{ $admins->count() }}</span>
+        <span class="badge" id="badgeAdminsCount" style="background:#f3f4f6; color:#374151; border-radius:10px; font-size:11px;">{{ $admins->count() }}</span>
     </button>
 </div>
 
@@ -145,7 +180,7 @@
             </thead>
             <tbody>
                 @forelse($employees as $emp)
-                <tr>
+                <tr class="staff-row employee-row" data-search="{{ strtolower($emp->name . ' ' . $emp->phone . ' ' . $emp->address . ' ' . ($emp->notes ?? '')) }}">
                     <td>
                         <div style="font-weight:700; color:#111827; font-size:14px;">{{ $emp->name }}</div>
                         @if($emp->notes)
@@ -213,11 +248,18 @@
                 <tr>
                     <td colspan="8" style="text-align:center; padding:48px; color:#9ca3af;">
                         <i class="bi bi-people" style="font-size:36px; display:block; margin-bottom:8px; opacity:.5;"></i>
-                        <p style="font-weight:600; color:#374151; margin-bottom:4px;">No customers added yet</p>
-                        <p style="font-size:13px; margin:0;">Add customers who are authorized to take items on credit sale.</p>
+                        <p style="font-weight:600; color:#374151; margin-bottom:4px;">No customers found</p>
+                        <p style="font-size:13px; margin:0;">{{ !empty($search) ? 'No customers match your search criteria.' : 'Add customers who are authorized to take items on credit sale.' }}</p>
                     </td>
                 </tr>
                 @endforelse
+                <tr class="no-filter-match-row employee-no-match" style="display:none;">
+                    <td colspan="8" style="text-align:center; padding:36px; color:#9ca3af;">
+                        <i class="bi bi-search" style="font-size:28px; display:block; margin-bottom:8px; opacity:.5;"></i>
+                        <p style="font-weight:600; color:#374151; margin-bottom:4px;">No matching customers</p>
+                        <p style="font-size:13px; margin:0;">No customers match your current search query in this tab.</p>
+                    </td>
+                </tr>
             </tbody>
         </table>
     </div>
@@ -239,7 +281,7 @@
             </thead>
             <tbody>
                 @forelse($cashiers as $c)
-                <tr>
+                <tr class="staff-row cashier-row" data-search="{{ strtolower($c->name . ' ' . $c->email) }}">
                     <td>
                         <div style="font-weight:700; color:#111827;">{{ $c->name }}</div>
                     </td>
@@ -280,11 +322,18 @@
                 <tr>
                     <td colspan="6" style="text-align:center; padding:48px; color:#9ca3af;">
                         <i class="bi bi-person-badge" style="font-size:36px; display:block; margin-bottom:8px; opacity:.5;"></i>
-                        <p style="font-weight:600; color:#374151; margin-bottom:4px;">No cashiers configured</p>
-                        <p style="font-size:13px; margin:0;">Create cashier accounts with password to let staff operate the POS.</p>
+                        <p style="font-weight:600; color:#374151; margin-bottom:4px;">No cashiers found</p>
+                        <p style="font-size:13px; margin:0;">{{ !empty($search) ? 'No cashiers match your search criteria.' : 'Create cashier accounts with password to let staff operate the POS.' }}</p>
                     </td>
                 </tr>
                 @endforelse
+                <tr class="no-filter-match-row cashier-no-match" style="display:none;">
+                    <td colspan="6" style="text-align:center; padding:36px; color:#9ca3af;">
+                        <i class="bi bi-search" style="font-size:28px; display:block; margin-bottom:8px; opacity:.5;"></i>
+                        <p style="font-weight:600; color:#374151; margin-bottom:4px;">No matching cashiers</p>
+                        <p style="font-size:13px; margin:0;">No cashiers match your current search query in this tab.</p>
+                    </td>
+                </tr>
             </tbody>
         </table>
     </div>
@@ -306,7 +355,7 @@
             </thead>
             <tbody>
                 @forelse($admins as $a)
-                <tr>
+                <tr class="staff-row admin-row" data-search="{{ strtolower($a->name . ' ' . $a->email) }}">
                     <td>
                         <div class="d-flex align-items-center gap-2">
                             <div style="font-weight:700; color:#111827;">{{ $a->name }}</div>
@@ -358,6 +407,13 @@
                     </td>
                 </tr>
                 @endforelse
+                <tr class="no-filter-match-row admin-no-match" style="display:none;">
+                    <td colspan="6" style="text-align:center; padding:36px; color:#9ca3af;">
+                        <i class="bi bi-search" style="font-size:28px; display:block; margin-bottom:8px; opacity:.5;"></i>
+                        <p style="font-weight:600; color:#374151; margin-bottom:4px;">No matching administrators</p>
+                        <p style="font-size:13px; margin:0;">No administrators match your current search query in this tab.</p>
+                    </td>
+                </tr>
             </tbody>
         </table>
     </div>
@@ -640,6 +696,102 @@
         document.getElementById('tabBtnCashiers').classList.toggle('active', tab === 'cashiers');
         document.getElementById('tabBtnAdmins').classList.toggle('active', tab === 'admins');
     }
+
+    function filterStaff(query) {
+        query = (query || '').toLowerCase().trim();
+        const clearBtn = document.getElementById('clearSearchBtn');
+        const notice = document.getElementById('searchMatchNotice');
+        const matchCountEl = document.getElementById('searchMatchCount');
+
+        if (clearBtn) {
+            clearBtn.style.display = query ? 'block' : 'none';
+        }
+
+        // Filter Customer / Employee rows
+        let empCount = 0;
+        document.querySelectorAll('.employee-row').forEach(row => {
+            const text = (row.getAttribute('data-search') || '').toLowerCase();
+            const match = !query || text.includes(query);
+            row.style.display = match ? '' : 'none';
+            if (match) empCount++;
+        });
+        const empNoMatch = document.querySelector('.employee-no-match');
+        if (empNoMatch) {
+            const totalEmp = document.querySelectorAll('.employee-row').length;
+            empNoMatch.style.display = (query && totalEmp > 0 && empCount === 0) ? '' : 'none';
+        }
+        const badgeEmp = document.getElementById('badgeEmployeesCount');
+        if (badgeEmp) badgeEmp.innerText = empCount;
+
+        // Filter Cashier rows
+        let cashierCount = 0;
+        document.querySelectorAll('.cashier-row').forEach(row => {
+            const text = (row.getAttribute('data-search') || '').toLowerCase();
+            const match = !query || text.includes(query);
+            row.style.display = match ? '' : 'none';
+            if (match) cashierCount++;
+        });
+        const cashierNoMatch = document.querySelector('.cashier-no-match');
+        if (cashierNoMatch) {
+            const totalCashier = document.querySelectorAll('.cashier-row').length;
+            cashierNoMatch.style.display = (query && totalCashier > 0 && cashierCount === 0) ? '' : 'none';
+        }
+        const badgeCashier = document.getElementById('badgeCashiersCount');
+        if (badgeCashier) badgeCashier.innerText = cashierCount;
+
+        // Filter Admin rows
+        let adminCount = 0;
+        document.querySelectorAll('.admin-row').forEach(row => {
+            const text = (row.getAttribute('data-search') || '').toLowerCase();
+            const match = !query || text.includes(query);
+            row.style.display = match ? '' : 'none';
+            if (match) adminCount++;
+        });
+        const adminNoMatch = document.querySelector('.admin-no-match');
+        if (adminNoMatch) {
+            const totalAdmin = document.querySelectorAll('.admin-row').length;
+            adminNoMatch.style.display = (query && totalAdmin > 0 && adminCount === 0) ? '' : 'none';
+        }
+        const badgeAdmin = document.getElementById('badgeAdminsCount');
+        if (badgeAdmin) badgeAdmin.innerText = adminCount;
+
+        // Update match notice
+        const totalMatches = empCount + cashierCount + adminCount;
+        if (notice && matchCountEl) {
+            if (query) {
+                notice.style.display = 'block';
+                matchCountEl.innerText = totalMatches;
+            } else {
+                notice.style.display = 'none';
+            }
+        }
+    }
+
+    function clearStaffSearch() {
+        const input = document.getElementById('staffSearchInput');
+        if (input) {
+            input.value = '';
+            filterStaff('');
+            input.focus();
+        }
+        const url = new URL(window.location.href);
+        if (url.searchParams.has('search')) {
+            url.searchParams.delete('search');
+            window.location.href = url.pathname;
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const input = document.getElementById('staffSearchInput');
+        if (input) {
+            input.addEventListener('input', function() {
+                filterStaff(this.value);
+            });
+            if (input.value) {
+                filterStaff(input.value);
+            }
+        }
+    });
 
     function openEditEmployeeModal(id, name, phone, address, isActive, notes) {
         document.getElementById('editEmployeeForm').action = `{{ url('admin/staff/employees') }}/${id}`;

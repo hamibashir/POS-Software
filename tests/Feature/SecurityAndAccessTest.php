@@ -157,5 +157,48 @@ class SecurityAndAccessTest extends TestCase
             ->delete(route('admin.staff.admins.destroy', $this->admin));
         $responseLastDelete->assertStatus(400);
     }
+
+    public function test_admin_can_search_staff_across_customers_cashiers_and_admins(): void
+    {
+        $customer = \App\Models\Employee::create([
+            'name'      => 'Tariq Mehmood',
+            'phone'     => '03335557788',
+            'address'   => 'Rawalpindi Satellite Town',
+            'is_active' => true,
+            'notes'     => 'Master Plumber Contractor',
+        ]);
+
+        $cashier2 = User::factory()->create([
+            'name'      => 'Zeeshan Cashier',
+            'email'     => 'zeeshan@posstore.com',
+            'role'      => 'cashier',
+            'is_active' => true,
+        ]);
+
+        // 1. Search for customer by name
+        $response = $this->actingAs($this->admin)
+            ->get(route('admin.staff.index', ['search' => 'Tariq']));
+
+        $response->assertOk()
+            ->assertSee('Tariq Mehmood')
+            ->assertSee('03335557788')
+            ->assertDontSee('Zeeshan Cashier');
+
+        // 2. Search for cashier by email
+        $responseCashier = $this->actingAs($this->admin)
+            ->get(route('admin.staff.index', ['search' => 'zeeshan@posstore.com']));
+
+        $responseCashier->assertOk()
+            ->assertSee('Zeeshan Cashier')
+            ->assertDontSee('Tariq Mehmood');
+
+        // 3. Search for admin by name
+        $responseAdmin = $this->actingAs($this->admin)
+            ->get(route('admin.staff.index', ['search' => $this->admin->name]));
+
+        $responseAdmin->assertOk()
+            ->assertSee($this->admin->name)
+            ->assertDontSee('Zeeshan Cashier');
+    }
 }
 

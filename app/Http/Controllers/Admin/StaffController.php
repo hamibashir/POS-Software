@@ -27,33 +27,52 @@ class StaffController extends Controller
     {
         $this->authorizeAdmin();
 
-        $employees = Employee::with(['sales' => fn($q) => $q->where('payment_method', 'credit')->where('status', 'completed'), 'payments'])
-            ->latest()
-            ->get();
+        $search = trim($request->get('search', ''));
 
-        $cashiers = User::where('role', 'cashier')
-            ->latest()
-            ->get();
+        $employeesQuery = Employee::with(['sales' => fn($q) => $q->where('payment_method', 'credit')->where('status', 'completed'), 'payments']);
+        $cashiersQuery  = User::where('role', 'cashier');
+        $adminsQuery    = User::where('role', 'admin');
 
-        $admins = User::where('role', 'admin')
-            ->latest()
-            ->get();
+        if (!empty($search)) {
+            $employeesQuery->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%")
+                  ->orWhere('address', 'like', "%{$search}%")
+                  ->orWhere('notes', 'like', "%{$search}%");
+            });
 
-        $totalCredit    = $employees->sum(fn($e) => $e->total_credit);
-        $totalPaid      = $employees->sum(fn($e) => $e->total_paid);
-        $totalPending   = max(0, $totalCredit - $totalPaid);
+            $cashiersQuery->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+
+            $adminsQuery->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        $employees = $employeesQuery->orderBy('id', 'asc')->get();
+        $cashiers  = $cashiersQuery->latest()->get();
+        $admins    = $adminsQuery->latest()->get();
+
+        // Calculate overall store stats
+        $allEmployees = Employee::with(['sales' => fn($q) => $q->where('payment_method', 'credit')->where('status', 'completed'), 'payments'])->get();
+        $totalCredit  = $allEmployees->sum(fn($e) => $e->total_credit);
+        $totalPaid    = $allEmployees->sum(fn($e) => $e->total_paid);
+        $totalPending = max(0, $totalCredit - $totalPaid);
 
         $stats = [
-            'total_employees' => $employees->count(),
-            'active_employees'=> $employees->where('is_active', true)->count(),
+            'total_employees' => $allEmployees->count(),
+            'active_employees'=> $allEmployees->where('is_active', true)->count(),
             'total_credit'    => $totalCredit,
             'total_paid'      => $totalPaid,
             'total_pending'   => $totalPending,
-            'total_cashiers'  => $cashiers->count(),
-            'total_admins'    => $admins->count(),
+            'total_cashiers'  => User::where('role', 'cashier')->count(),
+            'total_admins'    => User::where('role', 'admin')->count(),
         ];
 
-        return view('admin.staff.index', compact('employees', 'cashiers', 'admins', 'stats'));
+        return view('admin.staff.index', compact('employees', 'cashiers', 'admins', 'stats', 'search'));
     }
 
     /**
