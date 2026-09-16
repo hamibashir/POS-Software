@@ -168,4 +168,56 @@ class ProductManagementTest extends TestCase
 
         $this->assertEquals(0, StockMovement::where('product_id', $this->product->id)->count());
     }
+
+    public function test_product_displays_supplier_info_and_supports_supplier_filtering(): void
+    {
+        $supplierA = \App\Models\Supplier::create([
+            'name'            => 'Master Sanitary Fittings Ltd',
+            'phone'           => '051-998877',
+            'opening_balance' => 0,
+            'is_active'       => true,
+        ]);
+
+        $supplierB = \App\Models\Supplier::create([
+            'name'            => 'Super Pipe Mills',
+            'phone'           => '051-443322',
+            'opening_balance' => 0,
+            'is_active'       => true,
+        ]);
+
+        // Assign supplierA to product
+        $this->product->update(['supplier_id' => $supplierA->id]);
+
+        $productB = Product::create([
+            'category_id'         => $this->category->id,
+            'supplier_id'         => $supplierB->id,
+            'name'                => 'PPRC Pipe 25mm 4Mtr',
+            'slug'                => 'pprc-pipe-25mm-4mtr',
+            'sku'                 => 'PPR-025',
+            'unit'                => 'meter',
+            'cost_price'          => 350.00,
+            'sale_price'          => 500.00,
+            'stock_quantity'      => 100,
+            'low_stock_threshold' => 10,
+            'is_active'           => true,
+        ]);
+
+        // 1. Products index renders supplier column with supplier name
+        $response = $this->actingAs($this->admin)->get(route('admin.products.index'));
+        $response->assertOk()
+            ->assertSee('Master Sanitary Fittings Ltd')
+            ->assertSee('Super Pipe Mills');
+
+        // 2. Filter by supplierA
+        $responseFilterA = $this->actingAs($this->admin)->get(route('admin.products.index', ['supplier_id' => $supplierA->id]));
+        $responseFilterA->assertOk()
+            ->assertSee('Master Basin Mixer Chrome')
+            ->assertDontSee('PPRC Pipe 25mm 4Mtr');
+
+        // 3. Filter by supplierB
+        $responseFilterB = $this->actingAs($this->admin)->get(route('admin.products.index', ['supplier_id' => $supplierB->id]));
+        $responseFilterB->assertOk()
+            ->assertSee('PPRC Pipe 25mm 4Mtr')
+            ->assertDontSee('Master Basin Mixer Chrome');
+    }
 }

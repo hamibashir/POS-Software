@@ -50,7 +50,7 @@
             </div>
 
             {{-- Category --}}
-            <div style="min-width:170px;">
+            <div style="min-width:160px;">
                 <label class="form-label" style="font-size:12px; font-weight:600; color:#6b7280; margin-bottom:4px;">Category</label>
                 <select name="category_id" class="pos-input">
                     <option value="">All Categories</option>
@@ -62,8 +62,21 @@
                 </select>
             </div>
 
+            {{-- Supplier --}}
+            <div style="min-width:170px;">
+                <label class="form-label" style="font-size:12px; font-weight:600; color:#6b7280; margin-bottom:4px;">Supplier</label>
+                <select name="supplier_id" class="pos-input">
+                    <option value="">All Suppliers</option>
+                    @foreach($suppliers as $sup)
+                        <option value="{{ $sup->id }}" {{ request('supplier_id') == $sup->id ? 'selected' : '' }}>
+                            {{ $sup->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
             {{-- Status --}}
-            <div style="min-width:140px;">
+            <div style="min-width:130px;">
                 <label class="form-label" style="font-size:12px; font-weight:600; color:#6b7280; margin-bottom:4px;">Status</label>
                 <select name="status" class="pos-input">
                     <option value="">All Status</option>
@@ -73,7 +86,7 @@
             </div>
 
             {{-- Stock --}}
-            <div style="min-width:140px;">
+            <div style="min-width:130px;">
                 <label class="form-label" style="font-size:12px; font-weight:600; color:#6b7280; margin-bottom:4px;">Stock</label>
                 <select name="stock" class="pos-input">
                     <option value="">All Stock</option>
@@ -85,7 +98,7 @@
 
             <div class="d-flex gap-2" style="margin-top:20px;">
                 <button type="submit" class="btn-pos"><i class="bi bi-funnel"></i> Filter</button>
-                @if(request('search') || request('category_id') || request('status') || request('stock'))
+                @if(request('search') || request('category_id') || request('supplier_id') || request('status') || request('stock'))
                     <a href="{{ route('admin.products.index') }}" class="btn-pos-outline"><i class="bi bi-x-circle"></i> Clear</a>
                 @endif
             </div>
@@ -109,6 +122,7 @@
                     <th width="60">Image</th>
                     <th>Product</th>
                     <th>SKU / Barcode</th>
+                    <th>Supplier</th>
                     <th>Category</th>
                     <th>Unit</th>
                     <th>Cost</th>
@@ -143,6 +157,17 @@
                         <code style="background:#f3f4f6; padding:2px 7px; border-radius:4px; font-size:12px; display:block; margin-bottom:2px;">{{ $product->sku }}</code>
                         @if($product->barcode)
                             <span style="font-size:11px; color:#9ca3af;"><i class="bi bi-upc-scan"></i> {{ $product->barcode }}</span>
+                        @endif
+                    </td>
+
+                    {{-- Supplier --}}
+                    <td>
+                        @if($product->supplier_name)
+                            <span class="badge" style="background:#fef3c7; color:#92400e; padding:4px 9px; font-size:11px; font-weight:700; border-radius:12px; display:inline-flex; align-items:center; gap:4px;">
+                                <i class="bi bi-truck"></i> {{ $product->supplier_name }}
+                            </span>
+                        @else
+                            <span class="text-muted" style="font-size:12px;">—</span>
                         @endif
                     </td>
 

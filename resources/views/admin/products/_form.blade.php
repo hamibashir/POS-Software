@@ -211,6 +211,27 @@
             @error('category_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
         </div>
 
+        {{-- Supplier / Vendor --}}
+        <div class="pos-card p-4 mb-4">
+            <h6 class="fw-bold mb-3" style="color:#374151; font-size:14px;">
+                <i class="bi bi-truck me-2" style="color:var(--pos-primary)"></i>Supplier / Vendor
+            </h6>
+            <select name="supplier_id" class="pos-input @error('supplier_id') is-invalid @enderror">
+                <option value="">— No Supplier Assigned —</option>
+                @if(isset($suppliers))
+                    @foreach($suppliers as $sup)
+                        <option value="{{ $sup->id }}" {{ old('supplier_id', $product->supplier_id ?? '') == $sup->id ? 'selected' : '' }}>
+                            {{ $sup->name }} @if(!empty($sup->company_name))({{ $sup->company_name }})@endif
+                        </option>
+                    @endforeach
+                @endif
+            </select>
+            @error('supplier_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            <div style="font-size:11px; color:#9ca3af; margin-top:4px;">
+                Identifies which supplier or vendor supplies this product.
+            </div>
+        </div>
+
         {{-- Image Upload --}}
         <div class="pos-card p-4 mb-4">
             <h6 class="fw-bold mb-3" style="color:#374151; font-size:14px;">

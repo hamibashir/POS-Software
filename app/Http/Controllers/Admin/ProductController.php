@@ -7,6 +7,7 @@ use App\Http\Requests\Admin\StoreProductRequest;
 use App\Http\Requests\Admin\UpdateProductRequest;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\Supplier;
 use App\Services\ProductService;
 use Illuminate\Http\Request;
 
@@ -21,7 +22,7 @@ class ProductController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Product::with('category')
+        $query = Product::with(['category', 'supplier'])
             ->orderBy('id', 'asc');
 
         // Search by name, SKU, or barcode
@@ -36,6 +37,11 @@ class ProductController extends Controller
         // Filter by category
         if ($request->filled('category_id')) {
             $query->where('category_id', $request->get('category_id'));
+        }
+
+        // Filter by supplier
+        if ($request->filled('supplier_id')) {
+            $query->where('supplier_id', $request->get('supplier_id'));
         }
 
         // Filter by status
@@ -55,8 +61,9 @@ class ProductController extends Controller
 
         $products   = $query->paginate(15)->withQueryString();
         $categories = Category::active()->orderBy('name')->get();
+        $suppliers  = Supplier::where('is_active', true)->orderBy('name')->get(['id', 'name', 'company_name']);
 
-        return view('admin.products.index', compact('products', 'categories'));
+        return view('admin.products.index', compact('products', 'categories', 'suppliers'));
     }
 
     /**
@@ -64,11 +71,12 @@ class ProductController extends Controller
      */
     public function create()
     {
-        $categories  = Category::active()->orderBy('name')->get();
+        $categories   = Category::active()->orderBy('name')->get();
+        $suppliers    = Supplier::where('is_active', true)->orderBy('name')->get(['id', 'name', 'company_name']);
         $suggestedSku = $this->productService->generateSku('');
-        $units = $this->unitOptions();
+        $units        = $this->unitOptions();
 
-        return view('admin.products.create', compact('categories', 'suggestedSku', 'units'));
+        return view('admin.products.create', compact('categories', 'suppliers', 'suggestedSku', 'units'));
     }
 
     /**
@@ -97,9 +105,10 @@ class ProductController extends Controller
     public function edit(Product $product)
     {
         $categories = Category::active()->orderBy('name')->get();
-        $units = $this->unitOptions();
+        $suppliers  = Supplier::where('is_active', true)->orderBy('name')->get(['id', 'name', 'company_name']);
+        $units      = $this->unitOptions();
 
-        return view('admin.products.edit', compact('product', 'categories', 'units'));
+        return view('admin.products.edit', compact('product', 'categories', 'suppliers', 'units'));
     }
 
     /**

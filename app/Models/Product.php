@@ -13,6 +13,7 @@ class Product extends Model
 
     protected $fillable = [
         'category_id',
+        'supplier_id',
         'name',
         'slug',
         'sku',
@@ -45,6 +46,33 @@ class Product extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function supplier(): BelongsTo
+    {
+        return $this->belongsTo(Supplier::class);
+    }
+
+    public function purchaseItems(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(PurchaseItem::class);
+    }
+
+    /**
+     * Get the supplier name (assigned supplier or from purchase history).
+     */
+    public function getSupplierNameAttribute(): ?string
+    {
+        if ($this->supplier) {
+            return $this->supplier->name;
+        }
+
+        $latestPurchase = Purchase::whereHas('items', fn($q) => $q->where('product_id', $this->id))
+            ->with('supplier:id,name')
+            ->latest()
+            ->first();
+
+        return $latestPurchase?->supplier?->name ?? $latestPurchase?->supplier_name;
     }
 
     // ─── Scopes ───────────────────────────────────────────────────
