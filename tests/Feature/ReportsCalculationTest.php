@@ -183,4 +183,54 @@ class ReportsCalculationTest extends TestCase
             ->assertSee("Monthly Net Profit", false)
             ->assertSee('5,500');
     }
+
+    public function test_cleared_credit_payment_counted_on_clearance_day_not_purchase_day(): void
+    {
+        $customer = \App\Models\Employee::create([
+            'name'      => 'Credit Customer Test',
+            'phone'     => '03001234567',
+            'address'   => 'Test Address',
+            'is_active' => true,
+        ]);
+
+        // Purchase on credit 5 days ago for 4,000 PKR (unpaid: paid_amount = 0)
+        $pastDate = now()->subDays(5);
+        $creditSale = Sale::create([
+            'invoice_number'  => 'INV-CREDIT-001',
+            'user_id'         => $this->admin->id,
+            'employee_id'     => $customer->id,
+            'subtotal'        => 4000.00,
+            'discount_amount' => 0.00,
+            'tax_amount'      => 0.00,
+            'total_amount'    => 4000.00,
+            'paid_amount'     => 0.00,
+            'change_amount'   => 0.00,
+            'payment_method'  => 'credit',
+            'status'          => 'completed',
+            'created_at'      => $pastDate,
+        ]);
+
+        // Today: Customer clears 4,000 PKR of the credit
+        \App\Models\EmployeePayment::create([
+            'employee_id'    => $customer->id,
+            'user_id'        => $this->admin->id,
+            'amount'         => 4000.00,
+            'payment_method' => 'cash',
+            'payment_date'   => today(),
+        ]);
+
+        // Today's total sales should include 15,500 (from setup) + 4,000 cleared credit = 19,500
+        $response = $this->actingAs($this->admin)
+            ->get(route('admin.reports.index', ['tab' => 'daily']));
+
+        $response->assertOk()
+            ->assertSee('19,500'); // 15,500 + 4,000
+
+        // Dashboard today sales should also be 19,500
+        $dashResponse = $this->actingAs($this->admin)
+            ->get(route('admin.dashboard'));
+
+        $dashResponse->assertOk()
+            ->assertSee('19,500');
+    }
 }

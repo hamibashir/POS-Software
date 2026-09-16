@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Sale;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class SalesController extends Controller
 {
@@ -54,11 +55,19 @@ class SalesController extends Controller
         if ($to)      { $statsQuery->whereDate('created_at', '<=', $to); }
         if ($payment) { $statsQuery->where('payment_method', $payment); }
 
+        $todayDirectRevenue = (float) Sale::where('status', 'completed')
+            ->whereDate('created_at', today())
+            ->sum(DB::raw("CASE WHEN payment_method != 'credit' THEN total_amount ELSE paid_amount END"));
+
+        $todayCreditCleared = (float) \App\Models\EmployeePayment::whereDate(
+            DB::raw('COALESCE(payment_date, created_at)'), today()
+        )->sum('amount');
+
         $stats = [
             'total_sales'    => $statsQuery->count(),
             'total_revenue'  => $statsQuery->sum('total_amount'),
             'today_sales'    => Sale::where('status', 'completed')->whereDate('created_at', today())->count(),
-            'today_revenue'  => Sale::where('status', 'completed')->whereDate('created_at', today())->sum('total_amount'),
+            'today_revenue'  => $todayDirectRevenue + $todayCreditCleared,
         ];
 
         return view('admin.sales.index', compact('sales', 'stats'));

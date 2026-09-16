@@ -34,6 +34,7 @@ class ReportController extends Controller
 
         $startDate = now()->subDays($days)->startOfDay();
 
+        // 1. Direct Sales by Day (Cash, Card, and upfront paid portion on Credit sales)
         $salesData = DB::table('sales')
             ->leftJoin(DB::raw('(
                 SELECT sale_id, SUM(quantity * cost_price) as cogs
@@ -43,7 +44,7 @@ class ReportController extends Controller
             ->select(
                 DB::raw('DATE(sales.created_at) as date'),
                 DB::raw('COUNT(sales.id) as transactions'),
-                DB::raw('SUM(sales.total_amount) as revenue'),
+                DB::raw("SUM(CASE WHEN sales.payment_method != 'credit' THEN sales.total_amount ELSE sales.paid_amount END) as direct_revenue"),
                 DB::raw('SUM(sales.paid_amount) as collected'),
                 DB::raw('SUM(sales.discount_amount) as discounts'),
                 DB::raw('AVG(sales.total_amount) as avg_sale'),
@@ -52,9 +53,22 @@ class ReportController extends Controller
             ->where('sales.status', 'completed')
             ->where('sales.created_at', '>=', $startDate)
             ->groupBy('date')
-            ->orderByDesc('date')
-            ->get();
+            ->get()
+            ->keyBy('date');
 
+        // 2. Customer Credit Payments cleared on each day
+        $creditClearedData = DB::table('employee_payments')
+            ->select(
+                DB::raw('DATE(COALESCE(payment_date, created_at)) as date'),
+                DB::raw('SUM(amount) as credit_cleared'),
+                DB::raw('COUNT(id) as payment_count')
+            )
+            ->where(DB::raw('DATE(COALESCE(payment_date, created_at))'), '>=', $startDate->toDateString())
+            ->groupBy('date')
+            ->get()
+            ->keyBy('date');
+
+        // 3. Operating Expenses by Day
         $expensesData = DB::table('expenses')
             ->select(
                 DB::raw('DATE(expense_date) as date'),
@@ -64,24 +78,43 @@ class ReportController extends Controller
             ->groupBy('date')
             ->pluck('total_expense', 'date');
 
-        $rows = $salesData->map(function ($row) use ($expensesData) {
-            $revenue = (float) $row->revenue;
-            $cogs    = (float) $row->cogs;
-            $expense = (float) ($expensesData[$row->date] ?? 0);
-            $grossProfit = $revenue - $cogs;
-            $netProfit   = $grossProfit - $expense;
-            $grossMargin = $revenue > 0 ? round(($grossProfit / $revenue) * 100, 1) : 0;
-            $netMargin   = $revenue > 0 ? round(($netProfit / $revenue) * 100, 1) : 0;
+        // Merge all active dates
+        $allDates = $salesData->keys()
+            ->merge($creditClearedData->keys())
+            ->merge($expensesData->keys())
+            ->unique()
+            ->sortDesc()
+            ->values();
 
-            $row->cogs         = $cogs;
-            $row->expense      = $expense;
-            $row->gross_profit = $grossProfit;
-            $row->net_profit   = $netProfit;
-            $row->gross_margin = $grossMargin;
-            $row->net_margin   = $netMargin;
+        $rows = $allDates->map(function ($date) use ($salesData, $creditClearedData, $expensesData) {
+            $saleRow       = $salesData[$date] ?? null;
+            $creditRow     = $creditClearedData[$date] ?? null;
+            $directRevenue = $saleRow ? (float) $saleRow->direct_revenue : 0.0;
+            $creditCleared = $creditRow ? (float) $creditRow->credit_cleared : 0.0;
+            $revenue       = $directRevenue + $creditCleared;
+            $transactions  = ($saleRow ? (int) $saleRow->transactions : 0) + ($creditRow ? (int) $creditRow->payment_count : 0);
+            $cogs          = $saleRow ? (float) $saleRow->cogs : 0.0;
+            $expense       = (float) ($expensesData[$date] ?? 0);
+            $grossProfit   = $revenue - $cogs;
+            $netProfit     = $grossProfit - $expense;
+            $grossMargin   = $revenue > 0 ? round(($grossProfit / $revenue) * 100, 1) : 0;
+            $netMargin     = $revenue > 0 ? round(($netProfit / $revenue) * 100, 1) : 0;
 
-            return $row;
-        });
+            return (object) [
+                'date'           => $date,
+                'transactions'   => $transactions,
+                'direct_revenue' => $directRevenue,
+                'credit_cleared' => $creditCleared,
+                'revenue'        => $revenue,
+                'cogs'           => $cogs,
+                'expense'        => $expense,
+                'gross_profit'   => $grossProfit,
+                'net_profit'     => $netProfit,
+                'gross_margin'   => $grossMargin,
+                'net_margin'     => $netMargin,
+                'avg_sale'       => $saleRow ? (float) $saleRow->avg_sale : 0.0,
+            ];
+        })->filter(fn($r) => $r->revenue > 0 || $r->transactions > 0 || $r->expense > 0)->values();
 
         $totalRevenue     = (float) $rows->sum('revenue');
         $totalCogs        = (float) $rows->sum('cogs');
@@ -100,7 +133,7 @@ class ReportController extends Controller
             'net_profit'   => $totalNetProfit,
             'gross_margin' => $totalGrossMargin,
             'net_margin'   => $totalNetMargin,
-            'avg_sale'     => $rows->avg('avg_sale') ?? 0,
+            'avg_sale'     => $rows->where('avg_sale', '>', 0)->avg('avg_sale') ?? 0,
         ];
 
         return compact('rows', 'totals', 'days');
@@ -120,7 +153,7 @@ class ReportController extends Controller
             ) as cogs_table'), 'cogs_table.sale_id', '=', 'sales.id')
             ->select(
                 DB::raw('COUNT(sales.id) as transactions'),
-                DB::raw('SUM(sales.total_amount) as revenue'),
+                DB::raw("SUM(CASE WHEN sales.payment_method != 'credit' THEN sales.total_amount ELSE sales.paid_amount END) as direct_revenue"),
                 DB::raw('SUM(sales.discount_amount) as discounts'),
                 DB::raw('SUM(sales.tax_amount) as taxes'),
                 DB::raw('SUM(sales.change_amount) as change_given'),
@@ -128,23 +161,35 @@ class ReportController extends Controller
                 DB::raw('SUM(COALESCE(cogs_table.cogs, 0)) as cogs'),
                 DB::raw("SUM(CASE WHEN sales.payment_method='cash' THEN sales.total_amount ELSE 0 END) as cash_revenue"),
                 DB::raw("SUM(CASE WHEN sales.payment_method='card' THEN sales.total_amount ELSE 0 END) as card_revenue"),
-                DB::raw("SUM(CASE WHEN sales.payment_method='credit' THEN sales.total_amount ELSE 0 END) as credit_revenue")
+                DB::raw("SUM(CASE WHEN sales.payment_method='credit' THEN sales.paid_amount ELSE 0 END) as credit_upfront")
             )
             ->where('sales.status', 'completed')
             ->whereBetween(DB::raw('DATE(sales.created_at)'), [$from, $to])
             ->first();
 
+        $creditClearedTotal = (float) DB::table('employee_payments')
+            ->whereBetween(DB::raw('DATE(COALESCE(payment_date, created_at))'), [$from, $to])
+            ->sum('amount');
+
+        $creditClearedCount = (int) DB::table('employee_payments')
+            ->whereBetween(DB::raw('DATE(COALESCE(payment_date, created_at))'), [$from, $to])
+            ->count();
+
         $totalExpenses = (float) DB::table('expenses')
             ->whereBetween(DB::raw('DATE(expense_date)'), [$from, $to])
             ->sum('amount');
 
-        if ($summary && $summary->revenue) {
-            $summary->cogs         = (float) $summary->cogs;
-            $summary->expense      = $totalExpenses;
-            $summary->gross_profit = (float) $summary->revenue - $summary->cogs;
-            $summary->net_profit   = $summary->gross_profit - $totalExpenses;
-            $summary->gross_margin = $summary->revenue > 0 ? round(($summary->gross_profit / (float)$summary->revenue) * 100, 1) : 0;
-            $summary->net_margin   = $summary->revenue > 0 ? round(($summary->net_profit / (float)$summary->revenue) * 100, 1) : 0;
+        if ($summary) {
+            $directRevenue           = (float) ($summary->direct_revenue ?? 0);
+            $summary->revenue        = $directRevenue + $creditClearedTotal;
+            $summary->credit_revenue = (float) ($summary->credit_upfront ?? 0) + $creditClearedTotal;
+            $summary->transactions   = (int) ($summary->transactions ?? 0) + $creditClearedCount;
+            $summary->cogs           = (float) ($summary->cogs ?? 0);
+            $summary->expense        = $totalExpenses;
+            $summary->gross_profit   = (float) $summary->revenue - $summary->cogs;
+            $summary->net_profit     = $summary->gross_profit - $totalExpenses;
+            $summary->gross_margin   = $summary->revenue > 0 ? round(($summary->gross_profit / (float)$summary->revenue) * 100, 1) : 0;
+            $summary->net_margin     = $summary->revenue > 0 ? round(($summary->net_profit / (float)$summary->revenue) * 100, 1) : 0;
         }
 
         $expensesByDay = DB::table('expenses')
@@ -156,7 +201,7 @@ class ReportController extends Controller
             ->groupBy('date')
             ->pluck('total_expense', 'date');
 
-        $byDay = DB::table('sales')
+        $salesByDay = DB::table('sales')
             ->leftJoin(DB::raw('(
                 SELECT sale_id, SUM(quantity * cost_price) as cogs
                 FROM sale_items
@@ -165,30 +210,57 @@ class ReportController extends Controller
             ->select(
                 DB::raw('DATE(sales.created_at) as date'),
                 DB::raw('COUNT(sales.id) as transactions'),
-                DB::raw('SUM(sales.total_amount) as revenue'),
+                DB::raw("SUM(CASE WHEN sales.payment_method != 'credit' THEN sales.total_amount ELSE sales.paid_amount END) as direct_revenue"),
                 DB::raw('SUM(COALESCE(cogs_table.cogs, 0)) as cogs')
             )
             ->where('sales.status', 'completed')
             ->whereBetween(DB::raw('DATE(sales.created_at)'), [$from, $to])
             ->groupBy('date')
-            ->orderByDesc('date')
             ->get()
-            ->map(function ($row) use ($expensesByDay) {
-                $revenue = (float) $row->revenue;
-                $cogs    = (float) $row->cogs;
-                $expense = (float) ($expensesByDay[$row->date] ?? 0);
-                $gross   = $revenue - $cogs;
-                $net     = $gross - $expense;
+            ->keyBy('date');
 
-                $row->cogs         = $cogs;
-                $row->expense      = $expense;
-                $row->gross_profit = $gross;
-                $row->net_profit   = $net;
-                $row->gross_margin = $revenue > 0 ? round(($gross / $revenue) * 100, 1) : 0;
-                $row->net_margin   = $revenue > 0 ? round(($net / $revenue) * 100, 1) : 0;
+        $creditClearedByDay = DB::table('employee_payments')
+            ->select(
+                DB::raw('DATE(COALESCE(payment_date, created_at)) as date'),
+                DB::raw('SUM(amount) as credit_cleared'),
+                DB::raw('COUNT(id) as payment_count')
+            )
+            ->whereBetween(DB::raw('DATE(COALESCE(payment_date, created_at))'), [$from, $to])
+            ->groupBy('date')
+            ->get()
+            ->keyBy('date');
 
-                return $row;
-            });
+        $allRangeDates = $salesByDay->keys()
+            ->merge($creditClearedByDay->keys())
+            ->merge($expensesByDay->keys())
+            ->unique()
+            ->sortDesc()
+            ->values();
+
+        $byDay = $allRangeDates->map(function ($date) use ($salesByDay, $creditClearedByDay, $expensesByDay) {
+            $saleRow       = $salesByDay[$date] ?? null;
+            $creditRow     = $creditClearedByDay[$date] ?? null;
+            $directRevenue = $saleRow ? (float) $saleRow->direct_revenue : 0.0;
+            $creditCleared = $creditRow ? (float) $creditRow->credit_cleared : 0.0;
+            $revenue       = $directRevenue + $creditCleared;
+            $transactions  = ($saleRow ? (int) $saleRow->transactions : 0) + ($creditRow ? (int) $creditRow->payment_count : 0);
+            $cogs          = $saleRow ? (float) $saleRow->cogs : 0.0;
+            $expense       = (float) ($expensesByDay[$date] ?? 0);
+            $gross         = $revenue - $cogs;
+            $net           = $gross - $expense;
+
+            return (object) [
+                'date'         => $date,
+                'transactions' => $transactions,
+                'revenue'      => $revenue,
+                'cogs'         => $cogs,
+                'expense'      => $expense,
+                'gross_profit' => $gross,
+                'net_profit'   => $net,
+                'gross_margin' => $revenue > 0 ? round(($gross / $revenue) * 100, 1) : 0,
+                'net_margin'   => $revenue > 0 ? round(($net / $revenue) * 100, 1) : 0,
+            ];
+        })->filter(fn($r) => $r->revenue > 0 || $r->transactions > 0 || $r->expense > 0)->values();
 
         return compact('summary', 'byDay', 'from', 'to', 'totalExpenses');
     }
