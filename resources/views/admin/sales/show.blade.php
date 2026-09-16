@@ -38,9 +38,10 @@
         padding: 8px 16px; display: inline-block;
     }
 
-    .pay-cash { background:#d1fae5; color:#065f46; }
-    .pay-card { background:#ede9fe; color:#5b21b6; }
-    .pay-badge { display:inline-flex; align-items:center; gap:4px; border-radius:20px; padding:4px 12px; font-size:12px; font-weight:700; }
+    .pay-cash   { background:#d1fae5; color:#065f46; }
+    .pay-card   { background:#ede9fe; color:#5b21b6; }
+    .pay-credit { background:#fef3c7; color:#92400e; }
+    .pay-badge  { display:inline-flex; align-items:center; gap:4px; border-radius:20px; padding:4px 12px; font-size:12px; font-weight:700; }
 
     .status-completed { background:#d1fae5; color:#065f46; }
     .status-voided    { background:#fee2e2; color:#991b1b; }
@@ -131,8 +132,22 @@
             <div class="info-row">
                 <span class="lbl">Payment Method</span>
                 <span class="val">
-                    <span class="pay-badge {{ $sale->payment_method === 'cash' ? 'pay-cash' : 'pay-card' }}">
-                        {{ $sale->payment_method === 'cash' ? '💵' : '💳' }}
+                    @php
+                        $badgeClass = match($sale->payment_method) {
+                            'cash'   => 'pay-cash',
+                            'card'   => 'pay-card',
+                            'credit' => 'pay-credit',
+                            default  => 'pay-cash',
+                        };
+                        $badgeIcon = match($sale->payment_method) {
+                            'cash'   => '💵',
+                            'card'   => '💳',
+                            'credit' => '📋',
+                            default  => '💰',
+                        };
+                    @endphp
+                    <span class="pay-badge {{ $badgeClass }}">
+                        {{ $badgeIcon }}
                         {{ strtoupper($sale->payment_method) }}
                     </span>
                 </span>

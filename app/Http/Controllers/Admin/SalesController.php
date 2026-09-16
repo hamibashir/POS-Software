@@ -17,10 +17,13 @@ class SalesController extends Controller
             ->withCount('items')
             ->latest();
 
-        // — Search by invoice number
+        // — Search by invoice number or customer
         if ($search = $request->get('search')) {
-            $query->where('invoice_number', 'like', "%{$search}%")
-                  ->orWhere('customer_name', 'like', "%{$search}%");
+            $query->where(function($q) use ($search) {
+                $q->where('invoice_number', 'like', "%{$search}%")
+                  ->orWhere('customer_name', 'like', "%{$search}%")
+                  ->orWhere('customer_phone', 'like', "%{$search}%");
+            });
         }
 
         // — Filter by date (from)

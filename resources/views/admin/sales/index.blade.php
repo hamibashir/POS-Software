@@ -35,9 +35,10 @@
         background: #eff6ff; color: #1d4ed8;
         border-radius: 6px; padding: 3px 8px; font-size: 12px;
     }
-    .pay-cash  { background:#d1fae5; color:#065f46; }
-    .pay-card  { background:#ede9fe; color:#5b21b6; }
-    .pay-badge { display:inline-flex; align-items:center; gap:4px; border-radius:20px; padding:3px 10px; font-size:11px; font-weight:700; }
+    .pay-cash   { background:#d1fae5; color:#065f46; }
+    .pay-card   { background:#ede9fe; color:#5b21b6; }
+    .pay-credit { background:#fef3c7; color:#92400e; }
+    .pay-badge  { display:inline-flex; align-items:center; gap:4px; border-radius:20px; padding:3px 10px; font-size:11px; font-weight:700; }
 
     .status-completed { background:#d1fae5; color:#065f46; }
     .status-voided    { background:#fee2e2; color:#991b1b; }
@@ -81,7 +82,7 @@
             <div>
                 <div class="stat-label">Today's Revenue</div>
                 <div class="stat-value">{{ pkr($stats['today_revenue'], 2) }}</div>
-                <div class="stat-sub">cash & card</div>
+                <div class="stat-sub">cash, card & credit</div>
             </div>
         </div>
     </div>
@@ -137,10 +138,11 @@
         {{-- Payment method --}}
         <div class="fg">
             <label for="payment_method">Payment</label>
-            <select id="payment_method" name="payment_method" class="pos-input" style="width:130px;">
-                <option value="">All</option>
-                <option value="cash" {{ request('payment_method') === 'cash' ? 'selected' : '' }}>Cash</option>
-                <option value="card" {{ request('payment_method') === 'card' ? 'selected' : '' }}>Card</option>
+            <select id="payment_method" name="payment_method" class="pos-input" style="width:140px;">
+                <option value="">All Payments</option>
+                <option value="cash" {{ request('payment_method') === 'cash' ? 'selected' : '' }}>💵 Cash</option>
+                <option value="card" {{ request('payment_method') === 'card' ? 'selected' : '' }}>💳 Card</option>
+                <option value="credit" {{ request('payment_method') === 'credit' ? 'selected' : '' }}>📋 Credit</option>
             </select>
         </div>
 
@@ -228,8 +230,22 @@
 
                 {{-- Payment --}}
                 <td>
-                    <span class="pay-badge {{ $sale->payment_method === 'cash' ? 'pay-cash' : 'pay-card' }}">
-                        {{ $sale->payment_method === 'cash' ? '💵' : '💳' }}
+                    @php
+                        $badgeClass = match($sale->payment_method) {
+                            'cash'   => 'pay-cash',
+                            'card'   => 'pay-card',
+                            'credit' => 'pay-credit',
+                            default  => 'pay-cash',
+                        };
+                        $badgeIcon = match($sale->payment_method) {
+                            'cash'   => '💵',
+                            'card'   => '💳',
+                            'credit' => '📋',
+                            default  => '💰',
+                        };
+                    @endphp
+                    <span class="pay-badge {{ $badgeClass }}">
+                        {{ $badgeIcon }}
                         {{ strtoupper($sale->payment_method) }}
                     </span>
                 </td>

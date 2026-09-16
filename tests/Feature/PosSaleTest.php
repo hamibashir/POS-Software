@@ -261,4 +261,62 @@ class PosSaleTest extends TestCase
             ->assertSee('Hammer Pro')
             ->assertSee('Hassan & Sons');
     }
+
+    public function test_sales_listing_can_filter_by_credit_payment_method(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin', 'is_active' => true]);
+
+        $employee = Employee::create([
+            'name'       => 'Kamran Khan',
+            'phone'      => '03111223344',
+            'address'    => 'Islamabad',
+            'is_active'  => true,
+        ]);
+
+        // Create 1 cash sale and 1 credit sale
+        $cashSale = Sale::create([
+            'invoice_number'  => 'INV-CASH-001',
+            'user_id'         => $admin->id,
+            'subtotal'        => 500,
+            'discount_amount' => 0,
+            'tax_amount'      => 0,
+            'total_amount'    => 500,
+            'paid_amount'     => 500,
+            'change_amount'   => 0,
+            'payment_method'  => 'cash',
+            'status'          => 'completed',
+        ]);
+
+        $creditSale = Sale::create([
+            'invoice_number'  => 'INV-CREDIT-001',
+            'user_id'         => $admin->id,
+            'employee_id'     => $employee->id,
+            'customer_name'   => $employee->name,
+            'subtotal'        => 1500,
+            'discount_amount' => 0,
+            'tax_amount'      => 0,
+            'total_amount'    => 1500,
+            'paid_amount'     => 0,
+            'change_amount'   => 0,
+            'payment_method'  => 'credit',
+            'status'          => 'completed',
+        ]);
+
+        // Filter by credit
+        $response = $this->actingAs($admin)
+            ->get(route('admin.sales.index', ['payment_method' => 'credit']));
+
+        $response->assertOk()
+            ->assertSee('INV-CREDIT-001')
+            ->assertSee('CREDIT')
+            ->assertDontSee('INV-CASH-001');
+
+        // Filter by cash
+        $responseCash = $this->actingAs($admin)
+            ->get(route('admin.sales.index', ['payment_method' => 'cash']));
+
+        $responseCash->assertOk()
+            ->assertSee('INV-CASH-001')
+            ->assertDontSee('INV-CREDIT-001');
+    }
 }
