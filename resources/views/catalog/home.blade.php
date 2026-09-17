@@ -117,7 +117,7 @@
         z-index: 3;
     }
 
-    /* ── High-Contrast Transparent Floating Story Captions ── */
+    /* ── Floating Story Captions (No Backdrops, Single Color Typography) ── */
     .story-overlay {
         position: absolute;
         inset: 0;
@@ -131,7 +131,7 @@
 
     .story-step {
         position: absolute;
-        max-width: 650px;
+        max-width: 720px;
         width: calc(100% - 32px);
         text-align: center;
         opacity: 0;
@@ -141,21 +141,13 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        /* Frosted glass translucent card: crystal clear text + full animation visibility */
-        background: rgba(9, 13, 22, 0.74);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-        padding: 24px 28px;
-        border-radius: 24px;
-    }
-    @media (max-width: 640px) {
-        .story-step {
-            padding: 18px 16px;
-            border-radius: 20px;
-            width: calc(100% - 24px);
-        }
+        background: transparent !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0;
+        border-radius: 0;
     }
     .story-step.active {
         opacity: 1;
@@ -167,43 +159,43 @@
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        background: rgba(0, 0, 0, 0.6);
-        border: 1px solid rgba(56, 189, 248, 0.5);
-        color: #7dd3fc;
-        font-size: 11px;
-        font-weight: 800;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        color: #ffffff !important;
+        font-size: 13px;
+        font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 1px;
-        padding: 5px 14px;
-        border-radius: 20px;
+        letter-spacing: 1.5px;
+        padding: 0;
         margin-bottom: 12px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+        text-shadow: 0 2px 10px rgba(0,0,0,0.9);
     }
 
     .story-headline {
-        font-size: clamp(24px, 4.4vw, 48px);
+        font-size: clamp(28px, 5.2vw, 56px);
         font-weight: 900;
         line-height: 1.15;
-        letter-spacing: -.5px;
-        margin-bottom: 10px;
-        color: #ffffff;
-        text-shadow: 0 2px 10px rgba(0,0,0,0.9);
+        letter-spacing: -.6px;
+        margin-bottom: 12px;
+        color: #ffffff !important;
+        text-shadow: 0 2px 14px rgba(0,0,0,0.95);
     }
     .story-gradient {
-        background: linear-gradient(135deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        filter: drop-shadow(0 4px 20px rgba(56, 189, 248, 0.45));
+        color: #ffffff !important;
+        background: none !important;
+        -webkit-background-clip: unset !important;
+        -webkit-text-fill-color: #ffffff !important;
+        text-shadow: 0 2px 14px rgba(0,0,0,0.95);
     }
     .story-desc {
-        font-size: clamp(13px, 1.6vw, 16px);
-        color: #f1f5f9;
-        line-height: 1.5;
-        margin-bottom: 20px;
-        max-width: 520px;
+        font-size: clamp(15px, 1.8vw, 18px);
+        color: #ffffff !important;
+        line-height: 1.55;
+        margin-bottom: 24px;
+        max-width: 580px;
         font-weight: 500;
-        text-shadow: 0 2px 8px rgba(0,0,0,0.9);
+        text-shadow: 0 2px 10px rgba(0,0,0,0.9);
     }
 
     .story-actions {
@@ -231,18 +223,18 @@
         box-shadow: 0 6px 25px rgba(2, 132, 199, 0.8);
     }
     .btn-story-outline {
-        background: rgba(0, 0, 0, 0.65);
+        background: rgba(0, 0, 0, 0.5);
         color: #fff !important;
         font-weight: 600;
         font-size: 14px;
         padding: 11px 20px;
         border-radius: 12px;
-        border: 1.5px solid rgba(255, 255, 255, 0.35);
+        border: 1.5px solid rgba(255, 255, 255, 0.4);
         text-decoration: none !important;
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.4);
         transition: background .15s, transform .15s;
     }
     .btn-story-outline:hover {
@@ -270,7 +262,7 @@
 
     .story-features-row {
         display: flex;
-        gap: 12px;
+        gap: 16px;
         flex-wrap: wrap;
         justify-content: center;
         margin-top: 4px;
@@ -278,15 +270,15 @@
     .story-pill {
         display: inline-flex;
         align-items: center;
-        gap: 6px;
-        font-size: 13px;
-        font-weight: 700;
-        color: #f8fafc;
-        background: rgba(0, 0, 0, 0.65);
-        border: 1px solid rgba(255,255,255,.25);
-        padding: 7px 16px;
-        border-radius: 12px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        gap: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #ffffff !important;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 4px 10px;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.9);
     }
 
     /* Scroll Prompt */
@@ -631,13 +623,13 @@
                 <div class="loader-text">Loading Experience...</div>
             </div>
 
-            {{-- High-Contrast Floating Story Overlays --}}
+            {{-- Floating Story Overlays (No Backdrops, Single Color Typography) --}}
             <div class="story-overlay">
                 
                 {{-- Step 1: 0% - 25% Scroll --}}
                 <div class="story-step active" id="storyStep1">
                     <span class="story-tag"><i class="bi bi-shield-check"></i> Hassan &amp; Sons Hardware</span>
-                    <h1 class="story-headline">Next-Gen <span class="story-gradient">Hardware &amp; Sanitary</span></h1>
+                    <h1 class="story-headline">Next-Gen Hardware &amp; Sanitary</h1>
                     <p class="story-desc">Engineered for precision durability, industrial quality, and everyday reliability.</p>
                     <div class="story-actions">
                         <a href="#products" class="btn-story-primary"><i class="bi bi-cart3"></i> Explore Collection</a>
@@ -648,29 +640,29 @@
                 {{-- Step 2: 25% - 55% Scroll --}}
                 <div class="story-step" id="storyStep2">
                     <span class="story-tag"><i class="bi bi-gear-wide-connected"></i> Precision Engineering</span>
-                    <h2 class="story-headline">Sanitary Ware &amp; <span class="story-gradient">Power Tools</span></h2>
+                    <h2 class="story-headline">Sanitary Ware &amp; Power Tools</h2>
                     <p class="story-desc">From premium residential fixtures to heavy contractor machinery — complete store inventory.</p>
                     <div class="story-features-row">
-                        <div class="story-pill"><i class="bi bi-check-circle-fill text-success"></i> 100% Genuine Brands</div>
-                        <div class="story-pill"><i class="bi bi-shield-fill-check text-primary"></i> Manufacturer Tested</div>
+                        <div class="story-pill"><i class="bi bi-check-circle-fill"></i> 100% Genuine Brands</div>
+                        <div class="story-pill"><i class="bi bi-shield-fill-check"></i> Manufacturer Tested</div>
                     </div>
                 </div>
 
                 {{-- Step 3: 55% - 80% Scroll --}}
                 <div class="story-step" id="storyStep3">
                     <span class="story-tag"><i class="bi bi-boxes"></i> Wholesale &amp; Retail</span>
-                    <h2 class="story-headline">Direct Counter Stock at <span class="story-gradient">Best Market Rates</span></h2>
+                    <h2 class="story-headline">Direct Counter Stock at Best Market Rates</h2>
                     <p class="story-desc">Official distributor pricing for plumbers, electricians, contractors, and home builders.</p>
                     <div class="story-features-row">
-                        <div class="story-pill"><i class="bi bi-truck text-info"></i> Fast Local Dispatch</div>
-                        <div class="story-pill"><i class="bi bi-receipt-cutoff text-warning"></i> Itemized Official Invoices</div>
+                        <div class="story-pill"><i class="bi bi-truck"></i> Fast Local Dispatch</div>
+                        <div class="story-pill"><i class="bi bi-receipt-cutoff"></i> Itemized Official Invoices</div>
                     </div>
                 </div>
 
                 {{-- Step 4: 80% - 100% Scroll --}}
                 <div class="story-step" id="storyStep4">
                     <span class="story-tag"><i class="bi bi-lightning-charge-fill"></i> Instant Ordering</span>
-                    <h2 class="story-headline">Ready to Build <span class="story-gradient">Your Next Project?</span></h2>
+                    <h2 class="story-headline">Ready to Build Your Next Project?</h2>
                     <p class="story-desc">Browse our full live inventory below or place your order directly via phone or WhatsApp.</p>
                     <div class="story-actions">
                         <a href="#products" class="btn-story-primary"><i class="bi bi-grid-fill"></i> View Live Stock</a>
