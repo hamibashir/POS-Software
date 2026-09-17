@@ -197,17 +197,25 @@ class StaffController extends Controller
         $this->authorizeAdmin();
 
         $data = $request->validate([
-            'name'     => ['required', 'string', 'max:150'],
-            'email'    => ['required', 'email', 'unique:users,email', 'max:150'],
-            'password' => ['required', 'string', 'min:6'],
+            'name'           => ['required', 'string', 'max:150'],
+            'email'          => ['required', 'email', 'unique:users,email', 'max:150'],
+            'password'       => ['required', 'string', 'min:6'],
+            'salary'         => ['nullable', 'numeric', 'min:0'],
+            'allowed_leaves' => ['nullable', 'integer', 'min:0', 'max:31'],
+            'phone'          => ['nullable', 'string', 'max:30'],
+            'designation'    => ['nullable', 'string', 'max:100'],
         ]);
 
         $cashier = User::create([
-            'name'      => $data['name'],
-            'email'     => $data['email'],
-            'password'  => Hash::make($data['password']),
-            'role'      => 'cashier',
-            'is_active' => true,
+            'name'           => $data['name'],
+            'email'          => $data['email'],
+            'password'       => Hash::make($data['password']),
+            'role'           => 'cashier',
+            'salary'         => $data['salary'] ?? 0.00,
+            'allowed_leaves' => $data['allowed_leaves'] ?? 4,
+            'phone'          => $data['phone'] ?? null,
+            'designation'    => $data['designation'] ?? null,
+            'is_active'      => true,
         ]);
 
         return back()->with('success', "Employee {$cashier->name} added successfully.");
@@ -223,16 +231,24 @@ class StaffController extends Controller
         abort_unless($user->role === 'cashier', 400, 'Only employee accounts can be edited here.');
 
         $data = $request->validate([
-            'name'      => ['required', 'string', 'max:150'],
-            'email'     => ['required', 'email', Rule::unique('users', 'email')->ignore($user->id), 'max:150'],
-            'password'  => ['nullable', 'string', 'min:6'],
-            'is_active' => ['required', 'boolean'],
+            'name'           => ['required', 'string', 'max:150'],
+            'email'          => ['required', 'email', Rule::unique('users', 'email')->ignore($user->id), 'max:150'],
+            'password'       => ['nullable', 'string', 'min:6'],
+            'salary'         => ['nullable', 'numeric', 'min:0'],
+            'allowed_leaves' => ['nullable', 'integer', 'min:0', 'max:31'],
+            'phone'          => ['nullable', 'string', 'max:30'],
+            'designation'    => ['nullable', 'string', 'max:100'],
+            'is_active'      => ['required', 'boolean'],
         ]);
 
         $updateData = [
-            'name'      => $data['name'],
-            'email'     => $data['email'],
-            'is_active' => $data['is_active'],
+            'name'           => $data['name'],
+            'email'          => $data['email'],
+            'salary'         => $data['salary'] ?? 0.00,
+            'allowed_leaves' => $data['allowed_leaves'] ?? 4,
+            'phone'          => $data['phone'] ?? null,
+            'designation'    => $data['designation'] ?? null,
+            'is_active'      => $data['is_active'],
         ];
 
         if (!empty($data['password'])) {

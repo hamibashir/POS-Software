@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\AttendanceController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\SalesController;
@@ -103,6 +104,13 @@ Route::middleware(['auth', 'admin'])
         Route::post('staff/admins',                            [StaffController::class, 'storeAdmin'])->name('staff.admins.store');
         Route::put('staff/admins/{user}',                      [StaffController::class, 'updateAdmin'])->name('staff.admins.update');
         Route::delete('staff/admins/{user}',                   [StaffController::class, 'destroyAdmin'])->name('staff.admins.destroy');
+
+        // Attendance & Monthly Payroll - Admin only
+        Route::get('attendance',                               [AttendanceController::class, 'index'])->name('attendance.index');
+        Route::post('attendance',                              [AttendanceController::class, 'mark'])->name('attendance.mark');
+        Route::get('attendance/payroll',                       [AttendanceController::class, 'payroll'])->name('attendance.payroll');
+        Route::post('attendance/payroll/{user}/pay',           [AttendanceController::class, 'disburseSalary'])->name('attendance.payroll.pay');
+        Route::get('attendance/payroll/slip/{payment}',        [AttendanceController::class, 'salarySlip'])->name('attendance.payroll.slip');
     });
 
 /*

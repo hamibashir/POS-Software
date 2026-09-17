@@ -273,7 +273,9 @@
                 <tr>
                     <th>Employee Name</th>
                     <th>Email / Login</th>
-                    <th>Role</th>
+                    <th>Designation</th>
+                    <th style="text-align:right;">Base Salary</th>
+                    <th style="text-align:center;">Allowed Holidays</th>
                     <th>Status</th>
                     <th>Date Added</th>
                     <th style="text-align:right;">Actions</th>
@@ -281,16 +283,27 @@
             </thead>
             <tbody>
                 @forelse($cashiers as $c)
-                <tr class="staff-row cashier-row" data-search="{{ strtolower($c->name . ' ' . $c->email) }}">
+                <tr class="staff-row cashier-row" data-search="{{ strtolower($c->name . ' ' . $c->email . ' ' . ($c->designation ?? '') . ' ' . ($c->phone ?? '')) }}">
                     <td>
                         <div style="font-weight:700; color:#111827;">{{ $c->name }}</div>
+                        @if($c->phone)
+                        <div style="font-size:11px; color:#6b7280;"><i class="bi bi-telephone me-1"></i>{{ $c->phone }}</div>
+                        @endif
                     </td>
                     <td>
                         <span style="font-family:monospace; color:#4b5563;">{{ $c->email }}</span>
                     </td>
                     <td>
                         <span class="badge-cashier">
-                            <i class="bi bi-person-badge me-1"></i> Employee
+                            <i class="bi bi-person-badge me-1"></i> {{ $c->designation ?? 'POS Operator' }}
+                        </span>
+                    </td>
+                    <td style="text-align:right; font-weight:700; color:#111827;">
+                        {{ pkr($c->salary ?? 0, 2) }}
+                    </td>
+                    <td style="text-align:center;">
+                        <span class="badge" style="background:#f3f4f6; color:#374151; font-weight:700; border:1px solid #e5e7eb; padding:3px 8px;">
+                            {{ $c->allowed_leaves ?? 2 }} days / mo
                         </span>
                     </td>
                     <td>
@@ -304,7 +317,7 @@
                     <td style="text-align:right;">
                         <div class="d-inline-flex gap-1">
                             <button class="btn-pos-outline" style="padding:4px 8px; font-size:12px;"
-                                onclick="openEditCashierModal({{ $c->id }}, '{{ addslashes($c->name) }}', '{{ addslashes($c->email) }}', {{ $c->is_active ? 1 : 0 }})">
+                                onclick="openEditCashierModal({{ $c->id }}, '{{ addslashes($c->name) }}', '{{ addslashes($c->email) }}', {{ $c->is_active ? 1 : 0 }}, {{ (float)($c->salary ?? 0) }}, {{ (int)($c->allowed_leaves ?? 2) }}, '{{ addslashes($c->phone ?? '') }}', '{{ addslashes($c->designation ?? '') }}')">
                                 <i class="bi bi-pencil"></i> Edit
                             </button>
 
@@ -320,15 +333,15 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="6" style="text-align:center; padding:48px; color:#9ca3af;">
+                    <td colspan="8" style="text-align:center; padding:48px; color:#9ca3af;">
                         <i class="bi bi-person-badge" style="font-size:36px; display:block; margin-bottom:8px; opacity:.5;"></i>
                         <p style="font-weight:600; color:#374151; margin-bottom:4px;">No employees found</p>
-                        <p style="font-size:13px; margin:0;">{{ !empty($search) ? 'No employees match your search criteria.' : 'Create employee accounts with password to let staff operate the POS.' }}</p>
+                        <p style="font-size:13px; margin:0;">{{ !empty($search) ? 'No employees match your search criteria.' : 'Create employee accounts with password and base salary to let staff operate the POS and manage their attendance/payroll.' }}</p>
                     </td>
                 </tr>
                 @endforelse
                 <tr class="no-filter-match-row cashier-no-match" style="display:none;">
-                    <td colspan="6" style="text-align:center; padding:36px; color:#9ca3af;">
+                    <td colspan="8" style="text-align:center; padding:36px; color:#9ca3af;">
                         <i class="bi bi-search" style="font-size:28px; display:block; margin-bottom:8px; opacity:.5;"></i>
                         <p style="font-weight:600; color:#374151; margin-bottom:4px;">No matching employees</p>
                         <p style="font-size:13px; margin:0;">No employees match your current search query in this tab.</p>
@@ -565,6 +578,27 @@
                     <label class="form-label" style="font-size:13px; font-weight:600;">Email Address (Login) <span class="text-danger">*</span></label>
                     <input type="email" name="email" class="pos-input" required placeholder="e.g. employee1@hassanstore.com">
                 </div>
+                <div class="row g-2">
+                    <div class="col-6">
+                        <label class="form-label" style="font-size:13px; font-weight:600;">Designation / Title</label>
+                        <input type="text" name="designation" class="pos-input" placeholder="e.g. Senior Cashier">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label" style="font-size:13px; font-weight:600;">Phone Number</label>
+                        <input type="text" name="phone" class="pos-input" placeholder="e.g. 03001234567">
+                    </div>
+                </div>
+                <div class="row g-2">
+                    <div class="col-6">
+                        <label class="form-label" style="font-size:13px; font-weight:600;">Monthly Base Salary (PKR)</label>
+                        <input type="number" step="0.01" min="0" name="salary" class="pos-input" placeholder="e.g. 30000" value="0.00">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label" style="font-size:13px; font-weight:600;">Allowed Holidays / Leaves</label>
+                        <input type="number" min="0" max="31" name="allowed_leaves" class="pos-input" value="2" placeholder="e.g. 2">
+                        <small class="text-muted" style="font-size:11px;">Max leaves before salary deduction</small>
+                    </div>
+                </div>
                 <div>
                     <label class="form-label" style="font-size:13px; font-weight:600;">Password <span class="text-danger">*</span></label>
                     <input type="password" name="password" class="pos-input" required minlength="6" placeholder="At least 6 characters">
@@ -596,6 +630,27 @@
                 <div>
                     <label class="form-label" style="font-size:13px; font-weight:600;">Email Address <span class="text-danger">*</span></label>
                     <input type="email" name="email" id="editCashierEmail" class="pos-input" required>
+                </div>
+                <div class="row g-2">
+                    <div class="col-6">
+                        <label class="form-label" style="font-size:13px; font-weight:600;">Designation / Title</label>
+                        <input type="text" name="designation" id="editCashierDesignation" class="pos-input">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label" style="font-size:13px; font-weight:600;">Phone Number</label>
+                        <input type="text" name="phone" id="editCashierPhone" class="pos-input">
+                    </div>
+                </div>
+                <div class="row g-2">
+                    <div class="col-6">
+                        <label class="form-label" style="font-size:13px; font-weight:600;">Monthly Base Salary (PKR)</label>
+                        <input type="number" step="0.01" min="0" name="salary" id="editCashierSalary" class="pos-input">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label" style="font-size:13px; font-weight:600;">Allowed Holidays / Leaves</label>
+                        <input type="number" min="0" max="31" name="allowed_leaves" id="editCashierAllowedLeaves" class="pos-input">
+                        <small class="text-muted" style="font-size:11px;">Max leaves before salary deduction</small>
+                    </div>
                 </div>
                 <div>
                     <label class="form-label" style="font-size:13px; font-weight:600;">New Password (leave blank to keep current)</label>
@@ -812,11 +867,15 @@
         new bootstrap.Modal(document.getElementById('paymentModal')).show();
     }
 
-    function openEditCashierModal(id, name, email, isActive) {
+    function openEditCashierModal(id, name, email, isActive, salary, allowedLeaves, phone, designation) {
         document.getElementById('editCashierForm').action = `{{ url('admin/staff/cashiers') }}/${id}`;
         document.getElementById('editCashierName').value = name;
         document.getElementById('editCashierEmail').value = email;
         document.getElementById('editCashierActive').value = isActive;
+        document.getElementById('editCashierSalary').value = salary || 0;
+        document.getElementById('editCashierAllowedLeaves').value = allowedLeaves !== undefined ? allowedLeaves : 2;
+        document.getElementById('editCashierPhone').value = phone || '';
+        document.getElementById('editCashierDesignation').value = designation || '';
         new bootstrap.Modal(document.getElementById('editCashierModal')).show();
     }
 
