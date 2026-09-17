@@ -909,9 +909,29 @@
         drawFrame(currentFrameIndex);
     }
 
-    // Draw frame in COVER mode - fills entire viewport with zero black side bars or gaps
+    // Find the closest loaded frame so there is NEVER a black screen, missing frame, or gap
+    function getClosestLoadedFrame(targetIndex) {
+        if (frames[targetIndex] && frames[targetIndex].complete && frames[targetIndex].naturalWidth > 0) {
+            return frames[targetIndex];
+        }
+        // Search backwards first (smoothest during scroll)
+        for (let i = targetIndex - 1; i >= 1; i--) {
+            if (frames[i] && frames[i].complete && frames[i].naturalWidth > 0) {
+                return frames[i];
+            }
+        }
+        // Search forward
+        for (let i = targetIndex + 1; i <= TOTAL_FRAMES; i++) {
+            if (frames[i] && frames[i].complete && frames[i].naturalWidth > 0) {
+                return frames[i];
+            }
+        }
+        return null;
+    }
+
+    // Draw frame in COVER mode - seamlessly paints directly over canvas with zero black flashes or gaps
     function drawFrame(index) {
-        const img = frames[index];
+        const img = getClosestLoadedFrame(index);
         if (!img || !img.complete || img.naturalWidth === 0) return;
 
         if (fallbackImg) fallbackImg.style.display = 'none';
@@ -920,18 +940,13 @@
         const displayWidth = canvas.width / dpr;
         const displayHeight = canvas.height / dpr;
 
-        // Reset transform and clear entire canvas
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        // Apply scale for crisp retina display
+        // High-DPI retina scale - paints directly over previous pixels with zero clearRect flicker
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
         const imgRatio = img.naturalWidth / img.naturalHeight;
         const canvasRatio = displayWidth / displayHeight;
 
         let renderWidth, renderHeight;
-        // Cover calculation: guarantees edge-to-edge full fill without empty space
         if (canvasRatio > imgRatio) {
             renderWidth = displayWidth;
             renderHeight = displayWidth / imgRatio;
@@ -990,25 +1005,37 @@
             if (loader) loader.classList.add('loaded');
         };
 
-        // Priority 2: Preload remaining frames in background
-        for (let i = 1; i <= TOTAL_FRAMES; i++) {
+        // Priority 2: Key milestones every 10 frames so rapid scrolls never have gaps
+        const keyFrames = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 141];
+        keyFrames.forEach(idx => {
+            if (idx === 1) return;
+            const img = new Image();
+            img.src = getFrameUrl(idx);
+            img.onload = () => {
+                frames[idx] = img;
+                if (Math.abs(idx - currentFrameIndex) <= 5) {
+                    drawFrame(currentFrameIndex);
+                }
+            };
+        });
+
+        // Priority 3: Preload all remaining frames in background
+        for (let i = 2; i <= TOTAL_FRAMES; i++) {
+            if (keyFrames.includes(i)) continue;
             const img = new Image();
             img.src = getFrameUrl(i);
             img.onload = () => {
                 frames[i] = img;
                 loadedCount++;
-                if (loadedCount >= 5 && loader) {
-                    loader.classList.add('loaded');
+                if (Math.abs(i - currentFrameIndex) <= 1) {
+                    drawFrame(currentFrameIndex);
                 }
-            };
-            img.onerror = () => {
-                loadedCount++;
             };
         }
 
         setTimeout(() => {
             if (loader) loader.classList.add('loaded');
-        }, 600);
+        }, 800);
     }
 
     // Event Listeners
