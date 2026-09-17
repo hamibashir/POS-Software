@@ -19,12 +19,12 @@
     /* Scroll track height drives the animation duration */
     .apple-scroll-track {
         position: relative;
-        height: 380vh; /* Calibrated for natural scroll pacing */
+        height: 320vh;
     }
 
     @media (max-width: 768px) {
         .apple-scroll-track {
-            height: 280vh; /* Shorter track on mobile for quick scrubbing */
+            height: 240vh;
         }
     }
 
@@ -55,18 +55,33 @@
         pointer-events: none;
     }
 
+    /* Fallback image if canvas or WebGL is unavailable */
+    .hero-fallback-img {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        max-width: 85%;
+        max-height: 85%;
+        object-fit: contain;
+        z-index: 1;
+        pointer-events: none;
+        opacity: 0.85;
+    }
+
     /* Preloader */
     .canvas-loader {
         position: absolute;
         inset: 0;
-        background: #090d16;
+        background: rgba(9, 13, 22, 0.85);
         z-index: 20;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         gap: 14px;
-        transition: opacity .5s ease, visibility .5s ease;
+        transition: opacity .4s ease, visibility .4s ease;
+        backdrop-filter: blur(8px);
     }
     .canvas-loader.loaded {
         opacity: 0;
@@ -74,9 +89,9 @@
         pointer-events: none;
     }
     .loader-spinner {
-        width: 44px;
-        height: 44px;
-        border: 3px solid rgba(255,255,255,.1);
+        width: 40px;
+        height: 40px;
+        border: 3px solid rgba(255,255,255,.12);
         border-top-color: #38bdf8;
         border-radius: 50%;
         animation: spin-loader 0.8s linear infinite;
@@ -91,7 +106,7 @@
         color: #94a3b8;
     }
     .loader-bar-bg {
-        width: 180px;
+        width: 160px;
         height: 4px;
         background: rgba(255,255,255,.1);
         border-radius: 4px;
@@ -129,17 +144,17 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 24px;
+        padding: 20px;
     }
 
     .story-step {
         position: absolute;
-        max-width: 620px;
-        width: calc(100% - 48px);
+        max-width: 600px;
+        width: calc(100% - 32px);
         text-align: center;
         opacity: 0;
-        transform: translateY(28px) scale(0.96);
-        transition: opacity .45s cubic-bezier(.16,1,.3,1), transform .45s cubic-bezier(.16,1,.3,1);
+        transform: translateY(24px) scale(0.96);
+        transition: opacity .4s cubic-bezier(.16,1,.3,1), transform .4s cubic-bezier(.16,1,.3,1);
         pointer-events: none;
         display: flex;
         flex-direction: column;
@@ -153,13 +168,13 @@
 
     /* Glass card background on step */
     .story-card-glass {
-        background: rgba(15, 23, 42, 0.65);
-        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(15, 23, 42, 0.72);
+        border: 1px solid rgba(255, 255, 255, 0.15);
         box-shadow: 0 20px 50px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
         backdrop-filter: blur(16px);
         -webkit-backdrop-filter: blur(16px);
-        border-radius: 24px;
-        padding: 32px 36px;
+        border-radius: 22px;
+        padding: 28px 32px;
         width: 100%;
         display: flex;
         flex-direction: column;
@@ -167,8 +182,8 @@
     }
     @media (max-width: 640px) {
         .story-card-glass {
-            padding: 20px 18px;
-            border-radius: 18px;
+            padding: 18px 16px;
+            border-radius: 16px;
         }
     }
 
@@ -183,16 +198,16 @@
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: .8px;
-        padding: 5px 14px;
+        padding: 4px 12px;
         border-radius: 20px;
-        margin-bottom: 12px;
+        margin-bottom: 10px;
     }
     .story-headline {
-        font-size: clamp(24px, 4.2vw, 46px);
+        font-size: clamp(22px, 4vw, 42px);
         font-weight: 900;
-        line-height: 1.15;
-        letter-spacing: -.6px;
-        margin-bottom: 12px;
+        line-height: 1.18;
+        letter-spacing: -.5px;
+        margin-bottom: 10px;
         color: #ffffff;
     }
     .story-gradient {
@@ -202,11 +217,11 @@
         background-clip: text;
     }
     .story-desc {
-        font-size: clamp(13px, 1.6vw, 16px);
+        font-size: clamp(13px, 1.5vw, 15px);
         color: #cbd5e1;
-        line-height: 1.6;
-        margin-bottom: 20px;
-        max-width: 480px;
+        line-height: 1.55;
+        margin-bottom: 18px;
+        max-width: 460px;
     }
     .story-actions {
         display: flex;
@@ -271,7 +286,7 @@
 
     .story-features-row {
         display: flex;
-        gap: 14px;
+        gap: 12px;
         flex-wrap: wrap;
         justify-content: center;
         margin-top: 4px;
@@ -291,34 +306,34 @@
     /* ── Bottom Floating Controls ────────────────────────── */
     .canvas-controls {
         position: absolute;
-        bottom: 24px;
+        bottom: 22px;
         left: 50%;
         transform: translateX(-50%);
         z-index: 15;
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 10px;
         background: rgba(15, 23, 42, 0.85);
         border: 1px solid rgba(255, 255, 255, 0.15);
         box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         backdrop-filter: blur(16px);
         -webkit-backdrop-filter: blur(16px);
-        padding: 8px 16px;
+        padding: 7px 14px;
         border-radius: 30px;
         max-width: calc(100% - 32px);
     }
     @media (max-width: 640px) {
         .canvas-controls {
-            bottom: 16px;
-            padding: 6px 12px;
-            gap: 8px;
+            bottom: 14px;
+            padding: 5px 10px;
+            gap: 6px;
         }
     }
     .control-btn {
         background: rgba(255, 255, 255, 0.12);
         border: 1px solid rgba(255, 255, 255, 0.2);
         color: #fff;
-        padding: 6px 12px;
+        padding: 5px 10px;
         border-radius: 20px;
         font-size: 11px;
         font-weight: 700;
@@ -340,7 +355,7 @@
     .frame-scrubber {
         -webkit-appearance: none;
         appearance: none;
-        width: 110px;
+        width: 100px;
         height: 5px;
         border-radius: 5px;
         background: rgba(255,255,255,0.25);
@@ -348,7 +363,7 @@
         cursor: pointer;
     }
     @media (max-width: 480px) {
-        .frame-scrubber { width: 70px; }
+        .frame-scrubber { width: 65px; }
     }
     .frame-scrubber::-webkit-slider-thumb {
         -webkit-appearance: none;
@@ -368,13 +383,6 @@
         align-items: center;
         gap: 5px;
         white-space: nowrap;
-    }
-    .scroll-hint-label i {
-        animation: bounce-down 1.5s infinite;
-    }
-    @keyframes bounce-down {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(4px); }
     }
 
     /* ═══════════════════════════════════════════════════════════
@@ -540,16 +548,11 @@
         width: 6px; height: 6px; border-radius: 50%; display: block; flex-shrink: 0;
     }
     .badge-instock  { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
-    .badge-instock  .dot { background: #22c55e; animation: pulse-dot 2s infinite; }
+    .badge-instock  .dot { background: #22c55e; }
     .badge-lowstock { background: #fef9c3; color: #a16207; border: 1px solid #fde68a; }
     .badge-lowstock .dot { background: #eab308; }
     .badge-outstock { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
     .badge-outstock .dot { background: #ef4444; }
-
-    @keyframes pulse-dot {
-        0%, 100% { opacity: 1; transform: scale(1); }
-        50%       { opacity: .6; transform: scale(.8); }
-    }
 
     .prod-card-body {
         padding: 18px;
@@ -658,6 +661,9 @@
     <div class="apple-scroll-track" id="scrollTrack">
         <div class="apple-sticky-stage" id="stickyStage">
 
+            {{-- Fallback static image --}}
+            <img src="{{ asset('images/ezgif-frame-001.jpg') }}" class="hero-fallback-img" id="heroFallback" alt="Hassan & Sons Showcase">
+
             {{-- HTML5 Canvas rendering 141 high-res frames --}}
             <canvas id="heroCanvas" class="hero-canvas"></canvas>
 
@@ -680,7 +686,7 @@
                 {{-- Step 1: 0% - 25% Scroll --}}
                 <div class="story-step active" id="storyStep1">
                     <div class="story-card-glass">
-                        <span class="story-tag"><i class="bi bi-shield-check"></i> Hassan & Sons Hardware</span>
+                        <span class="story-tag"><i class="bi bi-shield-check"></i> Hassan &amp; Sons Hardware</span>
                         <h1 class="story-headline">Next-Gen <span class="story-gradient">Hardware &amp; Sanitary</span></h1>
                         <p class="story-desc">Engineered for precision durability, industrial quality, and everyday reliability.</p>
                         <div class="story-actions">
@@ -763,7 +769,7 @@
             </div>
             <div>
                 <div class="pillar-title">100% Original Products</div>
-                <div class="pillar-desc">Direct factory supply & guaranteed quality materials.</div>
+                <div class="pillar-desc">Direct factory supply &amp; guaranteed quality materials.</div>
             </div>
         </div>
         <div class="value-pillar-card">
@@ -772,7 +778,7 @@
             </div>
             <div>
                 <div class="pillar-title">Wholesale &amp; Retail Rates</div>
-                <div class="pillar-desc">Best competitive pricing in Rawalpindi & Islamabad.</div>
+                <div class="pillar-desc">Best competitive pricing in Rawalpindi &amp; Islamabad.</div>
             </div>
         </div>
         <div class="value-pillar-card">
@@ -937,6 +943,7 @@
 (function() {
     const TOTAL_FRAMES = 141;
     const canvas = document.getElementById('heroCanvas');
+    const fallbackImg = document.getElementById('heroFallback');
     if (!canvas) return;
 
     const ctx = canvas.getContext('2d');
@@ -963,15 +970,17 @@
     let autoPlayInterval = null;
     let isUserScrubbing = false;
 
-    // Helper to get image path
+    // Relative asset path to prevent cross-origin issues on cPanel preview URLs
+    const assetBaseUrl = "{{ asset('images') }}".replace(/\/$/, '');
+
     function getFrameUrl(index) {
         const padded = String(index).padStart(3, '0');
-        return `{{ asset('images/ezgif-frame-') }}${padded}.jpg`;
+        return `${assetBaseUrl}/ezgif-frame-${padded}.jpg`;
     }
 
     // Set canvas dimensions with high-DPI scaling
     function resizeCanvas() {
-        const dpr = window.devicePixelRatio || 1;
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
         const rect = canvas.parentElement.getBoundingClientRect();
         canvas.width = rect.width * dpr;
         canvas.height = rect.height * dpr;
@@ -986,7 +995,9 @@
         const img = frames[index];
         if (!img || !img.complete || img.naturalWidth === 0) return;
 
-        const dpr = window.devicePixelRatio || 1;
+        if (fallbackImg) fallbackImg.style.display = 'none';
+
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
         const displayWidth = canvas.width / dpr;
         const displayHeight = canvas.height / dpr;
 
@@ -997,10 +1008,10 @@
 
         let renderWidth, renderHeight;
         if (canvasRatio > imgRatio) {
-            renderHeight = displayHeight * 0.95;
+            renderHeight = displayHeight * 0.92;
             renderWidth = renderHeight * imgRatio;
         } else {
-            renderWidth = displayWidth * 0.95;
+            renderWidth = displayWidth * 0.92;
             renderHeight = renderWidth / imgRatio;
         }
 
@@ -1067,14 +1078,19 @@
                 if (loaderBar) loaderBar.style.width = `${pct}%`;
                 if (loaderPercent) loaderPercent.innerText = `${pct}%`;
 
-                if (loadedCount >= TOTAL_FRAMES - 5) {
-                    if (loader) loader.classList.add('loaded');
+                if (loadedCount >= 10 && loader) {
+                    loader.classList.add('loaded');
                 }
             };
             img.onerror = () => {
                 loadedCount++;
             };
         }
+
+        // Safety timeout to dismiss loader after 1.5 seconds under any circumstance
+        setTimeout(() => {
+            if (loader) loader.classList.add('loaded');
+        }, 1500);
     }
 
     // Scrubber drag / touch interaction
