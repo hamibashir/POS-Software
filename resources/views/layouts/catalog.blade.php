@@ -6,6 +6,12 @@
     <meta name="description" content="@yield('meta_description', 'Browse our full range of sanitary and hardware products.')">
     <title>@yield('title', 'Product Catalog') — Hassan & Sons</title>
 
+    <!-- Favicon & App Icons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
+    <link rel="shortcut icon" href="{{ asset('favicon.ico') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
+
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
@@ -442,7 +448,7 @@
 <nav class="cat-nav">
     <div class="inner">
         <a href="{{ route('catalog.home') }}" class="brand">
-            <span class="material-symbols-outlined ms-icon">home_repair_service</span>
+            <img src="{{ asset('favicon-32x32.png') }}" alt="Hassan & Sons" style="width:28px; height:28px; object-fit:contain; border-radius:4px;">
             <span>Hassan & Sons</span>
         </a>
 
@@ -485,7 +491,7 @@
             {{-- Brand --}}
             <div class="brand-col">
                 <div class="brand-row">
-                    <span class="material-symbols-outlined ms-icon" style="color:var(--primary);font-size:22px;">home_repair_service</span>
+                    <img src="{{ asset('favicon-32x32.png') }}" alt="Hassan & Sons" style="width:24px; height:24px; object-fit:contain; border-radius:4px;">
                     <span class="brand-name">Hassan & Sons</span>
                 </div>
                 <p>Your trusted partner for quality sanitary ware, hardware tools, plumbing, and building materials.</p>

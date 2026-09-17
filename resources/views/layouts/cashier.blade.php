@@ -6,6 +6,12 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'POS') — Hassan & Sons</title>
 
+    <!-- Favicon & App Icons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
+    <link rel="shortcut icon" href="{{ asset('favicon.ico') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
@@ -53,7 +59,7 @@
 <body>
 
 <div class="pos-bar">
-    <div class="brand"><i class="bi bi-tools"></i> Hassan & Sons</div>
+    <div class="brand"><img src="{{ asset('favicon-32x32.png') }}" alt="Logo" style="width:24px; height:24px; object-fit:contain; border-radius:3px;"> Hassan &amp; Sons</div>
 
     @if(auth()->user()->isAdmin())
         <a href="{{ route('admin.dashboard') }}" class="btn-admin-back">
