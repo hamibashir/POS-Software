@@ -107,22 +107,13 @@
 
         .btn-login {
             padding: 7px 14px; font-size: 13px; font-weight: 700;
-            color: var(--primary); background: var(--primary-lt);
-            border: 1px solid rgba(30,109,138,.2); border-radius: 8px; cursor: pointer;
-            text-decoration: none; white-space: nowrap; flex-shrink: 0;
-            display: inline-flex; align-items: center;
-            transition: background .15s;
-        }
-        .btn-login:hover { background: #c8e4ee; color: var(--primary-dk); }
-        .btn-signup {
-            padding: 7px 14px; font-size: 13px; font-weight: 700;
             color: #fff; background: var(--primary);
             border: none; border-radius: 8px; cursor: pointer;
             text-decoration: none; white-space: nowrap; flex-shrink: 0;
-            display: inline-flex; align-items: center;
+            display: inline-flex; align-items: center; gap: 6px;
             transition: background .15s;
         }
-        .btn-signup:hover { background: var(--primary-dk); color: #fff; }
+        .btn-login:hover { background: var(--primary-dk); color: #fff; }
 
         /* ── Responsive nav ─────────────────── */
         @media (max-width: 992px) {
@@ -477,8 +468,7 @@
                 <i class="bi bi-telephone-fill"></i>
                 <span>051-8891930</span>
             </button>
-            <a href="{{ route('staff') }}" class="btn-login">Log In</a>
-            <a href="{{ route('staff') }}" class="btn-signup">Sign Up</a>
+            <a href="{{ route('staff') }}" class="btn-login"><i class="bi bi-person-fill"></i> <span>Log In</span></a>
         </div>
     </div>
 </nav>
