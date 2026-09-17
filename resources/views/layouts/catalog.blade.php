@@ -97,6 +97,14 @@
         }
         .btn-order-phone:hover { background: #bae6fd; color: #0369a1; }
 
+        .btn-qr-nav {
+            background: #f8fafc; color: #334155; border: 1px solid #cbd5e1;
+            padding: 7px 12px; font-size: 12px; font-weight: 700; border-radius: 8px;
+            cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+            white-space: nowrap; flex-shrink: 0; transition: all .15s;
+        }
+        .btn-qr-nav:hover { background: #e2e8f0; color: #0f172a; border-color: #94a3b8; }
+
         .btn-login {
             padding: 7px 14px; font-size: 13px; font-weight: 700;
             color: var(--primary); background: var(--primary-lt);
@@ -125,7 +133,9 @@
             .cat-search-wrap { display: none; }
             .btn-order-phone span { display: none; }
             .btn-order-phone { padding: 7px 10px; }
-            .cat-nav .inner { gap: 8px; padding: 0 10px; }
+            .btn-qr-nav span { display: none; }
+            .btn-qr-nav { padding: 7px 10px; }
+            .cat-nav .inner { gap: 6px; padding: 0 10px; }
             .cat-nav .brand { font-size: 15px; }
             .cat-nav .brand .ms-icon { font-size: 22px; }
         }
@@ -248,7 +258,7 @@
             max-width: 1440px; margin: 0 auto;
         }
         .cat-footer-grid {
-            display: grid; grid-template-columns: 2fr 1fr 1.5fr;
+            display: grid; grid-template-columns: 1.8fr 1fr 1.2fr 1fr;
             gap: 32px; margin-bottom: 32px;
         }
         .cat-footer .brand-col .brand-row {
@@ -285,7 +295,7 @@
         }
         .cat-footer-bottom .social a:hover { color: var(--primary); }
 
-        @media (max-width: 768px) {
+        @media (max-width: 900px) {
             .cat-nav-links { display: none; }
             .cat-footer-grid { grid-template-columns: 1fr 1fr; }
         }
@@ -459,6 +469,10 @@
                            placeholder="Search products…" value="{{ request('q') }}">
                 </form>
             </div>
+            <button type="button" class="btn-qr-nav" onclick="openQrModal('{{ url()->current() }}', 'Scan to Open on Mobile')" title="Scan QR Code to open on Mobile">
+                <i class="bi bi-qr-code-scan"></i>
+                <span>Scan QR</span>
+            </button>
             <button type="button" class="btn-order-phone" onclick="openPhoneOrderModal()" title="Order from Phone Number">
                 <i class="bi bi-telephone-fill"></i>
                 <span>051-8891930</span>
@@ -519,6 +533,18 @@
                 </div>
                 @endif
             </div>
+
+            {{-- QR Code Column --}}
+            <div>
+                <h4>Scan &amp; Visit</h4>
+                <div style="background:#fff; padding:8px; border-radius:12px; border:1px solid var(--border); display:inline-block; margin-bottom:8px; box-shadow:0 2px 8px rgba(0,0,0,.04); cursor:pointer;" onclick="openQrModal('{{ url('/') }}', 'Hassan & Sons Store')">
+                    <img src="{{ asset('images/hassanandsons-qr.png') }}" alt="Store QR Code" style="width:100px; height:100px; display:block; border-radius:6px;">
+                </div>
+                <p style="font-size:12px; color:var(--muted); line-height:1.4; margin-bottom:6px;">Scan with your smartphone camera to access store on mobile.</p>
+                <a href="{{ asset('images/hassanandsons-qr.png') }}" download="Hassan-and-Sons-QR.png" style="font-size:12px; font-weight:700; color:var(--primary); text-decoration:none; display:inline-flex; align-items:center; gap:4px;">
+                    <i class="bi bi-download"></i> Download QR
+                </a>
+            </div>
         </div>
 
         <div class="cat-footer-bottom">
@@ -578,6 +604,45 @@
     </div>
 </div>
 
+{{-- ── QR Code Popup Modal ───────────────────── --}}
+<div id="qrCodeModal" class="phone-modal-overlay" onclick="if(event.target===this) closeQrModal()">
+    <div class="phone-modal-box" style="text-align:center;">
+        <button type="button" class="phone-modal-close" onclick="closeQrModal()" aria-label="Close popup">&times;</button>
+        
+        <div class="phone-modal-header" style="margin-bottom:14px;">
+            <div class="phone-modal-icon" style="background:#e0f2fe; color:#0284c7;">
+                <i class="bi bi-qr-code-scan"></i>
+            </div>
+            <h3 id="qrModalTitle">Scan &amp; Access Store</h3>
+            <p id="qrModalDesc">Point your smartphone camera at the QR code below to open this page instantly on your mobile phone.</p>
+        </div>
+
+        <div style="background:#fff; border:2px dashed #cbd5e1; border-radius:16px; padding:16px; display:inline-block; margin-bottom:18px; box-shadow:0 4px 16px rgba(0,0,0,0.06);">
+            <img id="qrModalImage" src="{{ asset('images/hassanandsons-qr.png') }}" alt="Website QR Code" style="width:200px; height:200px; display:block; border-radius:8px;">
+        </div>
+
+        <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-bottom:16px;">
+            <a id="btnDownloadQr" href="{{ asset('images/hassanandsons-qr.png') }}" download="Hassan-and-Sons-QR.png" class="btn-call-direct" style="background:#1e6d8a; color:#fff !important; flex:initial; padding:10px 18px;">
+                <i class="bi bi-download"></i> Download QR Image
+            </a>
+            <button type="button" class="btn-copy-number" id="btnCopyPageLink" style="background:#f1f5f9; color:#0f172a; border-color:#cbd5e1; flex:initial; padding:10px 18px;" onclick="copyPageLink()">
+                <i class="bi bi-link-45deg" id="copyLinkIcon"></i> <span id="copyLinkText">Copy Link</span>
+            </button>
+        </div>
+
+        <div class="phone-modal-footer-info" style="text-align:left;">
+            <div class="info-point">
+                <i class="bi bi-phone-fill text-primary"></i>
+                <span>Compatible with iOS Camera (iPhone) &amp; Android Lens / Scanner</span>
+            </div>
+            <div class="info-point">
+                <i class="bi bi-shield-check text-success"></i>
+                <span>Direct link to official Hassan &amp; Sons online store</span>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     // Open Phone Order Modal
     function openPhoneOrderModal(productName = '', productSku = '', productPrice = '') {
@@ -600,8 +665,70 @@
     // Close Phone Order Modal
     function closePhoneOrderModal() {
         const modal = document.getElementById('phoneOrderModal');
-        modal.classList.remove('active');
-        document.body.style.overflow = '';
+        if (modal) {
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+    }
+
+    // QR Code Modal
+    let currentQrUrl = "{{ url('/') }}";
+
+    function openQrModal(targetUrl, title = 'Scan & Access Store') {
+        currentQrUrl = targetUrl || "{{ url('/') }}";
+        const modal = document.getElementById('qrCodeModal');
+        const img = document.getElementById('qrModalImage');
+        const dlBtn = document.getElementById('btnDownloadQr');
+        const titleEl = document.getElementById('qrModalTitle');
+
+        if (titleEl) titleEl.textContent = title;
+
+        if (!targetUrl || targetUrl === "{{ url('/') }}" || targetUrl.indexOf('localhost') !== -1 || targetUrl.indexOf('127.0.0.1') !== -1) {
+            img.src = "{{ asset('images/hassanandsons-qr.png') }}";
+            dlBtn.href = "{{ asset('images/hassanandsons-qr.png') }}";
+        } else {
+            const dynamicQr = "https://api.qrserver.com/v1/create-qr-code/?size=600x600&margin=15&data=" + encodeURIComponent(currentQrUrl);
+            img.src = dynamicQr;
+            dlBtn.href = dynamicQr;
+        }
+
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeQrModal() {
+        const modal = document.getElementById('qrCodeModal');
+        if (modal) {
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+    }
+
+    function copyPageLink() {
+        const text = currentQrUrl || window.location.href;
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(text).then(() => showCopyLinkSuccess());
+        } else {
+            const input = document.createElement('input');
+            input.value = text;
+            document.body.appendChild(input);
+            input.select();
+            document.execCommand('copy');
+            document.body.removeChild(input);
+            showCopyLinkSuccess();
+        }
+    }
+
+    function showCopyLinkSuccess() {
+        const copyLinkText = document.getElementById('copyLinkText');
+        const copyLinkIcon = document.getElementById('copyLinkIcon');
+        const orig = copyLinkText.textContent;
+        copyLinkText.textContent = 'Link Copied!';
+        copyLinkIcon.className = 'bi bi-check-lg text-success';
+        setTimeout(() => {
+            copyLinkText.textContent = orig;
+            copyLinkIcon.className = 'bi bi-link-45deg';
+        }, 2200);
     }
 
     // Copy Phone Number to Clipboard with visual feedback
@@ -637,6 +764,7 @@
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             closePhoneOrderModal();
+            closeQrModal();
         }
     });
 </script>

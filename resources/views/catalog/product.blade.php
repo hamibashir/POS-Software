@@ -299,6 +299,12 @@
                     <span class="material-symbols-outlined" style="font-size:18px;">call</span>
                     Call to Order (051-8891930)
                 </a>
+                <button type="button" class="btn-call" style="flex:0 0 auto; min-width:auto; padding:13px 18px;"
+                        onclick="openQrModal('{{ route('catalog.product', $product->slug) }}', 'Scan QR for {{ addslashes($product->name) }}')"
+                        title="Scan QR Code to open this product on mobile">
+                    <i class="bi bi-qr-code-scan"></i>
+                    <span class="d-none d-sm-inline" style="margin-left:4px;">Scan QR</span>
+                </button>
             </div>
 
             {{-- Technical Specifications --}}
