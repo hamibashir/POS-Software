@@ -7,10 +7,11 @@
     <title>@yield('title', 'POS') — Hassan & Sons</title>
 
     <!-- Favicon & App Icons -->
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
-    <link rel="shortcut icon" href="{{ asset('favicon.ico') }}">
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}?v=5">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}?v=5">
+    <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}?v=5">
+    <link rel="shortcut icon" href="{{ asset('favicon.ico') }}?v=5">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}?v=5">
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
@@ -59,7 +60,7 @@
 <body>
 
 <div class="pos-bar">
-    <div class="brand"><img src="{{ asset('favicon-32x32.png') }}" alt="Logo" style="width:24px; height:24px; object-fit:contain; border-radius:3px;"> Hassan &amp; Sons</div>
+    <div class="brand"><img src="{{ asset('images/hassan-logo-icon.png') }}" alt="Logo" style="width:26px; height:26px; object-fit:contain;"> Hassan &amp; Sons</div>
 
     @if(auth()->user()->isAdmin())
         <a href="{{ route('admin.dashboard') }}" class="btn-admin-back">
