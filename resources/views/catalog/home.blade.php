@@ -6,7 +6,7 @@
 @push('styles')
 <style>
     /* ═══════════════════════════════════════════════════════════
-       ── APPLE-STYLE SEAMLESS SCROLL STORY (TRANSPARENT) ────────
+       ── APPLE-STYLE SEAMLESS SCROLL STORY (EDGE-TO-EDGE) ───────
        ═══════════════════════════════════════════════════════════ */
     .apple-scroll-wrapper {
         position: relative;
@@ -20,38 +20,36 @@
     /* Scroll track height drives the animation duration */
     .apple-scroll-track {
         position: relative;
-        height: 320vh;
+        height: 300vh;
     }
 
     @media (max-width: 768px) {
         .apple-scroll-track {
-            height: 240vh;
+            height: 220vh;
         }
     }
 
-    /* Sticky stage pinned to viewport */
+    /* Sticky stage pinned to viewport - 100% full screen with no empty space */
     .apple-sticky-stage {
         position: sticky;
-        top: 0;
+        top: 64px;
         left: 0;
-        width: 100vw;
-        height: 100vh;
+        width: 100%;
+        height: calc(100vh - 64px);
         overflow: hidden;
         display: flex;
         align-items: center;
         justify-content: center;
-        background: radial-gradient(circle at 50% 50%, #152238 0%, #090d16 80%);
+        background: #090d16;
     }
 
-    /* Interactive Canvas - Edge to Edge */
+    /* Interactive Canvas - Edge to Edge Fill */
     .hero-canvas {
         position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
+        inset: 0;
+        width: 100% !important;
+        height: 100% !important;
+        display: block;
         z-index: 1;
         pointer-events: none;
     }
@@ -59,15 +57,12 @@
     /* Fallback image */
     .hero-fallback-img {
         position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        max-width: 90%;
-        max-height: 90%;
-        object-fit: contain;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
         z-index: 1;
         pointer-events: none;
-        opacity: 0.9;
     }
 
     /* Minimalist Preloader */
@@ -91,7 +86,7 @@
     .loader-spinner {
         width: 36px;
         height: 36px;
-        border: 3px solid rgba(255,255,255,.1);
+        border: 3px solid rgba(255,255,255,.12);
         border-top-color: #38bdf8;
         border-radius: 50%;
         animation: spin-loader 0.7s linear infinite;
@@ -110,19 +105,19 @@
     .ambient-glow {
         position: absolute;
         inset: 0;
-        background: radial-gradient(circle at 50% 50%, rgba(56, 189, 248, 0.09) 0%, transparent 65%);
+        background: radial-gradient(circle at 50% 50%, rgba(56, 189, 248, 0.08) 0%, transparent 70%);
         pointer-events: none;
         z-index: 2;
     }
     .stage-vignette {
         position: absolute;
         inset: 0;
-        background: radial-gradient(circle at 50% 50%, transparent 40%, rgba(9, 13, 22, 0.65) 100%);
+        background: linear-gradient(180deg, rgba(9,13,22,0.4) 0%, transparent 25%, transparent 75%, rgba(9,13,22,0.85) 100%);
         pointer-events: none;
         z-index: 3;
     }
 
-    /* ── Seamless Transparent Story Captions ─────────────── */
+    /* ── High-Contrast Transparent Floating Story Captions ── */
     .story-overlay {
         position: absolute;
         inset: 0;
@@ -131,25 +126,36 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 24px;
+        padding: 20px;
     }
 
     .story-step {
         position: absolute;
-        max-width: 720px;
+        max-width: 650px;
         width: calc(100% - 32px);
         text-align: center;
         opacity: 0;
-        transform: translateY(22px) scale(0.97);
-        transition: opacity .4s cubic-bezier(.16,1,.3,1), transform .4s cubic-bezier(.16,1,.3,1);
+        transform: translateY(16px) scale(0.98);
+        transition: opacity .35s cubic-bezier(.16,1,.3,1), transform .35s cubic-bezier(.16,1,.3,1);
         pointer-events: none;
         display: flex;
         flex-direction: column;
         align-items: center;
-        /* Completely transparent - no box background so animations are 100% visible */
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
+        /* Frosted glass translucent card: crystal clear text + full animation visibility */
+        background: rgba(9, 13, 22, 0.74);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        padding: 24px 28px;
+        border-radius: 24px;
+    }
+    @media (max-width: 640px) {
+        .story-step {
+            padding: 18px 16px;
+            border-radius: 20px;
+            width: calc(100% - 24px);
+        }
     }
     .story-step.active {
         opacity: 1;
@@ -161,45 +167,43 @@
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        background: rgba(0, 0, 0, 0.45);
-        border: 1px solid rgba(56, 189, 248, 0.4);
+        background: rgba(0, 0, 0, 0.6);
+        border: 1px solid rgba(56, 189, 248, 0.5);
         color: #7dd3fc;
         font-size: 11px;
-        font-weight: 700;
+        font-weight: 800;
         text-transform: uppercase;
-        letter-spacing: .9px;
+        letter-spacing: 1px;
         padding: 5px 14px;
         border-radius: 20px;
         margin-bottom: 12px;
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.4);
     }
 
     .story-headline {
-        font-size: clamp(26px, 4.8vw, 54px);
+        font-size: clamp(24px, 4.4vw, 48px);
         font-weight: 900;
-        line-height: 1.12;
-        letter-spacing: -.6px;
-        margin-bottom: 12px;
+        line-height: 1.15;
+        letter-spacing: -.5px;
+        margin-bottom: 10px;
         color: #ffffff;
-        text-shadow: 0 4px 30px rgba(0,0,0,0.9), 0 1px 4px rgba(0,0,0,0.8);
+        text-shadow: 0 2px 10px rgba(0,0,0,0.9);
     }
     .story-gradient {
         background: linear-gradient(135deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
-        filter: drop-shadow(0 4px 20px rgba(56, 189, 248, 0.35));
+        filter: drop-shadow(0 4px 20px rgba(56, 189, 248, 0.45));
     }
     .story-desc {
-        font-size: clamp(14px, 1.8vw, 17px);
-        color: #e2e8f0;
-        line-height: 1.55;
-        margin-bottom: 22px;
+        font-size: clamp(13px, 1.6vw, 16px);
+        color: #f1f5f9;
+        line-height: 1.5;
+        margin-bottom: 20px;
         max-width: 520px;
-        text-shadow: 0 3px 20px rgba(0,0,0,0.95), 0 1px 3px rgba(0,0,0,0.8);
         font-weight: 500;
+        text-shadow: 0 2px 8px rgba(0,0,0,0.9);
     }
 
     .story-actions {
@@ -213,34 +217,32 @@
         color: #fff !important;
         font-weight: 700;
         font-size: 14px;
-        padding: 11px 22px;
+        padding: 11px 24px;
         border-radius: 12px;
         text-decoration: none !important;
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        box-shadow: 0 4px 20px rgba(2, 132, 199, 0.5);
+        box-shadow: 0 4px 20px rgba(2, 132, 199, 0.6);
         transition: transform .15s, box-shadow .15s;
     }
     .btn-story-primary:hover {
         transform: translateY(-2px);
-        box-shadow: 0 6px 25px rgba(2, 132, 199, 0.7);
+        box-shadow: 0 6px 25px rgba(2, 132, 199, 0.8);
     }
     .btn-story-outline {
-        background: rgba(0, 0, 0, 0.45);
+        background: rgba(0, 0, 0, 0.65);
         color: #fff !important;
         font-weight: 600;
         font-size: 14px;
         padding: 11px 20px;
         border-radius: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.3);
+        border: 1.5px solid rgba(255, 255, 255, 0.35);
         text-decoration: none !important;
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         transition: background .15s, transform .15s;
     }
     .btn-story-outline:hover {
@@ -252,13 +254,13 @@
         color: #fff !important;
         font-weight: 700;
         font-size: 14px;
-        padding: 11px 20px;
+        padding: 11px 22px;
         border-radius: 12px;
         text-decoration: none !important;
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        box-shadow: 0 4px 20px rgba(22, 163, 74, 0.5);
+        box-shadow: 0 4px 20px rgba(22, 163, 74, 0.6);
         transition: transform .15s;
     }
     .btn-story-whatsapp:hover {
@@ -278,15 +280,13 @@
         align-items: center;
         gap: 6px;
         font-size: 13px;
-        font-weight: 600;
-        color: #f1f5f9;
-        background: rgba(0, 0, 0, 0.45);
-        border: 1px solid rgba(255,255,255,.2);
-        padding: 7px 14px;
-        border-radius: 10px;
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        font-weight: 700;
+        color: #f8fafc;
+        background: rgba(0, 0, 0, 0.65);
+        border: 1px solid rgba(255,255,255,.25);
+        padding: 7px 16px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
     }
 
     /* Scroll Prompt */
@@ -300,18 +300,18 @@
         flex-direction: column;
         align-items: center;
         gap: 6px;
-        color: rgba(255,255,255,0.7);
+        color: rgba(255,255,255,0.75);
         font-size: 11px;
-        font-weight: 700;
-        letter-spacing: .6px;
+        font-weight: 800;
+        letter-spacing: .8px;
         text-transform: uppercase;
         pointer-events: none;
-        text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+        text-shadow: 0 2px 8px rgba(0,0,0,0.9);
     }
     .scroll-mouse-icon {
         width: 20px;
         height: 32px;
-        border: 2px solid rgba(255,255,255,0.6);
+        border: 2px solid rgba(255,255,255,0.7);
         border-radius: 12px;
         position: relative;
     }
@@ -335,12 +335,12 @@
     .seamless-transition-strip {
         width: 100%;
         height: 100px;
-        background: linear-gradient(180deg, #090d16 0%, #111827 30%, #f6f7f8 100%);
+        background: linear-gradient(180deg, #090d16 0%, #111827 35%, #f6f7f8 100%);
         margin-top: -1px;
     }
 
     /* ═══════════════════════════════════════════════════════════
-       ── MAIN CATALOG SECTIONS (CLEAN & DYNAMIC) ───────────────
+       ── MAIN CATALOG SECTIONS ─────────────────────────────────
        ═══════════════════════════════════════════════════════════ */
     .cat-main-content {
         max-width: 1440px;
@@ -609,7 +609,7 @@
 @section('content')
 
 {{-- ═══════════════════════════════════════════════════════════
-     ── 1. APPLE-STYLE SEAMLESS SCROLL HERO (TRANSPARENT) ─────
+     ── 1. APPLE-STYLE SEAMLESS SCROLL HERO (EDGE-TO-EDGE) ─────
      ═══════════════════════════════════════════════════════════ --}}
 <div class="apple-scroll-wrapper" id="interactiveExperience">
     <div class="apple-scroll-track" id="scrollTrack">
@@ -618,7 +618,7 @@
             {{-- Fallback static image --}}
             <img src="{{ asset('images/ezgif-frame-001.jpg') }}" class="hero-fallback-img" id="heroFallback" alt="Hassan & Sons Showcase">
 
-            {{-- HTML5 Canvas rendering 141 high-res frames --}}
+            {{-- HTML5 Canvas rendering 141 high-res frames - edge to edge --}}
             <canvas id="heroCanvas" class="hero-canvas"></canvas>
 
             {{-- Ambient glow & vignette effects --}}
@@ -631,7 +631,7 @@
                 <div class="loader-text">Loading Experience...</div>
             </div>
 
-            {{-- Dynamic Floating Story Overlays (100% Transparent, Unobstructed Animation) --}}
+            {{-- High-Contrast Floating Story Overlays --}}
             <div class="story-overlay">
                 
                 {{-- Step 1: 0% - 25% Scroll --}}
@@ -680,7 +680,7 @@
 
             </div>
 
-            {{-- Minimal Scroll Hint --}}
+            {{-- Minimal Scroll Prompt --}}
             <div class="scroll-indicator-wrap">
                 <div class="scroll-mouse-icon">
                     <div class="scroll-mouse-wheel"></div>
@@ -910,16 +910,14 @@
     // Set canvas dimensions with high-DPI scaling
     function resizeCanvas() {
         const dpr = Math.min(window.devicePixelRatio || 1, 2);
-        const rect = canvas.parentElement.getBoundingClientRect();
-        canvas.width = rect.width * dpr;
-        canvas.height = rect.height * dpr;
-        canvas.style.width = `${rect.width}px`;
-        canvas.style.height = `${rect.height}px`;
-        ctx.scale(dpr, dpr);
+        const stage = canvas.parentElement || document.getElementById('stickyStage');
+        const rect = stage ? stage.getBoundingClientRect() : { width: window.innerWidth, height: window.innerHeight - 64 };
+        canvas.width = Math.round(rect.width * dpr);
+        canvas.height = Math.round(rect.height * dpr);
         drawFrame(currentFrameIndex);
     }
 
-    // Draw frame centered while preserving aspect ratio (contain mode)
+    // Draw frame in COVER mode - fills entire viewport with zero black side bars or gaps
     function drawFrame(index) {
         const img = frames[index];
         if (!img || !img.complete || img.naturalWidth === 0) return;
@@ -930,18 +928,24 @@
         const displayWidth = canvas.width / dpr;
         const displayHeight = canvas.height / dpr;
 
-        ctx.clearRect(0, 0, displayWidth, displayHeight);
+        // Reset transform and clear entire canvas
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Apply scale for crisp retina display
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
         const imgRatio = img.naturalWidth / img.naturalHeight;
         const canvasRatio = displayWidth / displayHeight;
 
         let renderWidth, renderHeight;
+        // Cover calculation: guarantees edge-to-edge full fill without empty space
         if (canvasRatio > imgRatio) {
-            renderHeight = displayHeight * 0.96;
-            renderWidth = renderHeight * imgRatio;
+            renderWidth = displayWidth;
+            renderHeight = displayWidth / imgRatio;
         } else {
-            renderWidth = displayWidth * 0.96;
-            renderHeight = renderWidth / imgRatio;
+            renderHeight = displayHeight;
+            renderWidth = displayHeight * imgRatio;
         }
 
         const renderX = (displayWidth - renderWidth) / 2;
@@ -1012,7 +1016,7 @@
 
         setTimeout(() => {
             if (loader) loader.classList.add('loaded');
-        }, 800);
+        }, 600);
     }
 
     // Event Listeners
