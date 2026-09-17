@@ -91,7 +91,7 @@
                             <th>Date</th>
                             <th>Invoice #</th>
                             <th>Items</th>
-                            <th>Cashier</th>
+                            <th>Employee</th>
                             <th style="text-align:right;">Amount</th>
                         </tr>
                     </thead>

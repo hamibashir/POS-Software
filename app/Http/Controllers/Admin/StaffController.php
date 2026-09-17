@@ -190,7 +190,7 @@ class StaffController extends Controller
     }
 
     /**
-     * Add a new cashier user.
+     * Add a new employee user (POS operator).
      */
     public function storeCashier(Request $request)
     {
@@ -210,17 +210,17 @@ class StaffController extends Controller
             'is_active' => true,
         ]);
 
-        return back()->with('success', "Cashier {$cashier->name} added successfully.");
+        return back()->with('success', "Employee {$cashier->name} added successfully.");
     }
 
     /**
-     * Update cashier details.
+     * Update employee details.
      */
     public function updateCashier(Request $request, User $user)
     {
         $this->authorizeAdmin();
 
-        abort_unless($user->role === 'cashier', 400, 'Only cashier accounts can be edited here.');
+        abort_unless($user->role === 'cashier', 400, 'Only employee accounts can be edited here.');
 
         $data = $request->validate([
             'name'      => ['required', 'string', 'max:150'],
@@ -241,23 +241,23 @@ class StaffController extends Controller
 
         $user->update($updateData);
 
-        return back()->with('success', "Cashier {$user->name} updated successfully.");
+        return back()->with('success', "Employee {$user->name} updated successfully.");
     }
 
     /**
-     * Delete a cashier.
+     * Delete an employee.
      */
     public function destroyCashier(User $user)
     {
         $this->authorizeAdmin();
 
         abort_if($user->id === auth()->id(), 400, 'You cannot delete your own account.');
-        abort_unless($user->role === 'cashier', 400, 'Only cashier accounts can be deleted here.');
+        abort_unless($user->role === 'cashier', 400, 'Only employee accounts can be deleted here.');
 
         $name = $user->name;
         $user->delete();
 
-        return back()->with('success', "Cashier {$name} removed successfully.");
+        return back()->with('success', "Employee {$name} removed successfully.");
     }
 
     /**

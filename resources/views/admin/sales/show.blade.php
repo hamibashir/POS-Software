@@ -140,7 +140,7 @@
                 </span>
             </div>
             <div class="info-row">
-                <span class="lbl">Cashier</span>
+                <span class="lbl">Employee</span>
                 <span class="val">{{ $sale->user?->name ?? '—' }}</span>
             </div>
             <div class="info-row">

@@ -186,7 +186,7 @@
             <tr>
                 <th>Invoice</th>
                 <th>Date & Time</th>
-                <th>Cashier</th>
+                <th>Employee</th>
                 <th>Customer</th>
                 <th>Items</th>
                 <th>Total</th>

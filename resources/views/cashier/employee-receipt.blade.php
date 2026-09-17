@@ -362,8 +362,8 @@
                     <td>{{ $payment->created_at ? $payment->created_at->format('d M Y, g:i A') : $payment->payment_date->format('d M Y') }}</td>
                 </tr>
                 <tr>
-                    <td>Received By (Cashier)</td>
-                    <td>{{ $payment->user?->name ?? 'POS Cashier' }}</td>
+                    <td>Received By (Employee)</td>
+                    <td>{{ $payment->user?->name ?? 'POS Employee' }}</td>
                 </tr>
                 <tr>
                     <td>Customer</td>
@@ -421,7 +421,7 @@
             </div>
             <div class="sig-box">
                 <div class="sig-line"></div>
-                <div class="sig-label">Cashier Signature</div>
+                <div class="sig-label">Employee Signature</div>
             </div>
         </div>
 

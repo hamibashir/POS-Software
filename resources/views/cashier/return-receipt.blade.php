@@ -357,8 +357,8 @@
                     <td>{{ $saleReturn->created_at ? $saleReturn->created_at->format('d M Y, g:i A') : now()->format('d M Y, g:i A') }}</td>
                 </tr>
                 <tr>
-                    <td>Cashier</td>
-                    <td>{{ $saleReturn->user?->name ?? 'POS Cashier' }}</td>
+                    <td>Employee</td>
+                    <td>{{ $saleReturn->user?->name ?? 'POS Employee' }}</td>
                 </tr>
                 @if($saleReturn->sale)
                 <tr>
@@ -373,75 +373,77 @@
                 <tr>
                     <td>Customer</td>
                     <td>
-                        {{ $saleReturn->customer_name }}
-                        @if($saleReturn->customer_phone) · {{ $saleReturn->customer_phone }} @endif
+                        <div style="font-weight:700; color:#111827;">{{ $saleReturn->customer_name }}</div>
+                        @if($saleReturn->customer_phone)
+                            <div style="font-size:10px; color:#4b5563;">{{ $saleReturn->customer_phone }}</div>
+                        @endif
                     </td>
                 </tr>
                 <tr>
-                    <td>Refund Method</td>
+                    <td>Refund Mode</td>
                     <td>
                         <span class="pay-badge">
                             {{ match($saleReturn->refund_method) {
-                                'cash' => '💵 CASH REFUND',
-                                'card' => '💳 CARD / BANK',
-                                'credit_adjustment' => '💼 CREDIT ADJUSTMENT',
-                                default => strtoupper($saleReturn->refund_method)
+                                'cash'   => '💵 CASH REFUND',
+                                'card'   => '💳 CARD REVERSAL',
+                                'credit' => '📋 CUSTOMER CREDIT DEDUCTION',
+                                default  => strtoupper($saleReturn->refund_method)
                             } }}
                         </span>
                     </td>
                 </tr>
-                @if($saleReturn->reason)
-                <tr>
-                    <td>Return Reason</td>
-                    <td>{{ $saleReturn->reason }}</td>
-                </tr>
-                @endif
                 @if($saleReturn->notes)
                 <tr>
-                    <td>Notes</td>
+                    <td>Return Reason / Notes</td>
                     <td>{{ $saleReturn->notes }}</td>
                 </tr>
                 @endif
             </tbody>
         </table>
 
-        {{-- Returned Items --}}
-        <div class="items-title">Returned Products ({{ $saleReturn->items->sum('quantity') }} pcs)</div>
+        {{-- Returned Items Table --}}
         <table class="items-table">
             <thead>
                 <tr>
-                    <th style="text-align:left; width:46%;">Item</th>
-                    <th>Qty</th>
-                    <th>Rate</th>
-                    <th>Total</th>
+                    <th style="width:40%;">Item Details</th>
+                    <th style="width:18%; text-align:center;">Qty</th>
+                    <th style="width:20%; text-align:right;">Rate</th>
+                    <th style="width:22%; text-align:right;">Refund</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach($saleReturn->items as $item)
                 <tr>
-                    <td>
-                        <div class="item-name">{{ $item->product_name }}</div>
-                        <div class="item-meta">{{ $item->product_sku }} · {{ strtoupper($item->product_unit) }}</div>
+                    <td class="item-name">
+                        {{ $item->product_name }}
+                        @if($item->product_sku)
+                            <div class="item-sku">SKU: {{ $item->product_sku }}</div>
+                        @endif
                     </td>
-                    <td>{{ $item->quantity }}</td>
-                    <td>{{ pkr($item->unit_price, 2) }}</td>
-                    <td class="item-total">{{ pkr($item->total_price, 2) }}</td>
+                    <td class="item-qty">
+                        -{{ $item->quantity }} {{ $item->product_unit ?? 'pcs' }}
+                    </td>
+                    <td class="item-price">
+                        {{ pkr($item->unit_price, 2) }}
+                    </td>
+                    <td class="item-total">
+                        -{{ pkr($item->total_price, 2) }}
+                    </td>
                 </tr>
                 @endforeach
             </tbody>
         </table>
 
-        {{-- Totals --}}
-        <div class="totals-wrap">
-            <div class="t-row grand">
-                <span>TOTAL REFUND</span>
-                <span>{{ pkr($saleReturn->refund_amount, 2) }}</span>
+        {{-- Totals Box --}}
+        <div class="totals-section">
+            <div class="tot-row tot-grand">
+                <span>Total Refund Amount:</span>
+                <span>-{{ pkr($saleReturn->total_return_amount, 2) }}</span>
             </div>
         </div>
 
-        {{-- Refund Confirmation Box --}}
-        <div class="refund-box">
-            <span style="font-weight:600; color:#991b1b;">Refund Status:</span>
+        {{-- Return Status --}}
+        <div class="return-status-badge">
             <span style="font-weight:800; font-size:13px; color:#991b1b;">
                 <i class="bi bi-arrow-counterclockwise me-1"></i> Refund Disbursed
             </span>
@@ -455,7 +457,7 @@
             </div>
             <div class="sig-box">
                 <div class="sig-line"></div>
-                <div class="sig-label">Cashier Signature</div>
+                <div class="sig-label">Employee Signature</div>
             </div>
         </div>
 

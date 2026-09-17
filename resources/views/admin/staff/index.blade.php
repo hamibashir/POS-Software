@@ -35,14 +35,14 @@
 <div class="page-hero d-flex align-items-center justify-content-between flex-wrap gap-2">
     <div>
         <h1><i class="bi bi-people me-2" style="color:var(--pos-primary)"></i>Customers & User Management</h1>
-        <p>Manage customers eligible for credit sales, POS cashiers, and system administrators.</p>
+        <p>Manage customers eligible for credit sales, employees (POS operators), and system administrators.</p>
     </div>
     <div class="d-flex gap-2 flex-wrap">
         <button class="btn-pos-outline" data-bs-toggle="modal" data-bs-target="#addAdminModal">
             <i class="bi bi-shield-lock-fill"></i> Add Admin
         </button>
         <button class="btn-pos-outline" data-bs-toggle="modal" data-bs-target="#addCashierModal">
-            <i class="bi bi-person-badge"></i> Add Cashier
+            <i class="bi bi-person-badge"></i> Add Employee
         </button>
         <button class="btn-pos" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
             <i class="bi bi-person-plus-fill"></i> Add Customer
@@ -66,7 +66,7 @@
         <div class="stat-card">
             <div class="stat-icon" style="background:#fef3c7; color:#b45309;"><i class="bi bi-person-badge"></i></div>
             <div>
-                <div class="stat-label">Cashiers</div>
+                <div class="stat-label">Employees</div>
                 <div class="stat-value">{{ $stats['total_cashiers'] }}</div>
                 <div class="stat-sub">POS terminal operators</div>
             </div>
@@ -111,7 +111,7 @@
 </div>
 @endif
 
-{{-- Search Bar across Customers, Cashiers, and Admins --}}
+{{-- Search Bar across Customers, Employees, and Admins --}}
 <div class="pos-card mb-4" style="padding: 16px 20px; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
     <form method="GET" action="{{ route('admin.staff.index') }}" id="staffSearchForm" class="d-flex align-items-center gap-2 flex-wrap">
         <div style="position:relative; flex: 1; min-width: 260px;">
@@ -120,7 +120,7 @@
                    name="search"
                    id="staffSearchInput"
                    value="{{ $search ?? '' }}"
-                   placeholder="Search customers, cashiers, or admins by name, phone, address, email, notes..."
+                   placeholder="Search customers, employees, or admins by name, phone, address, email, notes..."
                    class="pos-input"
                    style="padding-left: 40px; padding-right: 36px; height: 44px; font-size: 14px; border-radius: 8px; width: 100%; border: 1.5px solid #d1d5db;"
                    autocomplete="off">
@@ -153,7 +153,7 @@
         <span class="badge" id="badgeEmployeesCount" style="background:#f3f4f6; color:#374151; border-radius:10px; font-size:11px;">{{ $employees->count() }}</span>
     </button>
     <button class="nav-tab-btn" id="tabBtnCashiers" onclick="switchTab('cashiers')">
-        <i class="bi bi-person-badge"></i> Cashiers (POS Users)
+        <i class="bi bi-person-badge"></i> Employees (POS Users)
         <span class="badge" id="badgeCashiersCount" style="background:#f3f4f6; color:#374151; border-radius:10px; font-size:11px;">{{ $cashiers->count() }}</span>
     </button>
     <button class="nav-tab-btn" id="tabBtnAdmins" onclick="switchTab('admins')">
@@ -265,13 +265,13 @@
     </div>
 </div>
 
-{{-- ═══════════════ CASHIERS TAB ═══════════════ --}}
+{{-- ═══════════════ EMPLOYEES (POS USERS) TAB ═══════════════ --}}
 <div id="tabCashiers" class="pos-card" style="display:none;">
     <div style="overflow-x:auto;">
         <table class="pos-table w-100">
             <thead>
                 <tr>
-                    <th>Cashier Name</th>
+                    <th>Employee Name</th>
                     <th>Email / Login</th>
                     <th>Role</th>
                     <th>Status</th>
@@ -290,7 +290,7 @@
                     </td>
                     <td>
                         <span class="badge-cashier">
-                            <i class="bi bi-person-badge me-1"></i> POS Cashier
+                            <i class="bi bi-person-badge me-1"></i> Employee
                         </span>
                     </td>
                     <td>
@@ -308,7 +308,7 @@
                                 <i class="bi bi-pencil"></i> Edit
                             </button>
 
-                            <form method="POST" action="{{ route('admin.staff.cashiers.destroy', $c) }}" style="display:inline;" onsubmit="return confirm('Remove cashier {{ $c->name }}?');">
+                            <form method="POST" action="{{ route('admin.staff.cashiers.destroy', $c) }}" style="display:inline;" onsubmit="return confirm('Remove employee {{ $c->name }}?');">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn-pos-outline" style="padding:4px 8px; font-size:12px; border-color:#fee2e2; color:#dc2626;">
@@ -322,16 +322,16 @@
                 <tr>
                     <td colspan="6" style="text-align:center; padding:48px; color:#9ca3af;">
                         <i class="bi bi-person-badge" style="font-size:36px; display:block; margin-bottom:8px; opacity:.5;"></i>
-                        <p style="font-weight:600; color:#374151; margin-bottom:4px;">No cashiers found</p>
-                        <p style="font-size:13px; margin:0;">{{ !empty($search) ? 'No cashiers match your search criteria.' : 'Create cashier accounts with password to let staff operate the POS.' }}</p>
+                        <p style="font-weight:600; color:#374151; margin-bottom:4px;">No employees found</p>
+                        <p style="font-size:13px; margin:0;">{{ !empty($search) ? 'No employees match your search criteria.' : 'Create employee accounts with password to let staff operate the POS.' }}</p>
                     </td>
                 </tr>
                 @endforelse
                 <tr class="no-filter-match-row cashier-no-match" style="display:none;">
                     <td colspan="6" style="text-align:center; padding:36px; color:#9ca3af;">
                         <i class="bi bi-search" style="font-size:28px; display:block; margin-bottom:8px; opacity:.5;"></i>
-                        <p style="font-weight:600; color:#374151; margin-bottom:4px;">No matching cashiers</p>
-                        <p style="font-size:13px; margin:0;">No cashiers match your current search query in this tab.</p>
+                        <p style="font-weight:600; color:#374151; margin-bottom:4px;">No matching employees</p>
+                        <p style="font-size:13px; margin:0;">No employees match your current search query in this tab.</p>
                     </td>
                 </tr>
             </tbody>
@@ -547,23 +547,23 @@
     </div>
 </div>
 
-{{-- 4. Add Cashier Modal --}}
+{{-- 4. Add Employee Modal --}}
 <div class="modal fade" id="addCashierModal" tabindex="-1">
     <div class="modal-dialog">
         <form method="POST" action="{{ route('admin.staff.cashiers.store') }}" class="modal-content">
             @csrf
             <div class="modal-header">
-                <h5 class="modal-title"><i class="bi bi-person-badge me-2 text-primary"></i>Add Cashier Account</h5>
+                <h5 class="modal-title"><i class="bi bi-person-badge me-2 text-primary"></i>Add Employee Account</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body d-flex flex-column gap-3">
                 <div>
-                    <label class="form-label" style="font-size:13px; font-weight:600;">Cashier Name <span class="text-danger">*</span></label>
-                    <input type="text" name="name" class="pos-input" required placeholder="e.g. Cashier 1">
+                    <label class="form-label" style="font-size:13px; font-weight:600;">Employee Name <span class="text-danger">*</span></label>
+                    <input type="text" name="name" class="pos-input" required placeholder="e.g. Employee 1">
                 </div>
                 <div>
                     <label class="form-label" style="font-size:13px; font-weight:600;">Email Address (Login) <span class="text-danger">*</span></label>
-                    <input type="email" name="email" class="pos-input" required placeholder="e.g. cashier1@hassanstore.com">
+                    <input type="email" name="email" class="pos-input" required placeholder="e.g. employee1@hassanstore.com">
                 </div>
                 <div>
                     <label class="form-label" style="font-size:13px; font-weight:600;">Password <span class="text-danger">*</span></label>
@@ -572,25 +572,25 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-pos-outline" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" class="btn-pos"><i class="bi bi-check-lg"></i> Create Cashier</button>
+                <button type="submit" class="btn-pos"><i class="bi bi-check-lg"></i> Create Employee</button>
             </div>
         </form>
     </div>
 </div>
 
-{{-- 5. Edit Cashier Modal --}}
+{{-- 5. Edit Employee Modal --}}
 <div class="modal fade" id="editCashierModal" tabindex="-1">
     <div class="modal-dialog">
         <form method="POST" id="editCashierForm" class="modal-content">
             @csrf
             @method('PUT')
             <div class="modal-header">
-                <h5 class="modal-title"><i class="bi bi-pencil-square me-2 text-primary"></i>Edit Cashier</h5>
+                <h5 class="modal-title"><i class="bi bi-pencil-square me-2 text-primary"></i>Edit Employee</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body d-flex flex-column gap-3">
                 <div>
-                    <label class="form-label" style="font-size:13px; font-weight:600;">Cashier Name <span class="text-danger">*</span></label>
+                    <label class="form-label" style="font-size:13px; font-weight:600;">Employee Name <span class="text-danger">*</span></label>
                     <input type="text" name="name" id="editCashierName" class="pos-input" required>
                 </div>
                 <div>
@@ -611,7 +611,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-pos-outline" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" class="btn-pos"><i class="bi bi-check-lg"></i> Update Cashier</button>
+                <button type="submit" class="btn-pos"><i class="bi bi-check-lg"></i> Update Employee</button>
             </div>
         </form>
     </div>

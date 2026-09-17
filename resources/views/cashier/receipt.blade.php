@@ -528,7 +528,7 @@
                     <td>{{ $sale->created_at->format('d M Y') }}, {{ $sale->created_at->format('g:i A') }}</td>
                 </tr>
                 <tr>
-                    <td>Cashier</td>
+                    <td>Employee</td>
                     <td>{{ $sale->user?->name ?? 'N/A' }}</td>
                 </tr>
                 <tr>
