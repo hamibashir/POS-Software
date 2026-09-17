@@ -6,14 +6,15 @@
 @push('styles')
 <style>
     /* ═══════════════════════════════════════════════════════════
-       ── APPLE-STYLE INTERACTIVE SCROLL STORY ──────────────────
+       ── APPLE-STYLE SEAMLESS SCROLL STORY (TRANSPARENT) ────────
        ═══════════════════════════════════════════════════════════ */
     .apple-scroll-wrapper {
         position: relative;
         width: 100%;
         background: #090d16;
         color: #fff;
-        margin-top: -1px;
+        margin: 0;
+        padding: 0;
     }
 
     /* Scroll track height drives the animation duration */
@@ -33,55 +34,54 @@
         position: sticky;
         top: 0;
         left: 0;
-        width: 100%;
+        width: 100vw;
         height: 100vh;
         overflow: hidden;
         display: flex;
         align-items: center;
         justify-content: center;
-        background: radial-gradient(circle at 50% 45%, #16243b 0%, #090d16 75%);
+        background: radial-gradient(circle at 50% 50%, #152238 0%, #090d16 80%);
     }
 
-    /* Interactive Canvas */
+    /* Interactive Canvas - Edge to Edge */
     .hero-canvas {
         position: absolute;
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        max-width: 100%;
-        max-height: 100%;
+        width: 100%;
+        height: 100%;
         object-fit: contain;
         z-index: 1;
         pointer-events: none;
     }
 
-    /* Fallback image if canvas or WebGL is unavailable */
+    /* Fallback image */
     .hero-fallback-img {
         position: absolute;
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        max-width: 85%;
-        max-height: 85%;
+        max-width: 90%;
+        max-height: 90%;
         object-fit: contain;
         z-index: 1;
         pointer-events: none;
-        opacity: 0.85;
+        opacity: 0.9;
     }
 
-    /* Preloader */
+    /* Minimalist Preloader */
     .canvas-loader {
         position: absolute;
         inset: 0;
-        background: rgba(9, 13, 22, 0.85);
+        background: #090d16;
         z-index: 20;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 14px;
-        transition: opacity .4s ease, visibility .4s ease;
-        backdrop-filter: blur(8px);
+        gap: 12px;
+        transition: opacity .35s ease, visibility .35s ease;
     }
     .canvas-loader.loaded {
         opacity: 0;
@@ -89,53 +89,40 @@
         pointer-events: none;
     }
     .loader-spinner {
-        width: 40px;
-        height: 40px;
-        border: 3px solid rgba(255,255,255,.12);
+        width: 36px;
+        height: 36px;
+        border: 3px solid rgba(255,255,255,.1);
         border-top-color: #38bdf8;
         border-radius: 50%;
-        animation: spin-loader 0.8s linear infinite;
+        animation: spin-loader 0.7s linear infinite;
     }
     @keyframes spin-loader {
         to { transform: rotate(360deg); }
     }
     .loader-text {
-        font-size: 13px;
+        font-size: 12px;
         font-weight: 600;
-        letter-spacing: .5px;
         color: #94a3b8;
-    }
-    .loader-bar-bg {
-        width: 160px;
-        height: 4px;
-        background: rgba(255,255,255,.1);
-        border-radius: 4px;
-        overflow: hidden;
-    }
-    .loader-bar {
-        width: 0%;
-        height: 100%;
-        background: linear-gradient(90deg, #38bdf8, #818cf8);
-        transition: width .15s ease;
+        letter-spacing: .5px;
     }
 
-    /* Ambient Vignette & Gradients */
+    /* Ambient Glow */
     .ambient-glow {
         position: absolute;
         inset: 0;
-        background: radial-gradient(circle at 50% 50%, rgba(56, 189, 248, 0.08) 0%, transparent 60%);
+        background: radial-gradient(circle at 50% 50%, rgba(56, 189, 248, 0.09) 0%, transparent 65%);
         pointer-events: none;
         z-index: 2;
     }
     .stage-vignette {
         position: absolute;
         inset: 0;
-        background: linear-gradient(180deg, rgba(9,13,22,.6) 0%, transparent 20%, transparent 80%, #090d16 100%);
+        background: radial-gradient(circle at 50% 50%, transparent 40%, rgba(9, 13, 22, 0.65) 100%);
         pointer-events: none;
         z-index: 3;
     }
 
-    /* ── Floating Story Captions Overlay ─────────────────── */
+    /* ── Seamless Transparent Story Captions ─────────────── */
     .story-overlay {
         position: absolute;
         inset: 0;
@@ -144,21 +131,25 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 20px;
+        padding: 24px;
     }
 
     .story-step {
         position: absolute;
-        max-width: 600px;
+        max-width: 720px;
         width: calc(100% - 32px);
         text-align: center;
         opacity: 0;
-        transform: translateY(24px) scale(0.96);
+        transform: translateY(22px) scale(0.97);
         transition: opacity .4s cubic-bezier(.16,1,.3,1), transform .4s cubic-bezier(.16,1,.3,1);
         pointer-events: none;
         display: flex;
         flex-direction: column;
         align-items: center;
+        /* Completely transparent - no box background so animations are 100% visible */
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
     }
     .story-step.active {
         opacity: 1;
@@ -166,66 +157,54 @@
         pointer-events: auto;
     }
 
-    /* Glass card background on step */
-    .story-card-glass {
-        background: rgba(15, 23, 42, 0.72);
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        box-shadow: 0 20px 50px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border-radius: 22px;
-        padding: 28px 32px;
-        width: 100%;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-    @media (max-width: 640px) {
-        .story-card-glass {
-            padding: 18px 16px;
-            border-radius: 16px;
-        }
-    }
-
     .story-tag {
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        background: rgba(56, 189, 248, 0.15);
-        border: 1px solid rgba(56, 189, 248, 0.35);
+        background: rgba(0, 0, 0, 0.45);
+        border: 1px solid rgba(56, 189, 248, 0.4);
         color: #7dd3fc;
         font-size: 11px;
         font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: .8px;
-        padding: 4px 12px;
+        letter-spacing: .9px;
+        padding: 5px 14px;
         border-radius: 20px;
-        margin-bottom: 10px;
+        margin-bottom: 12px;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     }
+
     .story-headline {
-        font-size: clamp(22px, 4vw, 42px);
+        font-size: clamp(26px, 4.8vw, 54px);
         font-weight: 900;
-        line-height: 1.18;
-        letter-spacing: -.5px;
-        margin-bottom: 10px;
+        line-height: 1.12;
+        letter-spacing: -.6px;
+        margin-bottom: 12px;
         color: #ffffff;
+        text-shadow: 0 4px 30px rgba(0,0,0,0.9), 0 1px 4px rgba(0,0,0,0.8);
     }
     .story-gradient {
         background: linear-gradient(135deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
+        filter: drop-shadow(0 4px 20px rgba(56, 189, 248, 0.35));
     }
     .story-desc {
-        font-size: clamp(13px, 1.5vw, 15px);
-        color: #cbd5e1;
+        font-size: clamp(14px, 1.8vw, 17px);
+        color: #e2e8f0;
         line-height: 1.55;
-        margin-bottom: 18px;
-        max-width: 460px;
+        margin-bottom: 22px;
+        max-width: 520px;
+        text-shadow: 0 3px 20px rgba(0,0,0,0.95), 0 1px 3px rgba(0,0,0,0.8);
+        font-weight: 500;
     }
+
     .story-actions {
         display: flex;
-        gap: 10px;
+        gap: 12px;
         flex-wrap: wrap;
         justify-content: center;
     }
@@ -233,50 +212,53 @@
         background: linear-gradient(135deg, #0284c7, #2563eb);
         color: #fff !important;
         font-weight: 700;
-        font-size: 13px;
-        padding: 10px 20px;
-        border-radius: 10px;
+        font-size: 14px;
+        padding: 11px 22px;
+        border-radius: 12px;
         text-decoration: none !important;
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        box-shadow: 0 4px 15px rgba(2, 132, 199, 0.4);
+        box-shadow: 0 4px 20px rgba(2, 132, 199, 0.5);
         transition: transform .15s, box-shadow .15s;
     }
     .btn-story-primary:hover {
         transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(2, 132, 199, 0.6);
+        box-shadow: 0 6px 25px rgba(2, 132, 199, 0.7);
     }
     .btn-story-outline {
-        background: rgba(255, 255, 255, 0.1);
+        background: rgba(0, 0, 0, 0.45);
         color: #fff !important;
         font-weight: 600;
-        font-size: 13px;
-        padding: 10px 18px;
-        border-radius: 10px;
-        border: 1px solid rgba(255, 255, 255, 0.25);
+        font-size: 14px;
+        padding: 11px 20px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
         text-decoration: none !important;
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        backdrop-filter: blur(8px);
-        transition: background .15s;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        transition: background .15s, transform .15s;
     }
     .btn-story-outline:hover {
         background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-2px);
     }
     .btn-story-whatsapp {
         background: #16a34a;
         color: #fff !important;
         font-weight: 700;
-        font-size: 13px;
-        padding: 10px 18px;
-        border-radius: 10px;
+        font-size: 14px;
+        padding: 11px 20px;
+        border-radius: 12px;
         text-decoration: none !important;
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        box-shadow: 0 4px 15px rgba(22, 163, 74, 0.4);
+        box-shadow: 0 4px 20px rgba(22, 163, 74, 0.5);
         transition: transform .15s;
     }
     .btn-story-whatsapp:hover {
@@ -295,103 +277,75 @@
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        font-size: 12px;
-        color: #e2e8f0;
-        background: rgba(255,255,255,.08);
-        border: 1px solid rgba(255,255,255,.12);
-        padding: 6px 12px;
-        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #f1f5f9;
+        background: rgba(0, 0, 0, 0.45);
+        border: 1px solid rgba(255,255,255,.2);
+        padding: 7px 14px;
+        border-radius: 10px;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     }
 
-    /* ── Bottom Floating Controls ────────────────────────── */
-    .canvas-controls {
+    /* Scroll Prompt */
+    .scroll-indicator-wrap {
         position: absolute;
-        bottom: 22px;
+        bottom: 24px;
         left: 50%;
         transform: translateX(-50%);
-        z-index: 15;
+        z-index: 12;
         display: flex;
+        flex-direction: column;
         align-items: center;
-        gap: 10px;
-        background: rgba(15, 23, 42, 0.85);
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        padding: 7px 14px;
-        border-radius: 30px;
-        max-width: calc(100% - 32px);
-    }
-    @media (max-width: 640px) {
-        .canvas-controls {
-            bottom: 14px;
-            padding: 5px 10px;
-            gap: 6px;
-        }
-    }
-    .control-btn {
-        background: rgba(255, 255, 255, 0.12);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        color: #fff;
-        padding: 5px 10px;
-        border-radius: 20px;
+        gap: 6px;
+        color: rgba(255,255,255,0.7);
         font-size: 11px;
         font-weight: 700;
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        white-space: nowrap;
-        transition: background .15s;
+        letter-spacing: .6px;
+        text-transform: uppercase;
+        pointer-events: none;
+        text-shadow: 0 2px 8px rgba(0,0,0,0.8);
     }
-    .control-btn:hover {
-        background: rgba(255, 255, 255, 0.25);
+    .scroll-mouse-icon {
+        width: 20px;
+        height: 32px;
+        border: 2px solid rgba(255,255,255,0.6);
+        border-radius: 12px;
+        position: relative;
     }
-    .scrub-track-wrap {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-    .frame-scrubber {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 100px;
-        height: 5px;
-        border-radius: 5px;
-        background: rgba(255,255,255,0.25);
-        outline: none;
-        cursor: pointer;
-    }
-    @media (max-width: 480px) {
-        .frame-scrubber { width: 65px; }
-    }
-    .frame-scrubber::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 14px;
-        height: 14px;
-        border-radius: 50%;
+    .scroll-mouse-wheel {
+        width: 3px;
+        height: 6px;
         background: #38bdf8;
-        cursor: pointer;
-        box-shadow: 0 0 8px #38bdf8;
+        border-radius: 2px;
+        position: absolute;
+        top: 5px;
+        left: 50%;
+        transform: translateX(-50%);
+        animation: mouse-scroll 1.6s infinite;
     }
-    .scroll-hint-label {
-        font-size: 11px;
-        color: #94a3b8;
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        white-space: nowrap;
+    @keyframes mouse-scroll {
+        0%   { opacity: 1; transform: translate(-50%, 0); }
+        100% { opacity: 0; transform: translate(-50%, 12px); }
+    }
+
+    /* ── Seamless End-to-End Transition to Catalog ─────── */
+    .seamless-transition-strip {
+        width: 100%;
+        height: 100px;
+        background: linear-gradient(180deg, #090d16 0%, #111827 30%, #f6f7f8 100%);
+        margin-top: -1px;
     }
 
     /* ═══════════════════════════════════════════════════════════
-       ── MAIN CATALOG SECTIONS (LIGHT & DYNAMIC) ───────────────
+       ── MAIN CATALOG SECTIONS (CLEAN & DYNAMIC) ───────────────
        ═══════════════════════════════════════════════════════════ */
     .cat-main-content {
         max-width: 1440px;
         margin: 0 auto;
-        padding: 48px 20px 80px;
+        padding: 10px 20px 80px;
     }
 
     /* ── Value Pillars ──────────────────────────────────── */
@@ -655,7 +609,7 @@
 @section('content')
 
 {{-- ═══════════════════════════════════════════════════════════
-     ── 1. APPLE-STYLE INTERACTIVE STICKY SCROLL HERO ────────
+     ── 1. APPLE-STYLE SEAMLESS SCROLL HERO (TRANSPARENT) ─────
      ═══════════════════════════════════════════════════════════ --}}
 <div class="apple-scroll-wrapper" id="interactiveExperience">
     <div class="apple-scroll-track" id="scrollTrack">
@@ -674,87 +628,72 @@
             {{-- Preloader Screen --}}
             <div id="canvasLoader" class="canvas-loader">
                 <div class="loader-spinner"></div>
-                <div class="loader-text">Loading 3D Experience <span id="loaderPercent">0%</span></div>
-                <div class="loader-bar-bg">
-                    <div id="loaderBar" class="loader-bar"></div>
-                </div>
+                <div class="loader-text">Loading Experience...</div>
             </div>
 
-            {{-- Dynamic Floating Story Overlays (Synced with Scroll Progression) --}}
+            {{-- Dynamic Floating Story Overlays (100% Transparent, Unobstructed Animation) --}}
             <div class="story-overlay">
                 
                 {{-- Step 1: 0% - 25% Scroll --}}
                 <div class="story-step active" id="storyStep1">
-                    <div class="story-card-glass">
-                        <span class="story-tag"><i class="bi bi-shield-check"></i> Hassan &amp; Sons Hardware</span>
-                        <h1 class="story-headline">Next-Gen <span class="story-gradient">Hardware &amp; Sanitary</span></h1>
-                        <p class="story-desc">Engineered for precision durability, industrial quality, and everyday reliability.</p>
-                        <div class="story-actions">
-                            <a href="#products" class="btn-story-primary"><i class="bi bi-cart3"></i> Explore Collection</a>
-                            <a href="tel:051-8891930" onclick="openPhoneOrderModal(); return false;" class="btn-story-outline"><i class="bi bi-telephone-fill"></i> 051-8891930</a>
-                        </div>
+                    <span class="story-tag"><i class="bi bi-shield-check"></i> Hassan &amp; Sons Hardware</span>
+                    <h1 class="story-headline">Next-Gen <span class="story-gradient">Hardware &amp; Sanitary</span></h1>
+                    <p class="story-desc">Engineered for precision durability, industrial quality, and everyday reliability.</p>
+                    <div class="story-actions">
+                        <a href="#products" class="btn-story-primary"><i class="bi bi-cart3"></i> Explore Collection</a>
+                        <a href="tel:051-8891930" onclick="openPhoneOrderModal(); return false;" class="btn-story-outline"><i class="bi bi-telephone-fill"></i> 051-8891930</a>
                     </div>
                 </div>
 
                 {{-- Step 2: 25% - 55% Scroll --}}
                 <div class="story-step" id="storyStep2">
-                    <div class="story-card-glass">
-                        <span class="story-tag"><i class="bi bi-gear-wide-connected"></i> Precision Engineering</span>
-                        <h2 class="story-headline">Sanitary Ware &amp; <span class="story-gradient">Power Tools</span></h2>
-                        <p class="story-desc">From premium residential fixtures to heavy contractor machinery — complete store inventory.</p>
-                        <div class="story-features-row">
-                            <div class="story-pill"><i class="bi bi-check-circle-fill text-success"></i> 100% Genuine Brands</div>
-                            <div class="story-pill"><i class="bi bi-shield-fill-check text-primary"></i> Manufacturer Tested</div>
-                        </div>
+                    <span class="story-tag"><i class="bi bi-gear-wide-connected"></i> Precision Engineering</span>
+                    <h2 class="story-headline">Sanitary Ware &amp; <span class="story-gradient">Power Tools</span></h2>
+                    <p class="story-desc">From premium residential fixtures to heavy contractor machinery — complete store inventory.</p>
+                    <div class="story-features-row">
+                        <div class="story-pill"><i class="bi bi-check-circle-fill text-success"></i> 100% Genuine Brands</div>
+                        <div class="story-pill"><i class="bi bi-shield-fill-check text-primary"></i> Manufacturer Tested</div>
                     </div>
                 </div>
 
                 {{-- Step 3: 55% - 80% Scroll --}}
                 <div class="story-step" id="storyStep3">
-                    <div class="story-card-glass">
-                        <span class="story-tag"><i class="bi bi-boxes"></i> Wholesale &amp; Retail</span>
-                        <h2 class="story-headline">Direct Counter Stock at <span class="story-gradient">Best Market Rates</span></h2>
-                        <p class="story-desc">Official distributor pricing for plumbers, electricians, contractors, and home builders.</p>
-                        <div class="story-features-row">
-                            <div class="story-pill"><i class="bi bi-truck text-info"></i> Fast Local Dispatch</div>
-                            <div class="story-pill"><i class="bi bi-receipt-cutoff text-warning"></i> Itemized Official Invoices</div>
-                        </div>
+                    <span class="story-tag"><i class="bi bi-boxes"></i> Wholesale &amp; Retail</span>
+                    <h2 class="story-headline">Direct Counter Stock at <span class="story-gradient">Best Market Rates</span></h2>
+                    <p class="story-desc">Official distributor pricing for plumbers, electricians, contractors, and home builders.</p>
+                    <div class="story-features-row">
+                        <div class="story-pill"><i class="bi bi-truck text-info"></i> Fast Local Dispatch</div>
+                        <div class="story-pill"><i class="bi bi-receipt-cutoff text-warning"></i> Itemized Official Invoices</div>
                     </div>
                 </div>
 
                 {{-- Step 4: 80% - 100% Scroll --}}
                 <div class="story-step" id="storyStep4">
-                    <div class="story-card-glass">
-                        <span class="story-tag"><i class="bi bi-lightning-charge-fill"></i> Instant Ordering</span>
-                        <h2 class="story-headline">Ready to Build <span class="story-gradient">Your Next Project?</span></h2>
-                        <p class="story-desc">Browse our full live inventory below or place your order directly via phone or WhatsApp.</p>
-                        <div class="story-actions">
-                            <a href="#products" class="btn-story-primary"><i class="bi bi-grid-fill"></i> View Live Stock</a>
-                            <a href="https://wa.me/923000000000" target="_blank" class="btn-story-whatsapp"><i class="bi bi-whatsapp"></i> WhatsApp Order</a>
-                        </div>
+                    <span class="story-tag"><i class="bi bi-lightning-charge-fill"></i> Instant Ordering</span>
+                    <h2 class="story-headline">Ready to Build <span class="story-gradient">Your Next Project?</span></h2>
+                    <p class="story-desc">Browse our full live inventory below or place your order directly via phone or WhatsApp.</p>
+                    <div class="story-actions">
+                        <a href="#products" class="btn-story-primary"><i class="bi bi-grid-fill"></i> View Live Stock</a>
+                        <a href="https://wa.me/923000000000" target="_blank" class="btn-story-whatsapp"><i class="bi bi-whatsapp"></i> WhatsApp Order</a>
                     </div>
                 </div>
 
             </div>
 
-            {{-- Bottom Control Bar --}}
-            <div class="canvas-controls">
-                <button type="button" id="btnAutoPlay" class="control-btn" title="Toggle Auto Animation">
-                    <i class="bi bi-play-fill" id="playIcon"></i>
-                    <span id="playLabel">Auto Play</span>
-                </button>
-                <div class="scrub-track-wrap">
-                    <input type="range" id="frameScrubber" min="1" max="141" value="1" class="frame-scrubber" aria-label="Timeline Scrubber">
+            {{-- Minimal Scroll Hint --}}
+            <div class="scroll-indicator-wrap">
+                <div class="scroll-mouse-icon">
+                    <div class="scroll-mouse-wheel"></div>
                 </div>
-                <div class="scroll-hint-label d-none d-sm-flex">
-                    <i class="bi bi-arrow-down-circle"></i>
-                    <span>Scroll to explore</span>
-                </div>
+                <span>Scroll</span>
             </div>
 
         </div>
     </div>
 </div>
+
+{{-- Seamless Gradient Transition into Catalog Body --}}
+<div class="seamless-transition-strip"></div>
 
 {{-- ═══════════════════════════════════════════════════════════
      ── 2. CATALOG BODY CONTENT ──────────────────────────────
@@ -948,13 +887,7 @@
 
     const ctx = canvas.getContext('2d');
     const scrollTrack = document.getElementById('scrollTrack');
-    const scrubber = document.getElementById('frameScrubber');
     const loader = document.getElementById('canvasLoader');
-    const loaderBar = document.getElementById('loaderBar');
-    const loaderPercent = document.getElementById('loaderPercent');
-    const btnAutoPlay = document.getElementById('btnAutoPlay');
-    const playIcon = document.getElementById('playIcon');
-    const playLabel = document.getElementById('playLabel');
 
     const storySteps = [
         { el: document.getElementById('storyStep1'), min: 0.00, max: 0.25 },
@@ -966,11 +899,7 @@
     const frames = [];
     let loadedCount = 0;
     let currentFrameIndex = 1;
-    let isAutoPlaying = false;
-    let autoPlayInterval = null;
-    let isUserScrubbing = false;
 
-    // Relative asset path to prevent cross-origin issues on cPanel preview URLs
     const assetBaseUrl = "{{ asset('images') }}".replace(/\/$/, '');
 
     function getFrameUrl(index) {
@@ -1008,10 +937,10 @@
 
         let renderWidth, renderHeight;
         if (canvasRatio > imgRatio) {
-            renderHeight = displayHeight * 0.92;
+            renderHeight = displayHeight * 0.96;
             renderWidth = renderHeight * imgRatio;
         } else {
-            renderWidth = displayWidth * 0.92;
+            renderWidth = displayWidth * 0.96;
             renderHeight = renderWidth / imgRatio;
         }
 
@@ -1032,8 +961,6 @@
 
     // Handle scroll calculation
     function handleScroll() {
-        if (isAutoPlaying || isUserScrubbing) return;
-
         const rect = scrollTrack.getBoundingClientRect();
         const viewportHeight = window.innerHeight;
         const totalScrollable = rect.height - viewportHeight;
@@ -1049,7 +976,6 @@
             currentFrameIndex = targetFrame;
             requestAnimationFrame(() => {
                 drawFrame(currentFrameIndex);
-                if (scrubber) scrubber.value = currentFrameIndex;
             });
         }
 
@@ -1065,20 +991,17 @@
             frames[1] = firstImg;
             resizeCanvas();
             drawFrame(1);
+            if (loader) loader.classList.add('loaded');
         };
 
-        // Priority 2: Preload remaining frames
+        // Priority 2: Preload remaining frames in background
         for (let i = 1; i <= TOTAL_FRAMES; i++) {
             const img = new Image();
             img.src = getFrameUrl(i);
             img.onload = () => {
                 frames[i] = img;
                 loadedCount++;
-                const pct = Math.round((loadedCount / TOTAL_FRAMES) * 100);
-                if (loaderBar) loaderBar.style.width = `${pct}%`;
-                if (loaderPercent) loaderPercent.innerText = `${pct}%`;
-
-                if (loadedCount >= 10 && loader) {
+                if (loadedCount >= 5 && loader) {
                     loader.classList.add('loaded');
                 }
             };
@@ -1087,61 +1010,9 @@
             };
         }
 
-        // Safety timeout to dismiss loader after 1.5 seconds under any circumstance
         setTimeout(() => {
             if (loader) loader.classList.add('loaded');
-        }, 1500);
-    }
-
-    // Scrubber drag / touch interaction
-    if (scrubber) {
-        scrubber.addEventListener('input', function() {
-            isUserScrubbing = true;
-            stopAutoPlay();
-            currentFrameIndex = parseInt(this.value, 10);
-            const fraction = (currentFrameIndex - 1) / (TOTAL_FRAMES - 1);
-            drawFrame(currentFrameIndex);
-            updateStorySteps(fraction);
-        });
-
-        scrubber.addEventListener('change', function() {
-            isUserScrubbing = false;
-        });
-    }
-
-    // Auto Play Controller
-    function startAutoPlay() {
-        isAutoPlaying = true;
-        if (playIcon) playIcon.className = 'bi bi-pause-fill';
-        if (playLabel) playLabel.innerText = 'Pause';
-
-        autoPlayInterval = setInterval(() => {
-            currentFrameIndex++;
-            if (currentFrameIndex > TOTAL_FRAMES) {
-                currentFrameIndex = 1;
-            }
-            drawFrame(currentFrameIndex);
-            if (scrubber) scrubber.value = currentFrameIndex;
-            const fraction = (currentFrameIndex - 1) / (TOTAL_FRAMES - 1);
-            updateStorySteps(fraction);
-        }, 1000 / 30); // 30 FPS smooth playback
-    }
-
-    function stopAutoPlay() {
-        isAutoPlaying = false;
-        if (autoPlayInterval) clearInterval(autoPlayInterval);
-        if (playIcon) playIcon.className = 'bi bi-play-fill';
-        if (playLabel) playLabel.innerText = 'Auto Play';
-    }
-
-    if (btnAutoPlay) {
-        btnAutoPlay.addEventListener('click', () => {
-            if (isAutoPlaying) {
-                stopAutoPlay();
-            } else {
-                startAutoPlay();
-            }
-        });
+        }, 800);
     }
 
     // Event Listeners
