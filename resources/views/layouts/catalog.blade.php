@@ -7,11 +7,11 @@
     <title>@yield('title', 'Product Catalog') — Hassan & Sons</title>
 
     <!-- Favicon & App Icons -->
-    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}?v=5">
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}?v=5">
-    <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}?v=5">
-    <link rel="shortcut icon" href="{{ asset('favicon.ico') }}?v=5">
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}?v=5">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}?v=6">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}?v=6">
+    <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}?v=6">
+    <link rel="shortcut icon" href="{{ asset('favicon.ico') }}?v=6">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}?v=6">
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
