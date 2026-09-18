@@ -534,11 +534,11 @@
             {{-- QR Code Column --}}
             <div>
                 <h4>Scan &amp; Visit</h4>
-                <div style="background:#fff; padding:8px; border-radius:12px; border:1px solid var(--border); display:inline-block; margin-bottom:8px; box-shadow:0 2px 8px rgba(0,0,0,.04); cursor:pointer;" onclick="openQrModal('{{ url('/') }}', 'Hassan & Sons Store')">
-                    <img src="{{ asset('images/hassanandsons-qr.png') }}" alt="Store QR Code" style="width:100px; height:100px; display:block; border-radius:6px;">
+                <div style="background:#fff; padding:8px; border-radius:12px; border:1px solid var(--border); display:inline-block; margin-bottom:8px; box-shadow:0 2px 8px rgba(0,0,0,.04); cursor:pointer;" onclick="openQrModal('https://hassanandsonscorp.com/', 'Hassan & Sons Store')">
+                    <img src="{{ asset('images/hassanandsons-qr.png') }}?v=2" alt="Store QR Code" style="width:100px; height:100px; display:block; border-radius:6px;">
                 </div>
                 <p style="font-size:12px; color:var(--muted); line-height:1.4; margin-bottom:6px;">Scan with your smartphone camera to access store on mobile.</p>
-                <a href="{{ asset('images/hassanandsons-qr.png') }}" download="Hassan-and-Sons-QR.png" style="font-size:12px; font-weight:700; color:var(--primary); text-decoration:none; display:inline-flex; align-items:center; gap:4px;">
+                <a href="{{ asset('images/hassanandsons-qr.png') }}?v=2" download="Hassan-and-Sons-QR.png" style="font-size:12px; font-weight:700; color:var(--primary); text-decoration:none; display:inline-flex; align-items:center; gap:4px;">
                     <i class="bi bi-download"></i> Download QR
                 </a>
             </div>
@@ -669,10 +669,18 @@
     }
 
     // QR Code Modal
-    let currentQrUrl = "{{ url('/') }}";
+    let currentQrUrl = "https://hassanandsonscorp.com/";
 
     function openQrModal(targetUrl, title = 'Scan & Access Store') {
-        currentQrUrl = targetUrl || "{{ url('/') }}";
+        let cleanUrl = targetUrl || window.location.href;
+        // Ensure domain is hassanandsonscorp.com
+        if (!cleanUrl || cleanUrl.indexOf('localhost') !== -1 || cleanUrl.indexOf('127.0.0.1') !== -1) {
+            cleanUrl = "https://hassanandsonscorp.com/";
+        } else if (cleanUrl.indexOf('hassanandsons.com') !== -1 && cleanUrl.indexOf('hassanandsonscorp.com') === -1) {
+            cleanUrl = cleanUrl.replace('hassanandsons.com', 'hassanandsonscorp.com');
+        }
+        currentQrUrl = cleanUrl;
+
         const modal = document.getElementById('qrCodeModal');
         const img = document.getElementById('qrModalImage');
         const dlBtn = document.getElementById('btnDownloadQr');
@@ -680,9 +688,9 @@
 
         if (titleEl) titleEl.textContent = title;
 
-        if (!targetUrl || targetUrl === "{{ url('/') }}" || targetUrl.indexOf('localhost') !== -1 || targetUrl.indexOf('127.0.0.1') !== -1) {
-            img.src = "{{ asset('images/hassanandsons-qr.png') }}";
-            dlBtn.href = "{{ asset('images/hassanandsons-qr.png') }}";
+        if (cleanUrl === "https://hassanandsonscorp.com/" || cleanUrl === "https://hassanandsonscorp.com") {
+            img.src = "{{ asset('images/hassanandsons-qr.png') }}?v=2";
+            dlBtn.href = "{{ asset('images/hassanandsons-qr.png') }}?v=2";
         } else {
             const dynamicQr = "https://api.qrserver.com/v1/create-qr-code/?size=600x600&margin=15&data=" + encodeURIComponent(currentQrUrl);
             img.src = dynamicQr;
