@@ -459,6 +459,20 @@ class PosController extends Controller
                     'stock_quantity' => $p->stock_quantity,
                 ]);
 
+            // Fetch updated employee balance if credit adjustment / customer return
+            $updatedEmployee = null;
+            if ($saleReturn->employee_id) {
+                $emp = Employee::find($saleReturn->employee_id);
+                if ($emp) {
+                    $emp->reconcileCreditSales();
+                    $updatedEmployee = [
+                        'id'              => $emp->id,
+                        'name'            => $emp->name,
+                        'pending_payment' => (float) $emp->pending_payment,
+                    ];
+                }
+            }
+
             return response()->json([
                 'success'             => true,
                 'return_id'           => $saleReturn->id,
@@ -468,6 +482,7 @@ class PosController extends Controller
                 'refund_method'       => $saleReturn->refund_method,
                 'receipt_url'         => route('cashier.pos.return-receipt', $saleReturn->id),
                 'updated_products'    => $updatedProducts,
+                'updated_employee'    => $updatedEmployee,
                 'message'             => "Customer Return {$saleReturn->return_number} processed! {$saleReturn->items->sum('quantity')} item(s) returned back to stock.",
             ]);
         } catch (\RuntimeException $e) {

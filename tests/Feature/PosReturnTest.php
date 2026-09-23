@@ -202,6 +202,6 @@ class PosReturnTest extends TestCase
         $response->assertOk()
             ->assertSee($return->return_number)
             ->assertSee('Chrome Basin Mixer')
-            ->assertSee('Hassan & Sons');
+            ->assertSee('Hassan Corporation');
     }
 }

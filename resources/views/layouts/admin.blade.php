@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Admin') — Hassan & Sons</title>
+    <title>@yield('title', 'Admin') — Hassan Corporation</title>
 
     <!-- Favicon & App Icons -->
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}?v=6">
@@ -261,7 +261,7 @@
 
     <a href="{{ route('admin.dashboard') }}" class="brand">
         <img src="{{ asset('images/hassan-logo-icon.png') }}" alt="Logo" style="width:28px; height:28px; object-fit:contain;">
-        <span>Hassan <strong style="color:#111827">& Sons</strong></span>
+        <span>Hassan <strong style="color:#111827">Corporation</strong></span>
     </a>
 
     {{-- All 11 Navigation Links in Direct Top Header --}}
@@ -282,6 +282,11 @@
            class="pos-nav-link {{ request()->routeIs('admin.sales*') ? 'active' : '' }}">
             <i class="bi bi-receipt"></i>Sales
         </a>
+        <a href="{{ route('admin.sale-returns.index') }}"
+           class="pos-nav-link {{ request()->routeIs('admin.sale-returns*') ? 'active' : '' }}"
+           style="{{ request()->routeIs('admin.sale-returns*') ? '' : 'color:#b91c1c;' }}">
+            <i class="bi bi-arrow-counterclockwise"></i>Customer Returns
+        </a>
         <a href="{{ route('admin.purchases.index') }}"
            class="pos-nav-link {{ request()->routeIs('admin.purchases*') ? 'active' : '' }}">
             <i class="bi bi-truck"></i>Purchases
@@ -292,7 +297,7 @@
         </a>
         <a href="{{ route('admin.purchase-returns.index') }}"
            class="pos-nav-link {{ request()->routeIs('admin.purchase-returns*') ? 'active' : '' }}">
-            <i class="bi bi-arrow-return-left"></i>Returns
+            <i class="bi bi-arrow-return-left"></i>Supplier Returns
         </a>
         <a href="{{ route('admin.stock.index') }}"
            class="pos-nav-link {{ request()->routeIs('admin.stock*') ? 'active' : '' }}">
@@ -349,7 +354,7 @@
     <div class="offcanvas-header border-bottom">
         <div class="d-flex align-items-center gap-2">
             <i class="bi bi-tools text-primary fs-5"></i>
-            <span class="fw-bold fs-6">Hassan & Sons</span>
+            <span class="fw-bold fs-6">Hassan Corporation</span>
         </div>
         <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
@@ -368,6 +373,9 @@
             <a href="{{ route('admin.sales.index') }}" class="nav-mobile-link {{ request()->routeIs('admin.sales*') ? 'active' : '' }}">
                 <i class="bi bi-receipt"></i> Sales History
             </a>
+            <a href="{{ route('admin.sale-returns.index') }}" class="nav-mobile-link {{ request()->routeIs('admin.sale-returns*') ? 'active' : '' }}" style="color:#b91c1c;">
+                <i class="bi bi-arrow-counterclockwise"></i> Customer Returns
+            </a>
             <a href="{{ route('admin.purchases.index') }}" class="nav-mobile-link {{ request()->routeIs('admin.purchases*') ? 'active' : '' }}">
                 <i class="bi bi-truck"></i> Purchases
             </a>
@@ -375,7 +383,7 @@
                 <i class="bi bi-building"></i> Suppliers
             </a>
             <a href="{{ route('admin.purchase-returns.index') }}" class="nav-mobile-link {{ request()->routeIs('admin.purchase-returns*') ? 'active' : '' }}">
-                <i class="bi bi-arrow-return-left"></i> Returns
+                <i class="bi bi-arrow-return-left"></i> Supplier Returns
             </a>
             <a href="{{ route('admin.stock.index') }}" class="nav-mobile-link {{ request()->routeIs('admin.stock*') ? 'active' : '' }}">
                 <i class="bi bi-arrow-left-right"></i> Stock Adjustments

@@ -1,6 +1,6 @@
 @extends('layouts.catalog')
 
-@section('title', $category->name . ' — Hassan & Sons')
+@section('title', $category->name . ' — Hassan Corporation')
 @section('meta_description', 'Browse ' . $category->name . ' products with prices and stock availability.')
 
 @push('styles')

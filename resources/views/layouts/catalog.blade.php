@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="@yield('meta_description', 'Browse our full range of sanitary and hardware products.')">
-    <title>@yield('title', 'Product Catalog') — Hassan & Sons</title>
+    <title>@yield('title', 'Product Catalog') — Hassan Corporation</title>
 
     <!-- Favicon & App Icons -->
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}?v=6">
@@ -449,8 +449,8 @@
 <nav class="cat-nav">
     <div class="inner">
         <a href="{{ route('catalog.home') }}" class="brand">
-            <img src="{{ asset('images/hassan-logo-icon.png') }}" alt="Hassan & Sons" style="width:30px; height:30px; object-fit:contain;">
-            <span>Hassan & Sons</span>
+            <img src="{{ asset('images/hassan-logo-icon.png') }}" alt="Hassan Corporation" style="width:30px; height:30px; object-fit:contain;">
+            <span>Hassan Corporation</span>
         </a>
 
         <div class="cat-nav-links">
@@ -492,8 +492,8 @@
             {{-- Brand --}}
             <div class="brand-col">
                 <div class="brand-row">
-                    <img src="{{ asset('images/hassan-logo-icon.png') }}" alt="Hassan & Sons" style="width:28px; height:28px; object-fit:contain;">
-                    <span class="brand-name">Hassan & Sons</span>
+                    <img src="{{ asset('images/hassan-logo-icon.png') }}" alt="Hassan Corporation" style="width:28px; height:28px; object-fit:contain;">
+                    <span class="brand-name">Hassan Corporation</span>
                 </div>
                 <p>Your trusted partner for quality sanitary ware, hardware tools, plumbing, and building materials.</p>
             </div>
@@ -534,18 +534,18 @@
             {{-- QR Code Column --}}
             <div>
                 <h4>Scan &amp; Visit</h4>
-                <div style="background:#fff; padding:8px; border-radius:12px; border:1px solid var(--border); display:inline-block; margin-bottom:8px; box-shadow:0 2px 8px rgba(0,0,0,.04); cursor:pointer;" onclick="openQrModal('https://hassanandsonscorp.com/', 'Hassan & Sons Store')">
+                <div style="background:#fff; padding:8px; border-radius:12px; border:1px solid var(--border); display:inline-block; margin-bottom:8px; box-shadow:0 2px 8px rgba(0,0,0,.04); cursor:pointer;" onclick="openQrModal('https://hassanandsonscorp.com/', 'Hassan Corporation Store')">
                     <img src="{{ asset('images/hassanandsons-qr.png') }}?v=2" alt="Store QR Code" style="width:100px; height:100px; display:block; border-radius:6px;">
                 </div>
                 <p style="font-size:12px; color:var(--muted); line-height:1.4; margin-bottom:6px;">Scan with your smartphone camera to access store on mobile.</p>
-                <a href="{{ asset('images/hassanandsons-qr.png') }}?v=2" download="Hassan-and-Sons-QR.png" style="font-size:12px; font-weight:700; color:var(--primary); text-decoration:none; display:inline-flex; align-items:center; gap:4px;">
+                <a href="{{ asset('images/hassanandsons-qr.png') }}?v=2" download="Hassan-Corporation-QR.png" style="font-size:12px; font-weight:700; color:var(--primary); text-decoration:none; display:inline-flex; align-items:center; gap:4px;">
                     <i class="bi bi-download"></i> Download QR
                 </a>
             </div>
         </div>
 
         <div class="cat-footer-bottom">
-            <p>&copy; {{ date('Y') }} Hassan & Sons. All rights reserved.</p>
+            <p>&copy; {{ date('Y') }} Hassan Corporation. All rights reserved.</p>
         </div>
     </div>
 </footer>
@@ -619,7 +619,7 @@
         </div>
 
         <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-bottom:16px;">
-            <a id="btnDownloadQr" href="{{ asset('images/hassanandsons-qr.png') }}" download="Hassan-and-Sons-QR.png" class="btn-call-direct" style="background:#1e6d8a; color:#fff !important; flex:initial; padding:10px 18px;">
+            <a id="btnDownloadQr" href="{{ asset('images/hassanandsons-qr.png') }}" download="Hassan-Corporation-QR.png" class="btn-call-direct" style="background:#1e6d8a; color:#fff !important; flex:initial; padding:10px 18px;">
                 <i class="bi bi-download"></i> Download QR Image
             </a>
             <button type="button" class="btn-copy-number" id="btnCopyPageLink" style="background:#f1f5f9; color:#0f172a; border-color:#cbd5e1; flex:initial; padding:10px 18px;" onclick="copyPageLink()">
@@ -634,7 +634,7 @@
             </div>
             <div class="info-point">
                 <i class="bi bi-shield-check text-success"></i>
-                <span>Direct link to official Hassan &amp; Sons online store</span>
+                <span>Direct link to official Hassan Corporation online store</span>
             </div>
         </div>
     </div>

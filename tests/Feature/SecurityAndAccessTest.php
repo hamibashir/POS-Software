@@ -83,7 +83,7 @@ class SecurityAndAccessTest extends TestCase
         $response = $this->get(route('catalog.home'));
 
         $response->assertOk()
-            ->assertSee('Hassan & Sons')
+            ->assertSee('Hassan Corporation')
             ->assertSee('051-8891930')
             ->assertSee('Order by Phone');
     }

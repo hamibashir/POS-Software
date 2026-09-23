@@ -194,7 +194,7 @@
     {{-- Header --}}
     <div class="header">
         <div>
-            <h1 class="company-title">Hassan & Sons</h1>
+            <h1 class="company-title">Hassan Corporation</h1>
             <div class="company-sub">Hardware & Sanitary Store &bull; Official Salary Slip</div>
         </div>
         <div class="voucher-tag">

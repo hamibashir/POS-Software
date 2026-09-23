@@ -212,9 +212,10 @@
     <table class="items-detail-table">
         <thead>
             <tr>
-                <th style="text-align:left; width:40%;">Product</th>
+                <th style="text-align:left; width:35%;">Product</th>
                 <th style="text-align:right;">Unit Price</th>
-                <th style="text-align:right;">Qty</th>
+                <th style="text-align:right;">Sold Qty</th>
+                <th style="text-align:center;">Returned</th>
                 <th style="text-align:right;">Discount</th>
                 <th style="text-align:right;">Line Total</th>
                 <th style="text-align:right;">Cost</th>
@@ -224,6 +225,8 @@
         <tbody>
             @foreach($sale->items as $item)
             @php
+                $returnedQty = (int) $item->returnItems->sum('quantity');
+                $netQty = max(0, $item->quantity - $returnedQty);
                 $cost   = $item->cost_price * $item->quantity;
                 $margin = $item->total_price > 0 ? (($item->total_price - $cost) / $item->total_price) * 100 : 0;
             @endphp
@@ -234,8 +237,17 @@
                 </td>
                 <td style="text-align:right;">{{ pkr($item->unit_price, 2) }}</td>
                 <td style="text-align:right; font-weight:600;">{{ $item->quantity }}</td>
+                <td style="text-align:center;">
+                    @if($returnedQty > 0)
+                        <span class="badge bg-danger" title="Returned back to inventory">
+                            -{{ $returnedQty }} {{ $item->product_unit }}
+                        </span>
+                    @else
+                        <span class="text-muted small">—</span>
+                    @endif
+                </td>
                 <td style="text-align:right; color:#10b981;">
-                    {{ $item->discount_amount > 0 ? '−$' . number_format($item->discount_amount, 2) : '—' }}
+                    {{ $item->discount_amount > 0 ? '−' . pkr($item->discount_amount, 2) : '—' }}
                 </td>
                 <td style="text-align:right; font-weight:700; color:#111827;">{{ pkr($item->total_price, 2) }}</td>
                 <td style="text-align:right; color:#9ca3af; font-size:12px;">{{ pkr($cost, 2) }}</td>
@@ -269,16 +281,67 @@
         </div>
         @endif
         <div class="t-row-foot grand">
-            <span>TOTAL</span>
+            <span>GROSS SALE TOTAL</span>
             <span>{{ pkr($sale->total_amount, 2) }}</span>
         </div>
+        @if($sale->total_returned_amount > 0)
+        <div class="t-row-foot" style="color:#b91c1c; font-weight:700; font-size:14px; background:#fef2f2; margin:6px 16px; padding:8px 16px; border-radius:8px;">
+            <span><i class="bi bi-arrow-counterclockwise me-1"></i> Customer Returns Deducted</span>
+            <span>−{{ pkr($sale->total_returned_amount, 2) }}</span>
+        </div>
+        <div class="t-row-foot grand" style="color:#0f766e; border-top:1.5px solid #0f766e; margin-top:6px;">
+            <span>NET SALE REVENUE</span>
+            <span>{{ pkr(max(0, $sale->total_amount - $sale->total_returned_amount), 2) }}</span>
+        </div>
+        @endif
         @if($sale->change_amount > 0)
         <div class="t-row-foot change">
-            <span>💵 Change Due</span>
+            <span>💵 Change Given</span>
             <span>{{ pkr($sale->change_amount, 2) }}</span>
         </div>
         @endif
     </div>
 </div>
+
+@if($sale->returns && $sale->returns->count() > 0)
+{{-- ── Linked Customer Returns ────────────────────────────────── --}}
+<div class="detail-card mb-4" style="border:1.5px solid #fecaca;">
+    <div class="detail-card-header" style="background:#fff1f2; color:#991b1b;">
+        <i class="bi bi-arrow-counterclockwise"></i> Customer Return Vouchers Linked to this Sale ({{ $sale->returns->count() }})
+    </div>
+    <div class="table-responsive">
+        <table class="pos-table w-100">
+            <thead>
+                <tr>
+                    <th>Voucher #</th>
+                    <th>Date</th>
+                    <th>Refund Method</th>
+                    <th>Processed By</th>
+                    <th class="text-end">Refunded Amount</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($sale->returns as $ret)
+                <tr>
+                    <td>
+                        <a href="{{ route('admin.sale-returns.show', $ret->id) }}" class="fw-bold text-danger text-decoration-none" style="font-family:monospace;">
+                            {{ $ret->return_number }}
+                        </a>
+                    </td>
+                    <td>{{ $ret->returned_at ? \Carbon\Carbon::parse($ret->returned_at)->format('d M Y') : $ret->created_at->format('d M Y') }}</td>
+                    <td><span class="badge bg-light text-dark border">{{ strtoupper($ret->refund_method) }}</span></td>
+                    <td>{{ $ret->user?->name ?? 'POS Cashier' }}</td>
+                    <td class="text-end fw-bold text-danger">-{{ pkr($ret->total_return_amount, 2) }}</td>
+                    <td class="text-end">
+                        <a href="{{ route('admin.sale-returns.show', $ret->id) }}" class="btn btn-sm btn-outline-secondary">View Return</a>
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+</div>
+@endif
 
 @endsection

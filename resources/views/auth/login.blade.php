@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign In — Hassan & Sons</title>
+    <title>Sign In — Hassan Corporation</title>
     <!-- Favicon & App Icons -->
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}?v=6">
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}?v=6">
@@ -198,9 +198,9 @@
         <div class="overlay"></div>
         <div class="header-inner">
             <div class="logo-circle">
-                <img src="{{ asset('images/hassan-logo-icon.png') }}" alt="Hassan & Sons" style="width:48px; height:48px; object-fit:contain;">
+                <img src="{{ asset('images/hassan-logo-icon.png') }}" alt="Hassan Corporation" style="width:48px; height:48px; object-fit:contain;">
             </div>
-            <h1>Hassan & Sons</h1>
+            <h1>Hassan Corporation</h1>
         </div>
     </div>
 
@@ -259,7 +259,7 @@
 
     {{-- ── Footer ──────────────────────────────────── --}}
     <div class="login-footer">
-        <strong>Hassan & Sons</strong><br>
+        <strong>Hassan Corporation</strong><br>
         Rafi Commercial, Bahria Town Phase 8, Rawalpindi. &bull; Tel: 051-8891930
     </div>
 

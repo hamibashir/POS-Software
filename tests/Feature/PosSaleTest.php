@@ -259,7 +259,7 @@ class PosSaleTest extends TestCase
         $response->assertOk()
             ->assertSee($sale->invoice_number)
             ->assertSee('Hammer Pro')
-            ->assertSee('Hassan & Sons');
+            ->assertSee('Hassan Corporation');
     }
 
     public function test_sales_listing_can_filter_by_credit_payment_method(): void

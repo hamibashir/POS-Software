@@ -125,7 +125,7 @@ class EmployeeAdvanceTest extends TestCase
         $response->assertOk()
             ->assertSee('Tariq Mehmood')
             ->assertSee('5,000')
-            ->assertSee('Hassan & Sons');
+            ->assertSee('Hassan Corporation');
     }
 
     public function test_admin_can_view_employee_ledger(): void

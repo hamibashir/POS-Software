@@ -1701,48 +1701,158 @@
 
 {{-- ══════════ CUSTOMER PRODUCT RETURN MODAL (POS) ══════════ --}}
 <div class="modal fade" id="posCustomerReturnModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
         <div class="modal-content" style="border-radius:18px; border:none; box-shadow:0 20px 60px rgba(0,0,0,0.25); overflow:hidden;">
-            <div class="modal-header px-4 py-3" style="background:#b91c1c; color:#fff;">
+            <div class="modal-header px-4 py-3" style="background:linear-gradient(135deg, #991b1b 0%, #b91c1c 100%); color:#fff;">
                 <h5 class="modal-title fw-bold" style="color:#fff; display:flex; align-items:center; gap:8px;">
-                    <span class="material-symbols-outlined" style="font-size:22px;">assignment_return</span>
+                    <span class="material-symbols-outlined" style="font-size:24px;">assignment_return</span>
                     Customer Product Return & Stock Restoration
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
-                {{-- Live Product Search / Barcode Scan --}}
-                <div class="position-relative mb-3">
-                    <label class="form-label fw-bold small text-secondary">Search & Add Product to Return <span class="text-danger">*</span></label>
-                    <div class="input-group">
-                        <span class="input-group-text bg-white border-end-0">
-                            <span class="material-symbols-outlined" style="font-size:20px; color:#b91c1c;">barcode_scanner</span>
-                        </span>
-                        <input type="text" id="posReturnProductSearchInput" class="form-control form-control-lg fs-6 border-start-0" 
-                               placeholder="Scan product barcode, or type product name / SKU..." 
-                               autocomplete="off"
-                               oninput="onReturnProductSearch(this.value)"
-                               onkeydown="onReturnProductSearchKeydown(event)">
-                        <button type="button" class="btn btn-outline-secondary" onclick="clearReturnProductSearch()" title="Clear">
-                            <span class="material-symbols-outlined" style="font-size:18px;">close</span>
+
+                {{-- Mode Switcher Tabs --}}
+                <ul class="nav nav-pills mb-3 gap-2" id="posReturnTab" role="tablist" style="background:#f8fafc; padding:6px; border-radius:12px; border:1px solid #e2e8f0;">
+                    <li class="nav-item flex-fill" role="presentation">
+                        <button class="nav-link active w-100 fw-bold d-flex align-items-center justify-content-center gap-2 py-2" 
+                                id="posReturnInvoiceTabBtn" 
+                                data-bs-toggle="pill" 
+                                data-bs-target="#posReturnInvoiceTab" 
+                                type="button" 
+                                role="tab"
+                                style="border-radius:8px; font-size:13.5px;">
+                            <span class="material-symbols-outlined" style="font-size:18px;">receipt_long</span>
+                            1. Search by Invoice # (Recommended)
                         </button>
+                    </li>
+                    <li class="nav-item flex-fill" role="presentation">
+                        <button class="nav-link w-100 fw-bold d-flex align-items-center justify-content-center gap-2 py-2" 
+                                id="posReturnDirectTabBtn" 
+                                data-bs-toggle="pill" 
+                                data-bs-target="#posReturnDirectTab" 
+                                type="button" 
+                                role="tab"
+                                style="border-radius:8px; font-size:13.5px;">
+                            <span class="material-symbols-outlined" style="font-size:18px;">barcode_scanner</span>
+                            2. Direct Product / Barcode Scan
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content mb-4" id="posReturnTabContent">
+                    {{-- TAB 1: Invoice Lookup --}}
+                    <div class="tab-pane fade show active" id="posReturnInvoiceTab" role="tabpanel">
+                        <div class="p-3 rounded-3 mb-3" style="background:#f0fdf4; border:1.5px solid #bbf7d0;">
+                            <div class="row g-2 align-items-end">
+                                <div class="col-md-8">
+                                    <label class="form-label fw-bold small text-success mb-1">
+                                        <i class="bi bi-search me-1"></i> Scan or Enter Sale Invoice Number
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white border-end-0 text-muted">
+                                            <span class="material-symbols-outlined" style="font-size:18px;">qr_code</span>
+                                        </span>
+                                        <input type="text" id="posReturnInvoiceInput" class="form-control border-start-0 fw-bold" 
+                                               placeholder="e.g. INV-20260311-0001 or type invoice #" 
+                                               style="height:44px; font-family:monospace;"
+                                               onkeydown="if(event.key==='Enter'){ event.preventDefault(); lookupReturnInvoice(); }">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <button type="button" class="btn text-white w-100 fw-bold" 
+                                            id="posReturnInvoiceSearchBtn"
+                                            onclick="lookupReturnInvoice()" 
+                                            style="background:#0f766e; height:44px; border-radius:8px;">
+                                        <span class="material-symbols-outlined" style="font-size:18px; vertical-align:middle;">search</span> Fetch Invoice Items
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Invoice Details Card & Items Selection --}}
+                        <div id="posReturnInvoiceDetailsCard" style="display:none;" class="mb-3">
+                            <div class="p-3 rounded-3 mb-2 d-flex justify-content-between align-items-center flex-wrap gap-2" style="background:#f8fafc; border:1px solid #e2e8f0;">
+                                <div>
+                                    <span class="badge bg-dark me-2 fs-6" id="posReturnCardInvNumber">INV-XXXX</span>
+                                    <span class="text-muted small" id="posReturnCardDate">Date</span>
+                                    <div class="mt-1 small">
+                                        <strong class="text-dark" id="posReturnCardCustomer">Customer</strong>
+                                        <span class="text-muted" id="posReturnCardPhone"></span>
+                                        <span class="badge bg-secondary ms-2" id="posReturnCardMethod">Method</span>
+                                    </div>
+                                </div>
+                                <div class="text-end">
+                                    <div class="text-muted small">Original Invoice Total:</div>
+                                    <div class="fw-bold text-dark fs-5" id="posReturnCardTotal">PKR 0.00</div>
+                                </div>
+                            </div>
+
+                            <div class="table-responsive" style="max-height:220px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:8px;">
+                                <table class="table table-sm table-hover align-middle mb-0" style="font-size:12.5px;">
+                                    <thead class="bg-light sticky-top">
+                                        <tr>
+                                            <th>Original Purchased Item</th>
+                                            <th class="text-center">Sold Qty</th>
+                                            <th class="text-center">Already Returned</th>
+                                            <th class="text-center">Available to Return</th>
+                                            <th class="text-end">Sold Rate</th>
+                                            <th class="text-center" style="width:160px;">Return Quantity</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="posReturnInvoiceItemsTbody">
+                                        {{-- Loaded dynamically from invoice lookup --}}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
 
-                    {{-- Floating live search dropdown --}}
-                    <div id="posReturnProductDropdown" class="search-dropdown" style="display:none; position:absolute; top:100%; left:0; right:0; z-index:1060; background:#fff; border:1.5px solid #e2e8f0; border-radius:12px; max-height:260px; overflow-y:auto; box-shadow:0 12px 30px rgba(0,0,0,0.15); margin-top:4px;"></div>
+                    {{-- TAB 2: Direct Product Scan --}}
+                    <div class="tab-pane fade" id="posReturnDirectTab" role="tabpanel">
+                        <div class="position-relative mb-2">
+                            <label class="form-label fw-bold small text-secondary">Search Product Catalog / Scan Barcode</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0">
+                                    <span class="material-symbols-outlined" style="font-size:20px; color:#b91c1c;">barcode_scanner</span>
+                                </span>
+                                <input type="text" id="posReturnProductSearchInput" class="form-control form-control-lg fs-6 border-start-0" 
+                                       placeholder="Scan barcode, or type product name / SKU..." 
+                                       autocomplete="off"
+                                       oninput="onReturnProductSearch(this.value)"
+                                       onkeydown="onReturnProductSearchKeydown(event)">
+                                <button type="button" class="btn btn-outline-secondary" onclick="clearReturnProductSearch()" title="Clear">
+                                    <span class="material-symbols-outlined" style="font-size:18px;">close</span>
+                                </button>
+                            </div>
+
+                            {{-- Floating live search dropdown --}}
+                            <div id="posReturnProductDropdown" class="search-dropdown" style="display:none; position:absolute; top:100%; left:0; right:0; z-index:1060; background:#fff; border:1.5px solid #e2e8f0; border-radius:12px; max-height:260px; overflow-y:auto; box-shadow:0 12px 30px rgba(0,0,0,0.15); margin-top:4px;"></div>
+                        </div>
+                    </div>
                 </div>
 
                 {{-- Form for Return Processing --}}
                 <form id="posCustomerReturnForm" onsubmit="submitCustomerReturn(event)">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="fw-bold text-dark fs-6 d-flex align-items-center gap-1">
+                            <span class="material-symbols-outlined" style="font-size:18px; color:#b91c1c;">shopping_cart_checkout</span>
+                            Items to be Returned & Restored:
+                        </span>
+                        <button type="button" class="btn btn-sm btn-link text-danger p-0 fw-semibold text-decoration-none" onclick="clearAllReturnItems()" id="posReturnClearAllBtn" style="display:none;">
+                            Clear All Items
+                        </button>
+                    </div>
+
                     {{-- Return Items Table --}}
-                    <div class="table-responsive mb-3" style="max-height:280px; overflow-y:auto; border:1px solid #e5e7eb; border-radius:10px;">
+                    <div class="table-responsive mb-3" style="max-height:250px; overflow-y:auto; border:1px solid #e5e7eb; border-radius:10px;">
                         <table class="table table-hover align-middle mb-0" style="font-size:13px;">
                             <thead style="background:#f8fafc; position:sticky; top:0; z-index:1;">
                                 <tr>
                                     <th style="font-weight:700; color:#4b5563;">Product</th>
                                     <th style="font-weight:700; color:#4b5563; text-align:center;">Current Stock</th>
-                                    <th style="font-weight:700; color:#0f766e; text-align:center; width:130px;">Sales Rate (PKR)</th>
-                                    <th style="font-weight:700; color:#b91c1c; text-align:center; width:130px;">Return Qty</th>
+                                    <th style="font-weight:700; color:#0f766e; text-align:center; width:150px;">Sales Rate (PKR)</th>
+                                    <th style="font-weight:700; color:#b91c1c; text-align:center; width:140px;">Return Qty</th>
                                     <th style="font-weight:700; color:#4b5563; text-align:right;">Line Total</th>
                                     <th style="width:45px;"></th>
                                 </tr>
@@ -1751,8 +1861,8 @@
                                 <tr>
                                     <td colspan="6" class="text-center py-4 text-muted" id="posReturnEmptyPrompt">
                                         <span class="material-symbols-outlined d-block mb-1" style="font-size:32px; opacity:0.4;">qr_code_scanner</span>
-                                        <div class="fw-semibold">No products added yet.</div>
-                                        <div style="font-size:11.5px;">Scan a barcode or type a product name in the search box above to add items.</div>
+                                        <div class="fw-semibold">No return items added yet.</div>
+                                        <div style="font-size:11.5px;">Search an invoice above or scan a barcode to add products to this return.</div>
                                     </td>
                                 </tr>
                             </tbody>
@@ -1770,12 +1880,12 @@
                             <input type="text" id="posReturnCustomerPhone" class="form-control" style="height:42px; border-radius:10px;" placeholder="Optional phone #">
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label fw-bold small text-secondary">Customer (Optional)</label>
+                            <label class="form-label fw-bold small text-secondary">Customer Account (Credit)</label>
                             <select id="posReturnEmployeeSelect" class="form-select" style="height:42px; border-radius:10px;" onchange="onReturnEmployeeChange(this)">
                                 <option value="">-- None (Walk-in) --</option>
                                 @if(isset($employees))
                                     @foreach($employees as $e)
-                                        <option value="{{ $e['id'] }}">{{ $e['name'] }}</option>
+                                        <option value="{{ $e['id'] }}">{{ $e['name'] }} — Due: PKR {{ number_format($e['pending_payment'], 2) }}</option>
                                     @endforeach
                                 @endif
                             </select>
@@ -1789,7 +1899,7 @@
                             <select id="posReturnRefundMethod" class="form-select" style="height:42px; border-radius:10px;" required>
                                 <option value="cash" selected>💵 Cash Refund (Counter Drawer)</option>
                                 <option value="card">💳 Card / Bank Transfer</option>
-                                <option value="credit_adjustment" id="posReturnOptionCreditAdj" style="display:none;">💼 Adjust Credit Balance</option>
+                                <option value="credit_adjustment" id="posReturnOptionCreditAdj" style="display:none;">💼 Adjust Customer Credit Due</option>
                             </select>
                         </div>
                         <div class="col-md-6">
@@ -1814,7 +1924,7 @@
                     <div class="p-3 my-3 rounded-3 d-flex justify-content-between align-items-center" style="background:#fff1f2; border:1.5px solid #fecdd3;">
                         <div>
                             <div class="fw-bold text-dark fs-6">Total Refund Amount to Customer</div>
-                            <div class="text-muted" style="font-size:11px;">Calculated using the product sales rate. Stock will be restored automatically upon completion.</div>
+                            <div class="text-muted" style="font-size:11px;">Calculated using original sold rates. Restored stock is updated across system instantly.</div>
                         </div>
                         <div class="fs-4 fw-bold" style="color:#be123c;" id="posReturnTotalDisplay">PKR 0.00</div>
                     </div>
@@ -3151,17 +3261,24 @@ async function submitPosEmployeePayment(e) {
 /* ── Customer Product Return (POS Counter) ───── */
 const posCustomerReturnModal = new bootstrap.Modal(document.getElementById('posCustomerReturnModal'));
 let returnItemsList = [];
+let currentReturnSale = null;
 let returnSearchTimeout = null;
 let currentReturnSearchResults = [];
 
 function openCustomerReturnModal() {
     posCustomerReturnModal.show();
     setTimeout(() => {
-        const input = document.getElementById('posReturnProductSearchInput');
-        if (input) {
-            input.focus();
+        const invInput = document.getElementById('posReturnInvoiceInput');
+        if (invInput) {
+            invInput.focus();
+            invInput.select();
         }
     }, 200);
+}
+
+function clearAllReturnItems() {
+    returnItemsList = [];
+    renderReturnItemsTable();
 }
 
 function clearReturnProductSearch() {
@@ -3172,6 +3289,148 @@ function clearReturnProductSearch() {
         dropdown.style.display = 'none';
         dropdown.innerHTML = '';
     }
+}
+
+async function lookupReturnInvoice() {
+    const input = document.getElementById('posReturnInvoiceInput');
+    const query = input ? input.value.trim() : '';
+    if (!query) {
+        toast('Please enter an invoice number to search!', 'w');
+        return;
+    }
+
+    const btn = document.getElementById('posReturnInvoiceSearchBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Fetching...';
+
+    try {
+        const res = await fetch(`{{ route('cashier.pos.lookup-sale') }}?invoice=${encodeURIComponent(query)}`);
+        const data = await res.json();
+
+        if (data.success && data.sale) {
+            currentReturnSale = data.sale;
+            renderReturnSaleDetails(data.sale);
+            toast(`Found Invoice #${data.sale.invoice_number}`, 's');
+        } else {
+            currentReturnSale = null;
+            document.getElementById('posReturnInvoiceDetailsCard').style.display = 'none';
+            toast(data.message || 'Invoice not found.', 'e');
+        }
+    } catch (err) {
+        toast('Network error looking up invoice.', 'e');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:18px; vertical-align:middle;">search</span> Fetch Invoice Items';
+    }
+}
+
+function renderReturnSaleDetails(sale) {
+    const card = document.getElementById('posReturnInvoiceDetailsCard');
+    document.getElementById('posReturnCardInvNumber').textContent = sale.invoice_number;
+    document.getElementById('posReturnCardDate').textContent = sale.created_at;
+    document.getElementById('posReturnCardCustomer').textContent = sale.customer_name || 'Walk-in Customer';
+    document.getElementById('posReturnCardPhone').textContent = sale.customer_phone ? `(${sale.customer_phone})` : '';
+    document.getElementById('posReturnCardMethod').textContent = (sale.payment_method || 'CASH').toUpperCase();
+    document.getElementById('posReturnCardTotal').textContent = 'PKR ' + (sale.total_amount || 0).toLocaleString(undefined, {minimumFractionDigits: 2});
+
+    // Auto-fill customer info in form
+    document.getElementById('posReturnCustomerName').value = sale.customer_name || 'Walk-in Customer';
+    document.getElementById('posReturnCustomerPhone').value = sale.customer_phone || '';
+    
+    if (sale.employee_id) {
+        const empSelect = document.getElementById('posReturnEmployeeSelect');
+        if (empSelect) {
+            empSelect.value = sale.employee_id;
+            onReturnEmployeeChange(empSelect);
+        }
+        if (sale.payment_method === 'credit') {
+            document.getElementById('posReturnRefundMethod').value = 'credit_adjustment';
+        }
+    }
+
+    // Render items table
+    const tbody = document.getElementById('posReturnInvoiceItemsTbody');
+    let html = '';
+
+    sale.items.forEach((item, idx) => {
+        const isExhausted = item.quantity_returnable <= 0;
+        html += `
+            <tr class="${isExhausted ? 'text-muted bg-light' : ''}">
+                <td>
+                    <div class="fw-bold ${isExhausted ? 'text-muted' : 'text-dark'}">${escapeHtml(item.product_name)}</div>
+                    <div class="text-muted small" style="font-family:monospace;">${escapeHtml(item.product_sku || '')} · Stock: ${item.current_stock}</div>
+                </td>
+                <td class="text-center fw-bold">${item.quantity_sold} ${escapeHtml(item.product_unit)}</td>
+                <td class="text-center text-danger fw-semibold">${item.quantity_returned} ${escapeHtml(item.product_unit)}</td>
+                <td class="text-center">
+                    <span class="badge ${item.quantity_returnable > 0 ? 'bg-success' : 'bg-secondary'}">
+                        ${item.quantity_returnable} ${escapeHtml(item.product_unit)}
+                    </span>
+                </td>
+                <td class="text-end fw-bold text-success">
+                    PKR ${item.unit_price.toFixed(2)}
+                </td>
+                <td class="text-center">
+                    ${isExhausted ? `
+                        <span class="badge bg-light text-muted border">Fully Returned</span>
+                    ` : `
+                        <div class="input-group input-group-sm" style="width:140px; margin:0 auto;">
+                            <input type="number" id="invRetQty_${idx}" class="form-control text-center fw-bold" 
+                                   min="1" max="${item.quantity_returnable}" value="1">
+                            <button type="button" class="btn btn-danger fw-bold" onclick="addSaleItemToReturn(${idx})" title="Add to Return">
+                                + Return
+                            </button>
+                        </div>
+                    `}
+                </td>
+            </tr>
+        `;
+    });
+
+    tbody.innerHTML = html;
+    card.style.display = 'block';
+}
+
+function addSaleItemToReturn(idx) {
+    if (!currentReturnSale || !currentReturnSale.items[idx]) return;
+    const saleItem = currentReturnSale.items[idx];
+    const qtyInput = document.getElementById(`invRetQty_${idx}`);
+    let qtyToAdd = parseInt(qtyInput ? qtyInput.value : 1) || 1;
+
+    if (qtyToAdd <= 0) qtyToAdd = 1;
+    if (qtyToAdd > saleItem.quantity_returnable) {
+        toast(`Cannot return more than available quantity (${saleItem.quantity_returnable})!`, 'w');
+        qtyToAdd = saleItem.quantity_returnable;
+    }
+
+    // Check if already in returnItemsList
+    const existing = returnItemsList.find(i => i.sale_item_id === saleItem.sale_item_id);
+    if (existing) {
+        const newQty = existing.quantity + qtyToAdd;
+        if (newQty > saleItem.quantity_returnable) {
+            toast(`Maximum returnable quantity for this item is ${saleItem.quantity_returnable}!`, 'w');
+            existing.quantity = saleItem.quantity_returnable;
+        } else {
+            existing.quantity = newQty;
+        }
+    } else {
+        returnItemsList.push({
+            product_id:          saleItem.product_id,
+            sale_item_id:        saleItem.sale_item_id,
+            product_name:        saleItem.product_name,
+            product_sku:         saleItem.product_sku || '',
+            product_unit:        saleItem.product_unit || 'pcs',
+            current_stock:       saleItem.current_stock,
+            unit_price:          parseFloat(saleItem.unit_price) || 0,
+            quantity:            qtyToAdd,
+            max_qty:             saleItem.quantity_returnable,
+            is_from_invoice:     true,
+            invoice_number:      currentReturnSale.invoice_number
+        });
+    }
+
+    renderReturnItemsTable();
+    toast(`Added ${qtyToAdd}x ${saleItem.product_name} to return list`, 's');
 }
 
 function onReturnProductSearch(query) {
@@ -3225,7 +3484,7 @@ function renderReturnSearchDropdown(products, query) {
                 </div>
                 <div class="text-end">
                     <div class="fw-bold text-success fs-6">PKR ${p.sale_price.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
-                    <span class="badge bg-danger">Click to Return</span>
+                    <span class="badge bg-danger">+ Add to Return</span>
                 </div>
             </div>
         `;
@@ -3250,18 +3509,21 @@ function onReturnProductSearchKeydown(e) {
 }
 
 function addProductToReturn(product) {
-    const existing = returnItemsList.find(item => item.product_id === product.id);
+    const existing = returnItemsList.find(item => item.product_id === product.id && !item.sale_item_id);
     if (existing) {
         existing.quantity += 1;
     } else {
         returnItemsList.push({
-            product_id: product.id,
-            product_name: product.name,
-            product_sku: product.sku || '',
-            product_unit: product.unit || 'pcs',
-            current_stock: product.stock_quantity,
-            unit_price: parseFloat(product.sale_price) || 0,
-            quantity: 1
+            product_id:      product.id,
+            sale_item_id:    null,
+            product_name:    product.name,
+            product_sku:     product.sku || '',
+            product_unit:    product.unit || 'pcs',
+            current_stock:   product.stock_quantity,
+            unit_price:      parseFloat(product.sale_price) || 0,
+            quantity:        1,
+            max_qty:         9999,
+            is_from_invoice: false
         });
     }
     renderReturnItemsTable();
@@ -3269,19 +3531,24 @@ function addProductToReturn(product) {
 
 function renderReturnItemsTable() {
     const tbody = document.getElementById('posReturnItemsTbody');
+    const clearBtn = document.getElementById('posReturnClearAllBtn');
+
     if (returnItemsList.length === 0) {
         tbody.innerHTML = `
             <tr>
                 <td colspan="6" class="text-center py-4 text-muted" id="posReturnEmptyPrompt">
                     <span class="material-symbols-outlined d-block mb-1" style="font-size:32px; opacity:0.4;">qr_code_scanner</span>
-                    <div class="fw-semibold">No products added yet.</div>
-                    <div style="font-size:11.5px;">Scan a barcode or type a product name in the search box above to add items.</div>
+                    <div class="fw-semibold">No return items added yet.</div>
+                    <div style="font-size:11.5px;">Search an invoice above or scan a barcode to add products to this return.</div>
                 </td>
             </tr>
         `;
+        if (clearBtn) clearBtn.style.display = 'none';
         updateReturnGrandTotal();
         return;
     }
+
+    if (clearBtn) clearBtn.style.display = 'inline-block';
 
     let html = '';
     returnItemsList.forEach((item, idx) => {
@@ -3290,24 +3557,34 @@ function renderReturnItemsTable() {
             <tr>
                 <td>
                     <div class="fw-bold text-dark">${escapeHtml(item.product_name)}</div>
-                    <div class="text-muted" style="font-size:11px; font-family:monospace;">${escapeHtml(item.product_sku)}</div>
+                    <div class="text-muted d-flex align-items-center gap-1" style="font-size:11px; font-family:monospace;">
+                        <span>${escapeHtml(item.product_sku)}</span>
+                        ${item.is_from_invoice ? `<span class="badge bg-primary" style="font-size:9.5px;">${escapeHtml(item.invoice_number)}</span>` : '<span class="badge bg-secondary" style="font-size:9.5px;">Direct Scan</span>'}
+                    </div>
                 </td>
                 <td style="text-align:center; font-weight:600; color:#64748b;">
                     ${item.current_stock} ${escapeHtml(item.product_unit)}
                 </td>
                 <td style="text-align:center;">
-                    <div class="input-group input-group-sm" style="width:120px; margin:0 auto;">
-                        <span class="input-group-text bg-white border-end-0 text-muted" style="font-size:11px;">Rs.</span>
-                        <input type="number" step="0.01" min="0" value="${item.unit_price.toFixed(2)}"
-                               class="form-control text-end fw-bold border-start-0" 
-                               style="color:#0f766e; font-size:13px;"
-                               onchange="onReturnItemRateChange(${idx}, this.value)">
-                    </div>
+                    ${item.is_from_invoice ? `
+                        <span class="fw-bold text-teal" style="font-size:13.5px; color:#0f766e;">
+                            PKR ${item.unit_price.toFixed(2)}
+                        </span>
+                        <div style="font-size:9.5px; color:#059669; font-weight:600;">(Invoice Rate Locked)</div>
+                    ` : `
+                        <div class="input-group input-group-sm" style="width:130px; margin:0 auto;">
+                            <span class="input-group-text bg-white border-end-0 text-muted" style="font-size:11px;">Rs.</span>
+                            <input type="number" step="0.01" min="0" value="${item.unit_price.toFixed(2)}"
+                                   class="form-control text-end fw-bold border-start-0" 
+                                   style="color:#0f766e; font-size:13px;"
+                                   onchange="onReturnItemRateChange(${idx}, this.value)">
+                        </div>
+                    `}
                 </td>
                 <td style="text-align:center;">
-                    <div class="input-group input-group-sm" style="width:110px; margin:0 auto;">
+                    <div class="input-group input-group-sm" style="width:115px; margin:0 auto;">
                         <button type="button" class="btn btn-outline-secondary px-2" onclick="adjustReturnItemQty(${idx}, -1)">−</button>
-                        <input type="number" min="1" value="${item.quantity}" 
+                        <input type="number" min="1" max="${item.max_qty}" value="${item.quantity}" 
                                class="form-control text-center fw-bold" 
                                onchange="onReturnItemQtyChange(${idx}, this.value)">
                         <button type="button" class="btn btn-outline-secondary px-2" onclick="adjustReturnItemQty(${idx}, 1)">+</button>
@@ -3331,21 +3608,32 @@ function renderReturnItemsTable() {
 
 function adjustReturnItemQty(idx, change) {
     if (!returnItemsList[idx]) return;
-    returnItemsList[idx].quantity += change;
-    if (returnItemsList[idx].quantity < 1) returnItemsList[idx].quantity = 1;
+    const item = returnItemsList[idx];
+    item.quantity += change;
+    if (item.quantity < 1) item.quantity = 1;
+    if (item.max_qty && item.quantity > item.max_qty) {
+        toast(`Maximum returnable quantity is ${item.max_qty}!`, 'w');
+        item.quantity = item.max_qty;
+    }
     renderReturnItemsTable();
 }
 
 function onReturnItemQtyChange(idx, val) {
     if (!returnItemsList[idx]) return;
+    const item = returnItemsList[idx];
     let qty = parseInt(val) || 1;
     if (qty < 1) qty = 1;
-    returnItemsList[idx].quantity = qty;
+    if (item.max_qty && qty > item.max_qty) {
+        toast(`Maximum returnable quantity is ${item.max_qty}!`, 'w');
+        qty = item.max_qty;
+    }
+    item.quantity = qty;
     renderReturnItemsTable();
 }
 
 function onReturnItemRateChange(idx, val) {
     if (!returnItemsList[idx]) return;
+    if (returnItemsList[idx].is_from_invoice) return;
     let rate = parseFloat(val);
     if (isNaN(rate) || rate < 0) rate = 0;
     returnItemsList[idx].unit_price = rate;
@@ -3399,16 +3687,18 @@ async function submitCustomerReturn(e) {
                 'Accept': 'application/json'
             },
             body: JSON.stringify({
-                customer_name: document.getElementById('posReturnCustomerName').value.trim() || 'Walk-in Customer',
+                sale_id:        currentReturnSale ? currentReturnSale.id : null,
+                customer_name:  document.getElementById('posReturnCustomerName').value.trim() || 'Walk-in Customer',
                 customer_phone: document.getElementById('posReturnCustomerPhone').value.trim() || null,
-                employee_id: empId ? parseInt(empId) : null,
-                refund_method: document.getElementById('posReturnRefundMethod').value,
-                reason: document.getElementById('posReturnReason').value,
-                notes: document.getElementById('posReturnNotes').value.trim() || null,
+                employee_id:    empId ? parseInt(empId) : null,
+                refund_method:  document.getElementById('posReturnRefundMethod').value,
+                reason:         document.getElementById('posReturnReason').value,
+                notes:          document.getElementById('posReturnNotes').value.trim() || null,
                 items: returnItemsList.map(item => ({
-                    product_id: item.product_id,
-                    quantity: item.quantity,
-                    unit_price: item.unit_price
+                    product_id:   item.product_id,
+                    sale_item_id: item.sale_item_id || null,
+                    quantity:     item.quantity,
+                    unit_price:   item.unit_price
                 }))
             })
         });
@@ -3418,11 +3708,35 @@ async function submitCustomerReturn(e) {
             toast(data.message, 's');
             posCustomerReturnModal.hide();
 
-            // Reset state
+            // Synchronize returned stock in drawer catalog
+            if (data.updated_products && typeof loadDrawerCatalog === 'function') {
+                loadDrawerCatalog(currentDrawerCat || '');
+            }
+
+            // Synchronize updated customer credit due in UI
+            if (data.updated_employee && typeof currentCustomerList !== 'undefined') {
+                const found = currentCustomerList.find(c => c.id === data.updated_employee.id);
+                if (found) {
+                    found.pending_payment = data.updated_employee.pending_payment;
+                    if (typeof selectedCustomer !== 'undefined' && selectedCustomer && selectedCustomer.id === found.id) {
+                        selectedCustomer.pending_payment = data.updated_employee.pending_payment;
+                        if (typeof renderSelectedCustomerCard === 'function') {
+                            renderSelectedCustomerCard();
+                        }
+                    }
+                }
+            }
+
+            // Reset return form state
             returnItemsList = [];
+            currentReturnSale = null;
             renderReturnItemsTable();
             document.getElementById('posCustomerReturnForm').reset();
             document.getElementById('posReturnCustomerName').value = 'Walk-in Customer';
+            const invDetails = document.getElementById('posReturnInvoiceDetailsCard');
+            if (invDetails) invDetails.style.display = 'none';
+            const invInput = document.getElementById('posReturnInvoiceInput');
+            if (invInput) invInput.value = '';
             clearReturnProductSearch();
 
             // Prompt to print return voucher

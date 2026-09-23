@@ -228,7 +228,19 @@
                 </td>
 
                 {{-- Total --}}
-                <td class="total-amount">{{ pkr($sale->total_amount, 2) }}</td>
+                <td>
+                    <div class="total-amount">{{ pkr($sale->total_amount, 2) }}</div>
+                    @if($sale->total_returned_amount > 0)
+                        <div class="mt-1">
+                            <span class="badge bg-danger" style="font-size:10px; font-weight:700;">
+                                <i class="bi bi-arrow-counterclockwise"></i> Return: -{{ pkr($sale->total_returned_amount, 2) }}
+                            </span>
+                            <div style="font-size:11px; color:#0f766e; font-weight:700; margin-top:2px;">
+                                Net: {{ pkr(max(0, $sale->total_amount - $sale->total_returned_amount), 2) }}
+                            </div>
+                        </div>
+                    @endif
+                </td>
 
                 {{-- Payment --}}
                 <td>

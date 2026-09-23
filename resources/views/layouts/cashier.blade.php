@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'POS') — Hassan & Sons</title>
+    <title>@yield('title', 'POS') — Hassan Corporation</title>
 
     <!-- Favicon & App Icons -->
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}?v=6">
@@ -60,7 +60,7 @@
 <body>
 
 <div class="pos-bar">
-    <div class="brand"><img src="{{ asset('images/hassan-logo-icon.png') }}" alt="Logo" style="width:26px; height:26px; object-fit:contain;"> Hassan &amp; Sons</div>
+    <div class="brand"><img src="{{ asset('images/hassan-logo-icon.png') }}" alt="Logo" style="width:26px; height:26px; object-fit:contain;"> Hassan Corporation</div>
 
     @if(auth()->user()->isAdmin())
         <a href="{{ route('admin.dashboard') }}" class="btn-admin-back">

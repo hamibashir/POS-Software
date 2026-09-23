@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1280">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Hassan & Sons')</title>
+    <title>@yield('title', 'Hassan Corporation')</title>
 
     <!-- Favicon & App Icons -->
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}?v=6">

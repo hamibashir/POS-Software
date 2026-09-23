@@ -68,7 +68,26 @@ class ReportController extends Controller
             ->get()
             ->keyBy('date');
 
-        // 3. Operating Expenses by Day
+        // 3. Customer Product Returns by Day
+        $returnsData = DB::table('sale_returns')
+            ->leftJoin(DB::raw('(
+                SELECT sale_return_id, SUM(sale_return_items.quantity * products.cost_price) as returned_cogs
+                FROM sale_return_items
+                JOIN products ON products.id = sale_return_items.product_id
+                GROUP BY sale_return_id
+            ) as ret_cogs'), 'ret_cogs.sale_return_id', '=', 'sale_returns.id')
+            ->select(
+                DB::raw('DATE(COALESCE(sale_returns.returned_at, sale_returns.created_at)) as date'),
+                DB::raw('SUM(sale_returns.total_return_amount) as total_returns'),
+                DB::raw('SUM(COALESCE(ret_cogs.returned_cogs, 0)) as returned_cogs'),
+                DB::raw('COUNT(sale_returns.id) as return_count')
+            )
+            ->where(DB::raw('DATE(COALESCE(sale_returns.returned_at, sale_returns.created_at))'), '>=', $startDate->toDateString())
+            ->groupBy('date')
+            ->get()
+            ->keyBy('date');
+
+        // 4. Operating Expenses by Day
         $expensesData = DB::table('expenses')
             ->select(
                 DB::raw('DATE(expense_date) as date'),
@@ -81,19 +100,28 @@ class ReportController extends Controller
         // Merge all active dates
         $allDates = $salesData->keys()
             ->merge($creditClearedData->keys())
+            ->merge($returnsData->keys())
             ->merge($expensesData->keys())
             ->unique()
             ->sortDesc()
             ->values();
 
-        $rows = $allDates->map(function ($date) use ($salesData, $creditClearedData, $expensesData) {
+        $rows = $allDates->map(function ($date) use ($salesData, $creditClearedData, $returnsData, $expensesData) {
             $saleRow       = $salesData[$date] ?? null;
             $creditRow     = $creditClearedData[$date] ?? null;
+            $returnRow     = $returnsData[$date] ?? null;
+
             $directRevenue = $saleRow ? (float) $saleRow->direct_revenue : 0.0;
             $creditCleared = $creditRow ? (float) $creditRow->credit_cleared : 0.0;
-            $revenue       = $directRevenue + $creditCleared;
-            $transactions  = ($saleRow ? (int) $saleRow->transactions : 0) + ($creditRow ? (int) $creditRow->payment_count : 0);
-            $cogs          = $saleRow ? (float) $saleRow->cogs : 0.0;
+            $returnedAmt   = $returnRow ? (float) $returnRow->total_returns : 0.0;
+            $returnedCogs  = $returnRow ? (float) $returnRow->returned_cogs : 0.0;
+            $returnCount   = $returnRow ? (int) $returnRow->return_count : 0;
+
+            $grossRevenue  = $directRevenue + $creditCleared;
+            $revenue       = $grossRevenue - $returnedAmt;
+            $transactions  = ($saleRow ? (int) $saleRow->transactions : 0) + ($creditRow ? (int) $creditRow->payment_count : 0) + $returnCount;
+            $grossCogs     = $saleRow ? (float) $saleRow->cogs : 0.0;
+            $cogs          = max(0, $grossCogs - $returnedCogs);
             $expense       = (float) ($expensesData[$date] ?? 0);
             $grossProfit   = $revenue - $cogs;
             $netProfit     = $grossProfit - $expense;
@@ -105,6 +133,8 @@ class ReportController extends Controller
                 'transactions'   => $transactions,
                 'direct_revenue' => $directRevenue,
                 'credit_cleared' => $creditCleared,
+                'returns'        => $returnedAmt,
+                'returned_cogs'  => $returnedCogs,
                 'revenue'        => $revenue,
                 'cogs'           => $cogs,
                 'expense'        => $expense,
@@ -114,9 +144,10 @@ class ReportController extends Controller
                 'net_margin'     => $netMargin,
                 'avg_sale'       => $saleRow ? (float) $saleRow->avg_sale : 0.0,
             ];
-        })->filter(fn($r) => $r->revenue > 0 || $r->transactions > 0 || $r->expense > 0)->values();
+        })->filter(fn($r) => $r->revenue > 0 || $r->transactions > 0 || $r->expense > 0 || $r->returns > 0)->values();
 
         $totalRevenue     = (float) $rows->sum('revenue');
+        $totalReturns     = (float) $rows->sum('returns');
         $totalCogs        = (float) $rows->sum('cogs');
         $totalExpense     = (float) $rows->sum('expense');
         $totalGrossProfit = $totalRevenue - $totalCogs;
@@ -127,6 +158,7 @@ class ReportController extends Controller
         $totals = [
             'transactions' => $rows->sum('transactions'),
             'revenue'      => $totalRevenue,
+            'returns'      => $totalReturns,
             'cogs'         => $totalCogs,
             'expense'      => $totalExpense,
             'gross_profit' => $totalGrossProfit,
@@ -175,16 +207,32 @@ class ReportController extends Controller
             ->whereBetween(DB::raw('DATE(COALESCE(payment_date, created_at))'), [$from, $to])
             ->count();
 
+        $returnsTotal = (float) DB::table('sale_returns')
+            ->whereBetween(DB::raw('DATE(COALESCE(returned_at, created_at))'), [$from, $to])
+            ->sum('total_return_amount');
+
+        $returnsCount = (int) DB::table('sale_returns')
+            ->whereBetween(DB::raw('DATE(COALESCE(returned_at, created_at))'), [$from, $to])
+            ->count();
+
+        $returnedCogsTotal = (float) DB::table('sale_return_items')
+            ->join('sale_returns', 'sale_returns.id', '=', 'sale_return_items.sale_return_id')
+            ->join('products', 'products.id', '=', 'sale_return_items.product_id')
+            ->whereBetween(DB::raw('DATE(COALESCE(sale_returns.returned_at, sale_returns.created_at))'), [$from, $to])
+            ->sum(DB::raw('sale_return_items.quantity * products.cost_price'));
+
         $totalExpenses = (float) DB::table('expenses')
             ->whereBetween(DB::raw('DATE(expense_date)'), [$from, $to])
             ->sum('amount');
 
         if ($summary) {
             $directRevenue           = (float) ($summary->direct_revenue ?? 0);
-            $summary->revenue        = $directRevenue + $creditClearedTotal;
+            $summary->returns        = $returnsTotal;
+            $summary->revenue        = ($directRevenue + $creditClearedTotal) - $returnsTotal;
             $summary->credit_revenue = (float) ($summary->credit_upfront ?? 0) + $creditClearedTotal;
-            $summary->transactions   = (int) ($summary->transactions ?? 0) + $creditClearedCount;
-            $summary->cogs           = (float) ($summary->cogs ?? 0);
+            $summary->transactions   = (int) ($summary->transactions ?? 0) + $creditClearedCount + $returnsCount;
+            $grossCogs               = (float) ($summary->cogs ?? 0);
+            $summary->cogs           = max(0, $grossCogs - $returnedCogsTotal);
             $summary->expense        = $totalExpenses;
             $summary->gross_profit   = (float) $summary->revenue - $summary->cogs;
             $summary->net_profit     = $summary->gross_profit - $totalExpenses;
@@ -230,21 +278,47 @@ class ReportController extends Controller
             ->get()
             ->keyBy('date');
 
+        $returnsByDay = DB::table('sale_returns')
+            ->leftJoin(DB::raw('(
+                SELECT sale_return_id, SUM(sale_return_items.quantity * products.cost_price) as returned_cogs
+                FROM sale_return_items
+                JOIN products ON products.id = sale_return_items.product_id
+                GROUP BY sale_return_id
+            ) as ret_cogs'), 'ret_cogs.sale_return_id', '=', 'sale_returns.id')
+            ->select(
+                DB::raw('DATE(COALESCE(sale_returns.returned_at, sale_returns.created_at)) as date'),
+                DB::raw('SUM(sale_returns.total_return_amount) as total_returns'),
+                DB::raw('SUM(COALESCE(ret_cogs.returned_cogs, 0)) as returned_cogs'),
+                DB::raw('COUNT(sale_returns.id) as return_count')
+            )
+            ->whereBetween(DB::raw('DATE(COALESCE(sale_returns.returned_at, sale_returns.created_at))'), [$from, $to])
+            ->groupBy('date')
+            ->get()
+            ->keyBy('date');
+
         $allRangeDates = $salesByDay->keys()
             ->merge($creditClearedByDay->keys())
+            ->merge($returnsByDay->keys())
             ->merge($expensesByDay->keys())
             ->unique()
             ->sortDesc()
             ->values();
 
-        $byDay = $allRangeDates->map(function ($date) use ($salesByDay, $creditClearedByDay, $expensesByDay) {
+        $byDay = $allRangeDates->map(function ($date) use ($salesByDay, $creditClearedByDay, $returnsByDay, $expensesByDay) {
             $saleRow       = $salesByDay[$date] ?? null;
             $creditRow     = $creditClearedByDay[$date] ?? null;
+            $returnRow     = $returnsByDay[$date] ?? null;
+
             $directRevenue = $saleRow ? (float) $saleRow->direct_revenue : 0.0;
             $creditCleared = $creditRow ? (float) $creditRow->credit_cleared : 0.0;
-            $revenue       = $directRevenue + $creditCleared;
-            $transactions  = ($saleRow ? (int) $saleRow->transactions : 0) + ($creditRow ? (int) $creditRow->payment_count : 0);
-            $cogs          = $saleRow ? (float) $saleRow->cogs : 0.0;
+            $returnedAmt   = $returnRow ? (float) $returnRow->total_returns : 0.0;
+            $returnedCogs  = $returnRow ? (float) $returnRow->returned_cogs : 0.0;
+            $returnCount   = $returnRow ? (int) $returnRow->return_count : 0;
+
+            $revenue       = ($directRevenue + $creditCleared) - $returnedAmt;
+            $transactions  = ($saleRow ? (int) $saleRow->transactions : 0) + ($creditRow ? (int) $creditRow->payment_count : 0) + $returnCount;
+            $grossCogs     = $saleRow ? (float) $saleRow->cogs : 0.0;
+            $cogs          = max(0, $grossCogs - $returnedCogs);
             $expense       = (float) ($expensesByDay[$date] ?? 0);
             $gross         = $revenue - $cogs;
             $net           = $gross - $expense;
@@ -252,6 +326,7 @@ class ReportController extends Controller
             return (object) [
                 'date'         => $date,
                 'transactions' => $transactions,
+                'returns'      => $returnedAmt,
                 'revenue'      => $revenue,
                 'cogs'         => $cogs,
                 'expense'      => $expense,
@@ -260,7 +335,7 @@ class ReportController extends Controller
                 'gross_margin' => $revenue > 0 ? round(($gross / $revenue) * 100, 1) : 0,
                 'net_margin'   => $revenue > 0 ? round(($net / $revenue) * 100, 1) : 0,
             ];
-        })->filter(fn($r) => $r->revenue > 0 || $r->transactions > 0 || $r->expense > 0)->values();
+        })->filter(fn($r) => $r->revenue > 0 || $r->transactions > 0 || $r->expense > 0 || $r->returns > 0)->values();
 
         return compact('summary', 'byDay', 'from', 'to', 'totalExpenses');
     }
@@ -325,6 +400,19 @@ class ReportController extends Controller
 
         $categories = Category::orderBy('name')->get();
 
+        // Query product-level returned totals in date range
+        $returnedProducts = DB::table('sale_return_items')
+            ->join('sale_returns', 'sale_returns.id', '=', 'sale_return_items.sale_return_id')
+            ->select(
+                'sale_return_items.product_id',
+                DB::raw('SUM(sale_return_items.quantity) as returned_qty'),
+                DB::raw('SUM(sale_return_items.total_price) as returned_revenue')
+            )
+            ->whereBetween(DB::raw('DATE(COALESCE(sale_returns.returned_at, sale_returns.created_at))'), [$from, $to])
+            ->groupBy('sale_return_items.product_id')
+            ->get()
+            ->keyBy('product_id');
+
         // 1. Overall top selling products (filtered by category if selected)
         $products = DB::table('sale_items')
             ->join('sales', 'sales.id', '=', 'sale_items.sale_id')
@@ -337,10 +425,9 @@ class ReportController extends Controller
                 'sale_items.product_unit',
                 DB::raw("COALESCE(categories.name, 'Uncategorized') as category_name"),
                 'categories.id as category_id',
-                DB::raw('SUM(sale_items.quantity) as total_qty'),
-                DB::raw('SUM(sale_items.total_price) as total_revenue'),
-                DB::raw('SUM(sale_items.quantity * sale_items.cost_price) as total_cost'),
-                DB::raw('SUM(sale_items.total_price) - SUM(sale_items.quantity * sale_items.cost_price) as gross_profit'),
+                DB::raw('SUM(sale_items.quantity) as gross_qty'),
+                DB::raw('SUM(sale_items.total_price) as gross_revenue'),
+                DB::raw('SUM(sale_items.quantity * sale_items.cost_price) as gross_cost'),
                 DB::raw('COUNT(DISTINCT sales.id) as order_count'),
                 DB::raw('AVG(sale_items.unit_price) as avg_price'),
                 DB::raw('AVG(sale_items.cost_price) as avg_cost')
@@ -356,15 +443,23 @@ class ReportController extends Controller
                 'categories.id',
                 'categories.name'
             )
-            ->orderByDesc('total_qty')
-            ->limit($limit)
             ->get()
-            ->map(function ($p) {
-                $rev = (float) $p->total_revenue;
-                $profit = (float) $p->gross_profit;
-                $p->profit_margin = $rev > 0 ? round(($profit / $rev) * 100, 1) : 0;
+            ->map(function ($p) use ($returnedProducts) {
+                $ret = $returnedProducts[$p->product_id] ?? null;
+                $returnedQty = $ret ? (int)$ret->returned_qty : 0;
+                $returnedRev = $ret ? (float)$ret->returned_revenue : 0.0;
+
+                $p->total_qty     = max(0, (int)$p->gross_qty - $returnedQty);
+                $p->total_revenue = max(0, (float)$p->gross_revenue - $returnedRev);
+                $costPerUnit      = (float)$p->avg_cost;
+                $p->total_cost    = $p->total_qty * $costPerUnit;
+                $p->gross_profit  = $p->total_revenue - $p->total_cost;
+                $p->profit_margin = $p->total_revenue > 0 ? round(($p->gross_profit / $p->total_revenue) * 100, 1) : 0;
                 return $p;
-            });
+            })
+            ->sortByDesc('total_qty')
+            ->take($limit)
+            ->values();
 
         // 2. Category-wise Performance Breakdown Summary
         $categoryBreakdown = DB::table('sale_items')

@@ -1,7 +1,7 @@
 @extends('layouts.catalog')
 
-@section('title', 'Hassan & Sons — Next-Gen Hardware, Tools, Sanitary & Plumbing')
-@section('meta_description', 'Discover professional-grade hardware tools, sanitary ware, plumbing, and electrical supplies at Hassan & Sons. Interactive catalog and instant phone/WhatsApp ordering.')
+@section('title', 'Hassan Corporation — Next-Gen Hardware, Tools, Sanitary & Plumbing')
+@section('meta_description', 'Discover professional-grade hardware tools, sanitary ware, plumbing, and electrical supplies at Hassan Corporation. Interactive catalog and instant phone/WhatsApp ordering.')
 
 @push('styles')
 <style>
@@ -608,7 +608,7 @@
         <div class="apple-sticky-stage" id="stickyStage">
 
             {{-- Fallback static image --}}
-            <img src="{{ asset('images/ezgif-frame-001.jpg') }}" class="hero-fallback-img" id="heroFallback" alt="Hassan & Sons Showcase">
+            <img src="{{ asset('images/ezgif-frame-001.jpg') }}" class="hero-fallback-img" id="heroFallback" alt="Hassan Corporation Showcase">
 
             {{-- HTML5 Canvas rendering 141 high-res frames - edge to edge --}}
             <canvas id="heroCanvas" class="hero-canvas"></canvas>
@@ -628,7 +628,7 @@
                 
                 {{-- Step 1: 0% - 25% Scroll --}}
                 <div class="story-step active" id="storyStep1">
-                    <span class="story-tag"><i class="bi bi-shield-check"></i> Hassan &amp; Sons Hardware</span>
+                    <span class="story-tag"><i class="bi bi-shield-check"></i> Hassan Corporation</span>
                     <h1 class="story-headline">Next-Gen Hardware &amp; Sanitary</h1>
                     <p class="story-desc">Engineered for precision durability, industrial quality, and everyday reliability.</p>
                     <div class="story-actions">

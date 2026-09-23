@@ -60,6 +60,10 @@ Route::middleware(['auth', 'admin'])
         Route::get('sales',          [SalesController::class, 'index'])->name('sales.index');
         Route::get('sales/{sale}',   [SalesController::class, 'show'])->name('sales.show');
 
+        // Customer Sale Returns
+        Route::get('sale-returns',               [App\Http\Controllers\Admin\SaleReturnController::class, 'index'])->name('sale-returns.index');
+        Route::get('sale-returns/{saleReturn}',  [App\Http\Controllers\Admin\SaleReturnController::class, 'show'])->name('sale-returns.show');
+
         // Purchases
         Route::get('purchases',              [PurchaseController::class, 'index'])->name('purchases.index');
         Route::get('purchases/create',       [PurchaseController::class, 'create'])->name('purchases.create');

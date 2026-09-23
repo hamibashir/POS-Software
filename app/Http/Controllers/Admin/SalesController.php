@@ -14,7 +14,7 @@ class SalesController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Sale::with(['user:id,name', 'items'])
+        $query = Sale::with(['user:id,name', 'items', 'returns', 'employee:id,name'])
             ->withCount('items')
             ->latest();
 
@@ -88,7 +88,7 @@ class SalesController extends Controller
             }
         }
 
-        // Filtered revenue calculation (Direct Cash/Card + Upfront Credit + Cleared Credit Payments)
+        // Filtered revenue calculation (Direct Cash/Card + Upfront Credit + Cleared Credit Payments - Returns)
         $filteredDirectRevenue = (float) (clone $statsQuery)
             ->sum(DB::raw("CASE WHEN payment_method != 'credit' THEN total_amount ELSE paid_amount END"));
 
@@ -112,7 +112,19 @@ class SalesController extends Controller
             }
         }
 
-        $filteredRevenue = $filteredDirectRevenue + $filteredCreditCleared;
+        $filteredReturns = 0.0;
+        if (!$payment || $payment !== 'credit') {
+            $returnsQuery = DB::table('sale_returns');
+            if ($from) {
+                $returnsQuery->whereDate(DB::raw('COALESCE(returned_at, created_at)'), '>=', $from);
+            }
+            if ($to) {
+                $returnsQuery->whereDate(DB::raw('COALESCE(returned_at, created_at)'), '<=', $to);
+            }
+            $filteredReturns = (float) $returnsQuery->sum('total_return_amount');
+        }
+
+        $filteredRevenue = max(0, ($filteredDirectRevenue + $filteredCreditCleared) - $filteredReturns);
 
         $todayDirectRevenue = (float) Sale::where('status', '!=', 'voided')
             ->whereDate('created_at', today())
@@ -122,11 +134,19 @@ class SalesController extends Controller
             DB::raw('COALESCE(payment_date, created_at)'), today()
         )->sum('amount');
 
+        $todayReturns = (float) DB::table('sale_returns')
+            ->whereDate(DB::raw('COALESCE(returned_at, created_at)'), today())
+            ->sum('total_return_amount');
+
+        $todayRevenue = max(0, ($todayDirectRevenue + $todayCreditCleared) - $todayReturns);
+
         $stats = [
-            'total_sales'    => $statsQuery->count(),
-            'total_revenue'  => $filteredRevenue,
-            'today_sales'    => Sale::where('status', '!=', 'voided')->whereDate('created_at', today())->count(),
-            'today_revenue'  => $todayDirectRevenue + $todayCreditCleared,
+            'total_sales'      => $statsQuery->count(),
+            'total_revenue'    => $filteredRevenue,
+            'filtered_returns' => $filteredReturns,
+            'today_sales'      => Sale::where('status', '!=', 'voided')->whereDate('created_at', today())->count(),
+            'today_revenue'    => $todayRevenue,
+            'today_returns'    => $todayReturns,
         ];
 
         return view('admin.sales.index', compact('sales', 'stats'));
@@ -137,7 +157,7 @@ class SalesController extends Controller
      */
     public function show(Sale $sale)
     {
-        $sale->load(['items', 'user:id,name']);
+        $sale->load(['items.returnItems', 'user:id,name', 'employee', 'returns.items', 'returns.user']);
         return view('admin.sales.show', compact('sale'));
     }
 }

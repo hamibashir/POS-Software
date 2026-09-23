@@ -147,7 +147,9 @@
                 <thead><tr>
                     <th>Date</th>
                     <th style="text-align:right">Txns</th>
-                    <th style="text-align:right">Revenue</th>
+                    <th style="text-align:right">Gross (Sales+Credit)</th>
+                    <th style="text-align:right">Returns / Refunds</th>
+                    <th style="text-align:right">Net Revenue</th>
                     <th style="text-align:right">COGS</th>
                     <th style="text-align:right">Expenses</th>
                     <th style="text-align:right">Gross Profit</th>
@@ -159,14 +161,16 @@
                     <tr>
                         <td style="font-weight:600;">{{ \Carbon\Carbon::parse($row->date)->format('D, d M Y') }}</td>
                         <td style="text-align:right;color:#6b7280;">{{ $row->transactions }}</td>
-                        <td style="text-align:right;font-weight:700;color:#0f766e;">{{ pkr($row->revenue,2) }}</td>
-                        <td style="text-align:right;color:#64748b;">{{ pkr($row->cogs,2) }}</td>
-                        <td style="text-align:right;color:#ef4444;">{{ $row->expense > 0 ? pkr($row->expense,2) : '—' }}</td>
+                        <td style="text-align:right;color:#64748b;">{{ pkr($row->direct_revenue + $row->credit_cleared, 2) }}</td>
+                        <td style="text-align:right;color:#b91c1c;font-weight:600;">{{ $row->returns > 0 ? '-' . pkr($row->returns, 2) : '—' }}</td>
+                        <td style="text-align:right;font-weight:700;color:#0f766e;">{{ pkr($row->revenue, 2) }}</td>
+                        <td style="text-align:right;color:#64748b;">{{ pkr($row->cogs, 2) }}</td>
+                        <td style="text-align:right;color:#ef4444;">{{ $row->expense > 0 ? pkr($row->expense, 2) : '—' }}</td>
                         <td style="text-align:right;font-weight:700;color:{{ $row->gross_profit >= 0 ? '#0d9488' : '#dc2626' }};">
-                            {{ pkr($row->gross_profit,2) }}
+                            {{ pkr($row->gross_profit, 2) }}
                         </td>
                         <td style="text-align:right;font-weight:800;color:{{ $row->net_profit >= 0 ? '#059669' : '#dc2626' }};">
-                            {{ pkr($row->net_profit,2) }}
+                            {{ pkr($row->net_profit, 2) }}
                         </td>
                         <td style="text-align:right;">
                             <span class="badge {{ $row->net_margin >= 0 ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' }} border" style="font-size:11px; font-weight:700;">
@@ -205,14 +209,19 @@
     @if($summary)
     <div class="stat-grid" style="grid-template-columns:repeat(auto-fill,minmax(210px,1fr));">
         <div class="stat-card">
-            <div class="stat-label">Total Revenue</div>
+            <div class="stat-label">Net Revenue</div>
             <div class="stat-value" style="color:#0f766e;">{{ pkr($summary->revenue,2) }}</div>
             <div class="stat-sub">{{ number_format($summary->transactions) }} transactions</div>
         </div>
         <div class="stat-card">
+            <div class="stat-label">Customer Returns</div>
+            <div class="stat-value text-danger">-{{ pkr($summary->returns ?? 0, 2) }}</div>
+            <div class="stat-sub">deducted from gross revenue</div>
+        </div>
+        <div class="stat-card">
             <div class="stat-label">Cost of Goods (COGS)</div>
             <div class="stat-value" style="color:#475569;">{{ pkr($summary->cogs ?? 0,2) }}</div>
-            <div class="stat-sub">acquisition cost of sold goods</div>
+            <div class="stat-sub">net acquisition cost</div>
         </div>
         <div class="stat-card">
             <div class="stat-label">Operating Expenses</div>
@@ -233,11 +242,6 @@
             </div>
             <div class="stat-sub">{{ $summary->net_margin ?? 0 }}% Net Margin</div>
         </div>
-        <div class="stat-card">
-            <div class="stat-label">Discounts & Avg Sale</div>
-            <div class="stat-value" style="font-size:18px;">{{ pkr($summary->avg_sale,2) }}</div>
-            <div class="stat-sub">Discounts: {{ pkr($summary->discounts,2) }}</div>
-        </div>
     </div>
     @endif
 
@@ -254,7 +258,8 @@
                 <thead><tr>
                     <th>Date</th>
                     <th style="text-align:right">Txns</th>
-                    <th style="text-align:right">Revenue</th>
+                    <th style="text-align:right">Returns</th>
+                    <th style="text-align:right">Net Revenue</th>
                     <th style="text-align:right">COGS</th>
                     <th style="text-align:right">Expenses</th>
                     <th style="text-align:right">Gross Profit</th>
@@ -266,6 +271,7 @@
                     <tr>
                         <td style="font-weight:600;">{{ \Carbon\Carbon::parse($row->date)->format('D, d M Y') }}</td>
                         <td style="text-align:right;color:#6b7280;">{{ $row->transactions }}</td>
+                        <td style="text-align:right;color:#b91c1c;font-weight:600;">{{ $row->returns > 0 ? '-' . pkr($row->returns, 2) : '—' }}</td>
                         <td style="text-align:right;font-weight:700;color:#0f766e;">{{ pkr($row->revenue,2) }}</td>
                         <td style="text-align:right;color:#64748b;">{{ pkr($row->cogs,2) }}</td>
                         <td style="text-align:right;color:#ef4444;">{{ $row->expense > 0 ? pkr($row->expense,2) : '—' }}</td>
