@@ -16,11 +16,12 @@ class ReportController extends Controller
         $tab = $request->get('tab', 'daily');
 
         $data = match($tab) {
-            'daily'    => $this->dailySales($request),
-            'range'    => $this->dateRange($request),
-            'lowstock' => $this->lowStock($request),
-            'topsell'  => $this->topSelling($request),
-            default    => $this->dailySales($request),
+            'daily'     => $this->dailySales($request),
+            'range'     => $this->dateRange($request),
+            'lowstock'  => $this->lowStock($request),
+            'topsell'   => $this->topSelling($request),
+            'suppliers' => $this->supplierPayments($request),
+            default     => $this->dailySales($request),
         };
 
         return view('admin.reports.index', array_merge(['tab' => $tab], $data));
@@ -97,25 +98,41 @@ class ReportController extends Controller
             ->groupBy('date')
             ->pluck('total_expense', 'date');
 
+        // 5. Supplier Payments by Day (Cash outflow paid to suppliers)
+        $supplierPaymentsData = DB::table('supplier_payments')
+            ->select(
+                DB::raw('DATE(COALESCE(payment_date, created_at)) as date'),
+                DB::raw('SUM(amount) as supplier_paid'),
+                DB::raw('COUNT(id) as payment_count')
+            )
+            ->where(DB::raw('DATE(COALESCE(payment_date, created_at))'), '>=', $startDate->toDateString())
+            ->groupBy('date')
+            ->get()
+            ->keyBy('date');
+
         // Merge all active dates
         $allDates = $salesData->keys()
             ->merge($creditClearedData->keys())
             ->merge($returnsData->keys())
             ->merge($expensesData->keys())
+            ->merge($supplierPaymentsData->keys())
             ->unique()
             ->sortDesc()
             ->values();
 
-        $rows = $allDates->map(function ($date) use ($salesData, $creditClearedData, $returnsData, $expensesData) {
+        $rows = $allDates->map(function ($date) use ($salesData, $creditClearedData, $returnsData, $expensesData, $supplierPaymentsData) {
             $saleRow       = $salesData[$date] ?? null;
             $creditRow     = $creditClearedData[$date] ?? null;
             $returnRow     = $returnsData[$date] ?? null;
+            $supplierRow   = $supplierPaymentsData[$date] ?? null;
 
             $directRevenue = $saleRow ? (float) $saleRow->direct_revenue : 0.0;
             $creditCleared = $creditRow ? (float) $creditRow->credit_cleared : 0.0;
             $returnedAmt   = $returnRow ? (float) $returnRow->total_returns : 0.0;
             $returnedCogs  = $returnRow ? (float) $returnRow->returned_cogs : 0.0;
             $returnCount   = $returnRow ? (int) $returnRow->return_count : 0;
+            $supplierPaid  = $supplierRow ? (float) $supplierRow->supplier_paid : 0.0;
+            $supplierCount = $supplierRow ? (int) $supplierRow->payment_count : 0;
 
             $grossRevenue  = $directRevenue + $creditCleared;
             $revenue       = $grossRevenue - $returnedAmt;
@@ -138,34 +155,38 @@ class ReportController extends Controller
                 'revenue'        => $revenue,
                 'cogs'           => $cogs,
                 'expense'        => $expense,
+                'supplier_paid'  => $supplierPaid,
+                'supplier_count' => $supplierCount,
                 'gross_profit'   => $grossProfit,
                 'net_profit'     => $netProfit,
                 'gross_margin'   => $grossMargin,
                 'net_margin'     => $netMargin,
                 'avg_sale'       => $saleRow ? (float) $saleRow->avg_sale : 0.0,
             ];
-        })->filter(fn($r) => $r->revenue > 0 || $r->transactions > 0 || $r->expense > 0 || $r->returns > 0)->values();
+        })->filter(fn($r) => $r->revenue > 0 || $r->transactions > 0 || $r->expense > 0 || $r->returns > 0 || $r->supplier_paid > 0)->values();
 
-        $totalRevenue     = (float) $rows->sum('revenue');
-        $totalReturns     = (float) $rows->sum('returns');
-        $totalCogs        = (float) $rows->sum('cogs');
-        $totalExpense     = (float) $rows->sum('expense');
-        $totalGrossProfit = $totalRevenue - $totalCogs;
-        $totalNetProfit   = $totalGrossProfit - $totalExpense;
-        $totalGrossMargin = $totalRevenue > 0 ? round(($totalGrossProfit / $totalRevenue) * 100, 1) : 0;
-        $totalNetMargin   = $totalRevenue > 0 ? round(($totalNetProfit / $totalRevenue) * 100, 1) : 0;
+        $totalRevenue      = (float) $rows->sum('revenue');
+        $totalReturns      = (float) $rows->sum('returns');
+        $totalCogs         = (float) $rows->sum('cogs');
+        $totalExpense      = (float) $rows->sum('expense');
+        $totalSupplierPaid = (float) $rows->sum('supplier_paid');
+        $totalGrossProfit  = $totalRevenue - $totalCogs;
+        $totalNetProfit    = $totalGrossProfit - $totalExpense;
+        $totalGrossMargin  = $totalRevenue > 0 ? round(($totalGrossProfit / $totalRevenue) * 100, 1) : 0;
+        $totalNetMargin    = $totalRevenue > 0 ? round(($totalNetProfit / $totalRevenue) * 100, 1) : 0;
 
         $totals = [
-            'transactions' => $rows->sum('transactions'),
-            'revenue'      => $totalRevenue,
-            'returns'      => $totalReturns,
-            'cogs'         => $totalCogs,
-            'expense'      => $totalExpense,
-            'gross_profit' => $totalGrossProfit,
-            'net_profit'   => $totalNetProfit,
-            'gross_margin' => $totalGrossMargin,
-            'net_margin'   => $totalNetMargin,
-            'avg_sale'     => $rows->where('avg_sale', '>', 0)->avg('avg_sale') ?? 0,
+            'transactions'  => $rows->sum('transactions'),
+            'revenue'       => $totalRevenue,
+            'returns'       => $totalReturns,
+            'cogs'          => $totalCogs,
+            'expense'       => $totalExpense,
+            'supplier_paid' => $totalSupplierPaid,
+            'gross_profit'  => $totalGrossProfit,
+            'net_profit'    => $totalNetProfit,
+            'gross_margin'  => $totalGrossMargin,
+            'net_margin'    => $totalNetMargin,
+            'avg_sale'      => $rows->where('avg_sale', '>', 0)->avg('avg_sale') ?? 0,
         ];
 
         return compact('rows', 'totals', 'days');
@@ -225,19 +246,29 @@ class ReportController extends Controller
             ->whereBetween(DB::raw('DATE(expense_date)'), [$from, $to])
             ->sum('amount');
 
+        $supplierPaidTotal = (float) DB::table('supplier_payments')
+            ->whereBetween(DB::raw('DATE(COALESCE(payment_date, created_at))'), [$from, $to])
+            ->sum('amount');
+
+        $supplierPaidCount = (int) DB::table('supplier_payments')
+            ->whereBetween(DB::raw('DATE(COALESCE(payment_date, created_at))'), [$from, $to])
+            ->count();
+
         if ($summary) {
-            $directRevenue           = (float) ($summary->direct_revenue ?? 0);
-            $summary->returns        = $returnsTotal;
-            $summary->revenue        = ($directRevenue + $creditClearedTotal) - $returnsTotal;
-            $summary->credit_revenue = (float) ($summary->credit_upfront ?? 0) + $creditClearedTotal;
-            $summary->transactions   = (int) ($summary->transactions ?? 0) + $creditClearedCount + $returnsCount;
-            $grossCogs               = (float) ($summary->cogs ?? 0);
-            $summary->cogs           = max(0, $grossCogs - $returnedCogsTotal);
-            $summary->expense        = $totalExpenses;
-            $summary->gross_profit   = (float) $summary->revenue - $summary->cogs;
-            $summary->net_profit     = $summary->gross_profit - $totalExpenses;
-            $summary->gross_margin   = $summary->revenue > 0 ? round(($summary->gross_profit / (float)$summary->revenue) * 100, 1) : 0;
-            $summary->net_margin     = $summary->revenue > 0 ? round(($summary->net_profit / (float)$summary->revenue) * 100, 1) : 0;
+            $directRevenue               = (float) ($summary->direct_revenue ?? 0);
+            $summary->returns            = $returnsTotal;
+            $summary->revenue            = ($directRevenue + $creditClearedTotal) - $returnsTotal;
+            $summary->credit_revenue     = (float) ($summary->credit_upfront ?? 0) + $creditClearedTotal;
+            $summary->transactions       = (int) ($summary->transactions ?? 0) + $creditClearedCount + $returnsCount;
+            $grossCogs                   = (float) ($summary->cogs ?? 0);
+            $summary->cogs               = max(0, $grossCogs - $returnedCogsTotal);
+            $summary->expense            = $totalExpenses;
+            $summary->supplier_paid      = $supplierPaidTotal;
+            $summary->supplier_paid_cnt  = $supplierPaidCount;
+            $summary->gross_profit       = (float) $summary->revenue - $summary->cogs;
+            $summary->net_profit         = $summary->gross_profit - $totalExpenses;
+            $summary->gross_margin       = $summary->revenue > 0 ? round(($summary->gross_profit / (float)$summary->revenue) * 100, 1) : 0;
+            $summary->net_margin         = $summary->revenue > 0 ? round(($summary->net_profit / (float)$summary->revenue) * 100, 1) : 0;
         }
 
         $expensesByDay = DB::table('expenses')
@@ -248,6 +279,17 @@ class ReportController extends Controller
             ->whereBetween(DB::raw('DATE(expense_date)'), [$from, $to])
             ->groupBy('date')
             ->pluck('total_expense', 'date');
+
+        $supplierPaymentsByDay = DB::table('supplier_payments')
+            ->select(
+                DB::raw('DATE(COALESCE(payment_date, created_at)) as date'),
+                DB::raw('SUM(amount) as supplier_paid'),
+                DB::raw('COUNT(id) as payment_count')
+            )
+            ->whereBetween(DB::raw('DATE(COALESCE(payment_date, created_at))'), [$from, $to])
+            ->groupBy('date')
+            ->get()
+            ->keyBy('date');
 
         $salesByDay = DB::table('sales')
             ->leftJoin(DB::raw('(
@@ -300,20 +342,24 @@ class ReportController extends Controller
             ->merge($creditClearedByDay->keys())
             ->merge($returnsByDay->keys())
             ->merge($expensesByDay->keys())
+            ->merge($supplierPaymentsByDay->keys())
             ->unique()
             ->sortDesc()
             ->values();
 
-        $byDay = $allRangeDates->map(function ($date) use ($salesByDay, $creditClearedByDay, $returnsByDay, $expensesByDay) {
+        $byDay = $allRangeDates->map(function ($date) use ($salesByDay, $creditClearedByDay, $returnsByDay, $expensesByDay, $supplierPaymentsByDay) {
             $saleRow       = $salesByDay[$date] ?? null;
             $creditRow     = $creditClearedByDay[$date] ?? null;
             $returnRow     = $returnsByDay[$date] ?? null;
+            $supplierRow   = $supplierPaymentsByDay[$date] ?? null;
 
             $directRevenue = $saleRow ? (float) $saleRow->direct_revenue : 0.0;
             $creditCleared = $creditRow ? (float) $creditRow->credit_cleared : 0.0;
             $returnedAmt   = $returnRow ? (float) $returnRow->total_returns : 0.0;
             $returnedCogs  = $returnRow ? (float) $returnRow->returned_cogs : 0.0;
             $returnCount   = $returnRow ? (int) $returnRow->return_count : 0;
+            $supplierPaid  = $supplierRow ? (float) $supplierRow->supplier_paid : 0.0;
+            $supplierCount = $supplierRow ? (int) $supplierRow->payment_count : 0;
 
             $revenue       = ($directRevenue + $creditCleared) - $returnedAmt;
             $transactions  = ($saleRow ? (int) $saleRow->transactions : 0) + ($creditRow ? (int) $creditRow->payment_count : 0) + $returnCount;
@@ -324,20 +370,22 @@ class ReportController extends Controller
             $net           = $gross - $expense;
 
             return (object) [
-                'date'         => $date,
-                'transactions' => $transactions,
-                'returns'      => $returnedAmt,
-                'revenue'      => $revenue,
-                'cogs'         => $cogs,
-                'expense'      => $expense,
-                'gross_profit' => $gross,
-                'net_profit'   => $net,
-                'gross_margin' => $revenue > 0 ? round(($gross / $revenue) * 100, 1) : 0,
-                'net_margin'   => $revenue > 0 ? round(($net / $revenue) * 100, 1) : 0,
+                'date'           => $date,
+                'transactions'   => $transactions,
+                'returns'        => $returnedAmt,
+                'revenue'        => $revenue,
+                'cogs'           => $cogs,
+                'expense'        => $expense,
+                'supplier_paid'  => $supplierPaid,
+                'supplier_count' => $supplierCount,
+                'gross_profit'   => $gross,
+                'net_profit'     => $net,
+                'gross_margin'   => $revenue > 0 ? round(($gross / $revenue) * 100, 1) : 0,
+                'net_margin'     => $revenue > 0 ? round(($net / $revenue) * 100, 1) : 0,
             ];
-        })->filter(fn($r) => $r->revenue > 0 || $r->transactions > 0 || $r->expense > 0 || $r->returns > 0)->values();
+        })->filter(fn($r) => $r->revenue > 0 || $r->transactions > 0 || $r->expense > 0 || $r->returns > 0 || $r->supplier_paid > 0)->values();
 
-        return compact('summary', 'byDay', 'from', 'to', 'totalExpenses');
+        return compact('summary', 'byDay', 'from', 'to', 'totalExpenses', 'supplierPaidTotal');
     }
 
     /* ── Low stock report ────────────────────────────────── */
@@ -530,5 +578,108 @@ class ReportController extends Controller
             ->groupBy('category_name');
 
         return compact('products', 'from', 'to', 'limit', 'categories', 'categoryId', 'categoryBreakdown', 'categoryWiseProducts');
+    }
+
+    /* ── Supplier Payments & Purchases Report ─────────────── */
+    private function supplierPayments(Request $request): array
+    {
+        $from       = $request->get('from', now()->startOfMonth()->toDateString());
+        $to         = $request->get('to',   now()->toDateString());
+        $supplierId = $request->filled('supplier_id') ? (int) $request->get('supplier_id') : null;
+        $method     = $request->get('payment_method');
+
+        $suppliersList = \App\Models\Supplier::orderBy('name')->get();
+
+        // 1. Summary Stats in Date Range
+        $purchasesQuery = DB::table('purchases')
+            ->whereBetween(DB::raw('DATE(COALESCE(received_at, created_at))'), [$from, $to]);
+        if ($supplierId) {
+            $purchasesQuery->where('supplier_id', $supplierId);
+        }
+        $totalPurchases = (float) $purchasesQuery->sum('total_amount');
+        $purchaseCount  = (int) $purchasesQuery->count();
+
+        $paymentsQuery = DB::table('supplier_payments')
+            ->whereBetween(DB::raw('DATE(COALESCE(payment_date, created_at))'), [$from, $to]);
+        if ($supplierId) {
+            $paymentsQuery->where('supplier_id', $supplierId);
+        }
+        if ($method) {
+            $paymentsQuery->where('payment_method', $method);
+        }
+        $totalPaidAmount = (float) $paymentsQuery->sum('amount');
+        $paymentCount    = (int) $paymentsQuery->count();
+
+        $returnsQuery = DB::table('purchase_returns')
+            ->whereBetween(DB::raw('DATE(COALESCE(returned_at, created_at))'), [$from, $to]);
+        if ($supplierId) {
+            $returnsQuery->where('supplier_id', $supplierId);
+        }
+        $totalReturns = (float) $returnsQuery->sum('total_return_amount');
+
+        // All active suppliers pending balance overall
+        $allSuppliers = \App\Models\Supplier::with(['purchases', 'returns', 'payments'])->get();
+        $totalOutstandingPayables = (float) $allSuppliers->sum(fn($s) => $s->pending_balance);
+
+        // 2. Supplier-wise Breakdown in Period
+        $supplierBreakdown = $allSuppliers
+            ->when($supplierId, fn($c) => $c->where('id', $supplierId))
+            ->map(function ($s) use ($from, $to) {
+                $periodPurchases = (float) $s->purchases()
+                    ->whereBetween(DB::raw('DATE(COALESCE(received_at, created_at))'), [$from, $to])
+                    ->sum('total_amount');
+
+                $periodPaid = (float) $s->payments()
+                    ->whereBetween(DB::raw('DATE(COALESCE(payment_date, created_at))'), [$from, $to])
+                    ->sum('amount');
+
+                $periodReturns = (float) $s->returns()
+                    ->whereBetween(DB::raw('DATE(COALESCE(returned_at, created_at))'), [$from, $to])
+                    ->sum('total_return_amount');
+
+                $lastPayment = $s->payments()->first(); // latest payment due to model relationship ordering
+
+                return (object) [
+                    'id'                => $s->id,
+                    'name'              => $s->name,
+                    'company_name'      => $s->company_name,
+                    'phone'             => $s->phone,
+                    'opening_balance'   => (float) $s->opening_balance,
+                    'period_purchases'  => $periodPurchases,
+                    'period_paid'       => $periodPaid,
+                    'period_returns'    => $periodReturns,
+                    'pending_balance'   => $s->pending_balance,
+                    'total_paid_all'    => $s->total_paid,
+                    'last_payment_date' => $lastPayment?->payment_date,
+                    'last_payment_amt'  => $lastPayment?->amount,
+                ];
+            })
+            ->filter(fn($s) => $s->period_purchases > 0 || $s->period_paid > 0 || $s->period_returns > 0 || $s->pending_balance > 0)
+            ->sortByDesc('period_paid')
+            ->values();
+
+        // 3. Payment Transactions Log in Period
+        $paymentLogs = \App\Models\SupplierPayment::with(['supplier', 'user', 'purchase'])
+            ->whereBetween(DB::raw('DATE(COALESCE(payment_date, created_at))'), [$from, $to])
+            ->when($supplierId, fn($q) => $q->where('supplier_id', $supplierId))
+            ->when($method, fn($q) => $q->where('payment_method', $method))
+            ->orderByDesc('payment_date')
+            ->orderByDesc('id')
+            ->get();
+
+        // 4. Payment Method Breakdown (Cash, Bank, Cheque, Online)
+        $methodBreakdown = DB::table('supplier_payments')
+            ->select('payment_method', DB::raw('SUM(amount) as total_amount'), DB::raw('COUNT(id) as count'))
+            ->whereBetween(DB::raw('DATE(COALESCE(payment_date, created_at))'), [$from, $to])
+            ->when($supplierId, fn($q) => $q->where('supplier_id', $supplierId))
+            ->groupBy('payment_method')
+            ->get();
+
+        return compact(
+            'from', 'to', 'supplierId', 'method', 'suppliersList',
+            'totalPurchases', 'purchaseCount', 'totalPaidAmount', 'paymentCount',
+            'totalReturns', 'totalOutstandingPayables', 'supplierBreakdown',
+            'paymentLogs', 'methodBreakdown'
+        );
     }
 }

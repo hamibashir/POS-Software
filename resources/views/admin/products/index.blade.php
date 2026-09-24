@@ -212,18 +212,18 @@
                     {{-- Actions --}}
                     <td>
                         <div class="d-flex gap-1">
-                            <a href="{{ route('admin.products.edit', $product) }}"
+                            <a href="{{ route('admin.products.edit', array_merge(['product' => $product->id], request()->query())) }}"
                                class="btn btn-sm btn-outline-secondary" style="border-radius:7px;" title="Edit">
                                 <i class="bi bi-pencil"></i>
                             </a>
-                            <form method="POST" action="{{ route('admin.products.toggle-status', $product) }}">
+                            <form method="POST" action="{{ route('admin.products.toggle-status', array_merge(['product' => $product->id], request()->query())) }}">
                                 @csrf @method('PATCH')
                                 <button type="submit" class="btn btn-sm {{ $product->is_active ? 'btn-outline-warning' : 'btn-outline-success' }}"
                                     style="border-radius:7px;" title="{{ $product->is_active ? 'Deactivate' : 'Activate' }}">
                                     <i class="bi {{ $product->is_active ? 'bi-toggle-on' : 'bi-toggle-off' }}"></i>
                                 </button>
                             </form>
-                            <form method="POST" action="{{ route('admin.products.destroy', $product) }}"
+                            <form method="POST" action="{{ route('admin.products.destroy', array_merge(['product' => $product->id], request()->query())) }}"
                                 onsubmit="return confirm('Soft-delete product \'{{ addslashes($product->name) }}\'?')">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="btn btn-sm btn-outline-danger" style="border-radius:7px;" title="Delete">

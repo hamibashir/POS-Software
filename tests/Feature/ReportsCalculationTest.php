@@ -233,4 +233,89 @@ class ReportsCalculationTest extends TestCase
         $dashResponse->assertOk()
             ->assertSee('19,500');
     }
+
+    public function test_supplier_payments_tab_renders_with_metrics_and_logs(): void
+    {
+        $supplier = \App\Models\Supplier::create([
+            'name'            => 'National Cables Ltd',
+            'company_name'    => 'National Cables',
+            'phone'           => '03219876543',
+            'opening_balance' => 10000.00,
+            'is_active'       => true,
+        ]);
+
+        $purchase = \App\Models\Purchase::create([
+            'reference_number' => 'PUR-TEST-99',
+            'user_id'          => $this->admin->id,
+            'supplier_id'      => $supplier->id,
+            'supplier_name'    => $supplier->name,
+            'payment_method'   => 'bank',
+            'total_amount'     => 25000.00,
+            'paid_amount'      => 5000.00,
+            'status'           => 'completed',
+            'received_at'      => today(),
+        ]);
+
+        \App\Models\SupplierPayment::create([
+            'supplier_id'      => $supplier->id,
+            'purchase_id'      => $purchase->id,
+            'user_id'          => $this->admin->id,
+            'amount'           => 12000.00,
+            'payment_method'   => 'bank',
+            'reference_number' => 'VCH-BANK-001',
+            'payment_date'     => today(),
+            'notes'            => 'Advance clearing via bank transfer',
+        ]);
+
+        // Tab: Suppliers
+        $response = $this->actingAs($this->admin)
+            ->get(route('admin.reports.index', ['tab' => 'suppliers']));
+
+        $response->assertOk()
+            ->assertSee('Total Purchases')
+            ->assertSee('25,000.00')
+            ->assertSee('Total Paid Amount')
+            ->assertSee('12,000.00')
+            ->assertSee('National Cables Ltd')
+            ->assertSee('VCH-BANK-001')
+            ->assertSee('Advance clearing via bank transfer');
+    }
+
+    public function test_daily_and_range_reports_include_supplier_paid_amount(): void
+    {
+        $supplier = \App\Models\Supplier::create([
+            'name'            => 'Steel Works Co',
+            'opening_balance' => 0,
+            'is_active'       => true,
+        ]);
+
+        \App\Models\SupplierPayment::create([
+            'supplier_id'      => $supplier->id,
+            'user_id'          => $this->admin->id,
+            'amount'           => 8500.00,
+            'payment_method'   => 'cash',
+            'reference_number' => 'VCH-8500',
+            'payment_date'     => today(),
+        ]);
+
+        // Daily tab check
+        $dailyResponse = $this->actingAs($this->admin)
+            ->get(route('admin.reports.index', ['tab' => 'daily']));
+
+        $dailyResponse->assertOk()
+            ->assertSee('Supplier Paid')
+            ->assertSee('8,500.00');
+
+        // Range tab check
+        $rangeResponse = $this->actingAs($this->admin)
+            ->get(route('admin.reports.index', [
+                'tab'  => 'range',
+                'from' => today()->toDateString(),
+                'to'   => today()->toDateString(),
+            ]));
+
+        $rangeResponse->assertOk()
+            ->assertSee('Supplier Paid Amount')
+            ->assertSee('8,500.00');
+    }
 }

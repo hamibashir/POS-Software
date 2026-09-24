@@ -131,6 +131,26 @@ class SupplierLedgerTest extends TestCase
         ]);
     }
 
+    public function test_supplier_index_displays_paid_amount_in_stats_and_table(): void
+    {
+        SupplierPayment::create([
+            'supplier_id'      => $this->supplier->id,
+            'user_id'          => $this->admin->id,
+            'amount'           => 3500.00,
+            'payment_method'   => 'bank',
+            'reference_number' => 'VCH-00099',
+            'payment_date'     => today(),
+        ]);
+
+        $response = $this->actingAs($this->admin)
+            ->get(route('admin.suppliers.index'));
+
+        $response->assertOk()
+            ->assertSee('Total Paid Amount')
+            ->assertSee('3,500.00')
+            ->assertSee('1 payment(s)');
+    }
+
     public function test_admin_can_view_supplier_ledger(): void
     {
         $response = $this->actingAs($this->admin)

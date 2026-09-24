@@ -257,11 +257,14 @@ addRow(); // Start with one row
                     <select id="supplierSelect" class="pos-input" onchange="onSupplierSelected(this)">
                         <option value="">-- Choose Existing Supplier --</option>
                         @foreach($suppliers as $s)
+                            @php
+                                $compName = !empty($s->company_name) && strcasecmp(trim($s->company_name), trim($s->name)) !== 0 ? ' (' . $s->company_name . ')' : '';
+                            @endphp
                             <option value="{{ $s->id }}"
                                 data-name="{{ $s->name }}"
                                 data-phone="{{ $s->phone }}"
                                 data-balance="{{ $s->pending_balance }}">
-                                {{ $s->name }} @if($s->company_name)({{ $s->company_name }})@endif — Due: {{ pkr($s->pending_balance, 2) }}
+                                {{ $s->name }}{{ $compName }} — Due: {{ pkr($s->pending_balance, 2) }}
                             </option>
                         @endforeach
                     </select>

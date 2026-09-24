@@ -78,6 +78,10 @@
        class="tab-btn {{ $tab==='topsell' ? 'active' : '' }}">
         <i class="bi bi-trophy"></i> Top Selling
     </a>
+    <a href="{{ route('admin.reports.index', ['tab'=>'suppliers']) }}"
+       class="tab-btn {{ $tab==='suppliers' ? 'active' : '' }}">
+        <i class="bi bi-truck"></i> Supplier Payments
+    </a>
 </div>
 
 {{-- ════════════════════════════════════════════════════════
@@ -97,7 +101,7 @@
         </div>
     </form>
 
-    <div class="stat-grid" style="grid-template-columns:repeat(auto-fill,minmax(210px,1fr));">
+    <div class="stat-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr));">
         <div class="stat-card">
             <div class="stat-label">Total Revenue</div>
             <div class="stat-value" style="color:#0f766e;">{{ pkr($totals['revenue'], 2) }}</div>
@@ -112,6 +116,11 @@
             <div class="stat-label">Operating Expenses</div>
             <div class="stat-value text-danger">{{ pkr($totals['expense'], 2) }}</div>
             <div class="stat-sub">recorded daily expenses</div>
+        </div>
+        <div class="stat-card" style="border-left:4px solid #059669;">
+            <div class="stat-label" style="color:#059669;">Supplier Paid Amount</div>
+            <div class="stat-value" style="color:#059669;">{{ pkr($totals['supplier_paid'] ?? 0, 2) }}</div>
+            <div class="stat-sub">vendor payment clearances</div>
         </div>
         <div class="stat-card" style="border-left:4px solid #0d9488;">
             <div class="stat-label" style="color:#0f766e;">Gross Profit</div>
@@ -152,6 +161,7 @@
                     <th style="text-align:right">Net Revenue</th>
                     <th style="text-align:right">COGS</th>
                     <th style="text-align:right">Expenses</th>
+                    <th style="text-align:right">Supplier Paid</th>
                     <th style="text-align:right">Gross Profit</th>
                     <th style="text-align:right">Net Profit</th>
                     <th style="text-align:right">Net Margin</th>
@@ -166,6 +176,14 @@
                         <td style="text-align:right;font-weight:700;color:#0f766e;">{{ pkr($row->revenue, 2) }}</td>
                         <td style="text-align:right;color:#64748b;">{{ pkr($row->cogs, 2) }}</td>
                         <td style="text-align:right;color:#ef4444;">{{ $row->expense > 0 ? pkr($row->expense, 2) : '—' }}</td>
+                        <td style="text-align:right;font-weight:600;color:#059669;">
+                            @if(($row->supplier_paid ?? 0) > 0)
+                                {{ pkr($row->supplier_paid, 2) }}
+                                <div class="text-muted" style="font-size:10.5px;">{{ $row->supplier_count ?? 1 }} payment(s)</div>
+                            @else
+                                <span class="text-muted">—</span>
+                            @endif
+                        </td>
                         <td style="text-align:right;font-weight:700;color:{{ $row->gross_profit >= 0 ? '#0d9488' : '#dc2626' }};">
                             {{ pkr($row->gross_profit, 2) }}
                         </td>
@@ -207,7 +225,7 @@
     </form>
 
     @if($summary)
-    <div class="stat-grid" style="grid-template-columns:repeat(auto-fill,minmax(210px,1fr));">
+    <div class="stat-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr));">
         <div class="stat-card">
             <div class="stat-label">Net Revenue</div>
             <div class="stat-value" style="color:#0f766e;">{{ pkr($summary->revenue,2) }}</div>
@@ -227,6 +245,11 @@
             <div class="stat-label">Operating Expenses</div>
             <div class="stat-value text-danger">{{ pkr($summary->expense ?? 0,2) }}</div>
             <div class="stat-sub">period operating costs</div>
+        </div>
+        <div class="stat-card" style="border-left:4px solid #059669;">
+            <div class="stat-label" style="color:#059669;">Supplier Paid Amount</div>
+            <div class="stat-value" style="color:#059669;">{{ pkr($summary->supplier_paid ?? 0, 2) }}</div>
+            <div class="stat-sub">{{ number_format($summary->supplier_paid_cnt ?? 0) }} payment clearances</div>
         </div>
         <div class="stat-card" style="border-left:4px solid #0d9488;">
             <div class="stat-label" style="color:#0f766e;">Gross Profit</div>
@@ -262,6 +285,7 @@
                     <th style="text-align:right">Net Revenue</th>
                     <th style="text-align:right">COGS</th>
                     <th style="text-align:right">Expenses</th>
+                    <th style="text-align:right">Supplier Paid</th>
                     <th style="text-align:right">Gross Profit</th>
                     <th style="text-align:right">Net Profit</th>
                     <th style="text-align:right">Margin</th>
@@ -275,6 +299,14 @@
                         <td style="text-align:right;font-weight:700;color:#0f766e;">{{ pkr($row->revenue,2) }}</td>
                         <td style="text-align:right;color:#64748b;">{{ pkr($row->cogs,2) }}</td>
                         <td style="text-align:right;color:#ef4444;">{{ $row->expense > 0 ? pkr($row->expense,2) : '—' }}</td>
+                        <td style="text-align:right;font-weight:600;color:#059669;">
+                            @if(($row->supplier_paid ?? 0) > 0)
+                                {{ pkr($row->supplier_paid, 2) }}
+                                <div class="text-muted" style="font-size:10.5px;">{{ $row->supplier_count ?? 1 }} payment(s)</div>
+                            @else
+                                <span class="text-muted">—</span>
+                            @endif
+                        </td>
                         <td style="text-align:right;font-weight:700;color:{{ $row->gross_profit >= 0 ? '#0d9488' : '#dc2626' }};">
                             {{ pkr($row->gross_profit,2) }}
                         </td>
@@ -667,6 +699,239 @@
             </div>
         @endforeach
     @endif
+
+@elseif($tab === 'suppliers')
+    {{-- Supplier Payments & Purchases Filter Bar --}}
+    <form method="GET" action="{{ route('admin.reports.index') }}" class="rpt-filter-bar">
+        <input type="hidden" name="tab" value="suppliers">
+        <div class="fg">
+            <label>From Date</label>
+            <input type="date" name="from" value="{{ $from }}" class="pos-input">
+        </div>
+        <div class="fg">
+            <label>To Date</label>
+            <input type="date" name="to" value="{{ $to }}" class="pos-input">
+        </div>
+        <div class="fg">
+            <label>Supplier</label>
+            <select name="supplier_id" class="pos-input" style="min-width:180px;">
+                <option value="">All Suppliers</option>
+                @foreach($suppliersList as $sup)
+                    @php
+                        $compName = !empty($sup->company_name) && strcasecmp(trim($sup->company_name), trim($sup->name)) !== 0 ? " ({$sup->company_name})" : '';
+                    @endphp
+                    <option value="{{ $sup->id }}" {{ (string)$supplierId === (string)$sup->id ? 'selected' : '' }}>
+                        {{ $sup->name }}{{ $compName }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+        <div class="fg">
+            <label>Payment Method</label>
+            <select name="payment_method" class="pos-input" style="min-width:140px;">
+                <option value="">All Methods</option>
+                <option value="cash" {{ $method === 'cash' ? 'selected' : '' }}>Cash</option>
+                <option value="bank" {{ $method === 'bank' ? 'selected' : '' }}>Bank Transfer</option>
+                <option value="cheque" {{ $method === 'cheque' ? 'selected' : '' }}>Cheque</option>
+                <option value="online" {{ $method === 'online' ? 'selected' : '' }}>Online</option>
+            </select>
+        </div>
+        <div class="fg">
+            <label>&nbsp;</label>
+            <div style="display:flex; gap:6px;">
+                <button type="submit" class="btn-pos"><i class="bi bi-funnel"></i> Filter</button>
+                <a href="{{ route('admin.reports.index', ['tab' => 'suppliers']) }}" class="btn-pos btn-pos-secondary" style="text-decoration:none; display:inline-flex; align-items:center;">
+                    <i class="bi bi-arrow-counterclockwise"></i> Reset
+                </a>
+            </div>
+        </div>
+    </form>
+
+    {{-- Supplier KPI Stat Cards --}}
+    <div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom:20px;">
+        <div class="stat-card" style="border-left: 4px solid #3b82f6;">
+            <div class="stat-card-title"><i class="bi bi-truck me-1 text-primary"></i> Total Purchases</div>
+            <div class="stat-card-value text-primary" style="font-size:22px;">{{ pkr($totalPurchases, 2) }}</div>
+            <div class="stat-card-sub">{{ $purchaseCount }} invoice(s) in selected range</div>
+        </div>
+        <div class="stat-card" style="border-left: 4px solid #059669; background: #f0fdf4;">
+            <div class="stat-card-title"><i class="bi bi-cash-stack me-1 text-success"></i> Total Paid Amount</div>
+            <div class="stat-card-value" style="font-size:22px; color:#059669;">{{ pkr($totalPaidAmount, 2) }}</div>
+            <div class="stat-card-sub" style="color:#047857; font-weight:600;">{{ $paymentCount }} payment voucher(s) cleared</div>
+        </div>
+        <div class="stat-card" style="border-left: 4px solid #f59e0b;">
+            <div class="stat-card-title"><i class="bi bi-arrow-return-left me-1 text-warning"></i> Purchase Returns</div>
+            <div class="stat-card-value text-warning" style="font-size:22px;">{{ pkr($totalReturns, 2) }}</div>
+            <div class="stat-card-sub">Stock returned to suppliers</div>
+        </div>
+        <div class="stat-card" style="border-left: 4px solid #dc2626; background: #fef2f2;">
+            <div class="stat-card-title"><i class="bi bi-clock-history me-1 text-danger"></i> Outstanding Payables</div>
+            <div class="stat-card-value text-danger" style="font-size:22px;">{{ pkr($totalOutstandingPayables, 2) }}</div>
+            <div class="stat-card-sub" style="color:#b91c1c; font-weight:600;">Total net payable balance</div>
+        </div>
+    </div>
+
+    {{-- Payment Method Breakdown Badges --}}
+    @if(isset($methodBreakdown) && $methodBreakdown->isNotEmpty())
+    <div class="report-card" style="margin-bottom:20px; padding:12px 16px;">
+        <div style="font-size:12px; font-weight:700; color:#64748b; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px;">
+            <i class="bi bi-credit-card-2-front me-1 text-primary"></i> Payment Methods Summary ({{ $from }} &mdash; {{ $to }})
+        </div>
+        <div style="display:flex; flex-wrap:wrap; gap:12px;">
+            @foreach($methodBreakdown as $mb)
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:8px 14px; display:flex; align-items:center; gap:10px;">
+                    <span class="badge bg-primary-subtle text-primary border" style="font-size:11px; text-transform:uppercase; font-weight:700;">
+                        {{ $mb->payment_method ?: 'Cash' }}
+                    </span>
+                    <span style="font-weight:800; color:#059669; font-size:13px;">{{ pkr($mb->total_amount, 2) }}</span>
+                    <span style="font-size:11px; color:#64748b;">({{ $mb->count }} vouchers)</span>
+                </div>
+            @endforeach
+        </div>
+    </div>
+    @endif
+
+    {{-- Supplier-Wise Breakdown Table --}}
+    <div class="report-card" style="margin-bottom:24px;">
+        <div class="report-card-header">
+            <span><i class="bi bi-buildings me-1 text-primary"></i> Supplier Summary Breakdown & Balances</span>
+            <span style="color:#9ca3af;">{{ $from }} &mdash; {{ $to }}</span>
+        </div>
+        @if($supplierBreakdown->isEmpty())
+            <div style="padding:40px;text-align:center;color:#9ca3af;">No supplier transactions found for this selection.</div>
+        @else
+        <div style="overflow-x:auto;">
+            <table class="rpt-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Supplier / Company</th>
+                        <th>Phone</th>
+                        <th style="text-align:right">Period Purchases</th>
+                        <th style="text-align:right">Paid Amount</th>
+                        <th style="text-align:right">Period Returns</th>
+                        <th style="text-align:right">Outstanding Balance</th>
+                        <th>Last Payment</th>
+                        <th style="text-align:center">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($supplierBreakdown as $idx => $sb)
+                    <tr>
+                        <td style="color:#9ca3af; font-weight:700;">{{ $idx + 1 }}</td>
+                        <td>
+                            <div style="font-weight:700; color:#1e293b;">{{ $sb->name }}</div>
+                            @if($sb->company_name)
+                                <div style="font-size:11px; color:#64748b;">{{ $sb->company_name }}</div>
+                            @endif
+                        </td>
+                        <td style="font-size:12px; color:#64748b;">{{ $sb->phone ?: '—' }}</td>
+                        <td style="text-align:right; font-weight:600; color:#334155;">{{ pkr($sb->period_purchases, 2) }}</td>
+                        <td style="text-align:right; font-weight:800; color:#059669; background:#f0fdf4;">
+                            {{ pkr($sb->period_paid, 2) }}
+                        </td>
+                        <td style="text-align:right; color:#d97706;">{{ pkr($sb->period_returns, 2) }}</td>
+                        <td style="text-align:right;">
+                            @if($sb->pending_balance > 0)
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle" style="font-size:12px; font-weight:800;">
+                                    {{ pkr($sb->pending_balance, 2) }}
+                                </span>
+                            @else
+                                <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size:11px; font-weight:700;">
+                                    Settled ({{ pkr(0, 2) }})
+                                </span>
+                            @endif
+                        </td>
+                        <td style="font-size:11px; color:#64748b;">
+                            @if($sb->last_payment_date)
+                                <div><i class="bi bi-calendar-event me-1"></i>{{ \Carbon\Carbon::parse($sb->last_payment_date)->format('M d, Y') }}</div>
+                                <div style="font-weight:700; color:#059669;">{{ pkr($sb->last_payment_amt, 2) }}</div>
+                            @else
+                                <span style="color:#9ca3af;">None</span>
+                            @endif
+                        </td>
+                        <td style="text-align:center;">
+                            <a href="{{ route('admin.suppliers.ledger', $sb->id) }}" class="btn btn-sm btn-outline-primary" style="font-size:11px; padding:2px 8px; border-radius:6px;" title="View Supplier Ledger">
+                                <i class="bi bi-journal-text me-1"></i>Ledger
+                            </a>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+        @endif
+    </div>
+
+    {{-- Detailed Payment Transactions Log --}}
+    <div class="report-card" style="margin-bottom:20px;">
+        <div class="report-card-header">
+            <span><i class="bi bi-receipt me-1 text-success"></i> Supplier Payment Transactions Log</span>
+            <span style="color:#9ca3af;">{{ $from }} &mdash; {{ $to }} ({{ $paymentLogs->count() }} records)</span>
+        </div>
+        @if($paymentLogs->isEmpty())
+            <div style="padding:40px;text-align:center;color:#9ca3af;">No payment transactions recorded in this period.</div>
+        @else
+        <div style="overflow-x:auto;">
+            <table class="rpt-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Supplier</th>
+                        <th>Voucher / Ref #</th>
+                        <th>Method</th>
+                        <th style="text-align:right">Paid Amount</th>
+                        <th>Recorded By</th>
+                        <th>Notes / Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($paymentLogs as $log)
+                    <tr>
+                        <td style="font-size:12px; font-weight:600; color:#1e293b; white-space:nowrap;">
+                            {{ \Carbon\Carbon::parse($log->payment_date ?: $log->created_at)->format('M d, Y') }}
+                            <div style="font-size:10px; color:#94a3b8;">{{ \Carbon\Carbon::parse($log->created_at)->format('h:i A') }}</div>
+                        </td>
+                        <td>
+                            <div style="font-weight:700; color:#1e293b;">{{ $log->supplier?->name ?: '—' }}</div>
+                            @if($log->supplier?->company_name)
+                                <div style="font-size:11px; color:#64748b;">{{ $log->supplier->company_name }}</div>
+                            @endif
+                        </td>
+                        <td style="font-family:monospace; font-size:12px; font-weight:600; color:#475569;">
+                            {{ $log->reference_number ?: ('VCH-' . str_pad($log->id, 5, '0', STR_PAD_LEFT)) }}
+                        </td>
+                        <td>
+                            @php
+                                $m = strtolower($log->payment_method ?? 'cash');
+                                $badgeCls = match($m) {
+                                    'cash' => 'bg-success-subtle text-success',
+                                    'bank' => 'bg-info-subtle text-info',
+                                    'cheque' => 'bg-warning-subtle text-warning',
+                                    'online' => 'bg-primary-subtle text-primary',
+                                    default => 'bg-secondary-subtle text-secondary',
+                                };
+                            @endphp
+                            <span class="badge {{ $badgeCls }} border" style="font-size:11px; text-transform:uppercase; font-weight:700;">
+                                {{ $log->payment_method ?: 'Cash' }}
+                            </span>
+                        </td>
+                        <td style="text-align:right; font-weight:800; font-size:13px; color:#059669; background:#f0fdf4;">
+                            {{ pkr($log->amount, 2) }}
+                        </td>
+                        <td style="font-size:12px; color:#475569;">
+                            <i class="bi bi-person-circle me-1 text-muted"></i>{{ $log->user?->name ?: 'Admin / System' }}
+                        </td>
+                        <td style="font-size:11px; color:#64748b; max-width:250px;">
+                            {{ $log->notes ?: '—' }}
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+        @endif
+    </div>
 
 @endif
 

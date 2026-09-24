@@ -15,7 +15,7 @@
     </div>
 </div>
 
-<form method="POST" action="{{ route('admin.products.store') }}" enctype="multipart/form-data">
+<form id="productForm" method="POST" action="{{ route('admin.products.store') }}" enctype="multipart/form-data">
     @csrf
     @include('admin.products._form', ['submitLabel' => 'Create Product'])
 </form>

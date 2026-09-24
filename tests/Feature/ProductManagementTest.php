@@ -220,4 +220,67 @@ class ProductManagementTest extends TestCase
             ->assertSee('PPRC Pipe 25mm 4Mtr')
             ->assertDontSee('Master Basin Mixer Chrome');
     }
+
+    public function test_admin_can_create_product_with_pasted_base64_image(): void
+    {
+        // 1x1 transparent PNG base64
+        $base64Image = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+
+        $payload = [
+            'category_id'         => $this->category->id,
+            'name'                => 'Pasted Image Shower Head',
+            'sku'                 => 'SHW-PASTE-01',
+            'unit'                => 'pc',
+            'cost_price'          => 1200,
+            'sale_price'          => 1800,
+            'stock_quantity'      => 15,
+            'low_stock_threshold' => 1,
+            'image_base64'        => $base64Image,
+        ];
+
+        $response = $this->actingAs($this->admin)
+            ->post(route('admin.products.store'), $payload);
+
+        $response->assertRedirect(route('admin.products.index'));
+
+        $product = Product::where('sku', 'SHW-PASTE-01')->first();
+        $this->assertNotNull($product);
+        $this->assertNotNull($product->image);
+        $this->assertStringStartsWith('products/', $product->image);
+    }
+
+    public function test_updating_product_preserves_page_and_query_parameters(): void
+    {
+        $queryParams = ['page' => '3', 'search' => 'Mixer', 'category_id' => (string)$this->category->id];
+
+        // 1. Edit view includes query parameters in form action and back button
+        $editUrl = route('admin.products.edit', array_merge(['product' => $this->product->id], $queryParams));
+        $response = $this->actingAs($this->admin)->get($editUrl);
+        $response->assertOk()
+            ->assertSee('page=3')
+            ->assertSee('search=Mixer');
+
+        // 2. Submitting update with query parameters redirects to index on page 3 with query params
+        $updateUrl = route('admin.products.update', array_merge(['product' => $this->product->id], $queryParams));
+        $payload = [
+            'name'                => 'Master Basin Mixer Chrome Updated',
+            'category_id'         => $this->category->id,
+            'sku'                 => $this->product->sku,
+            'unit'                => $this->product->unit,
+            'cost_price'          => $this->product->cost_price,
+            'sale_price'          => $this->product->sale_price,
+            'stock_quantity'      => $this->product->stock_quantity,
+            'low_stock_threshold' => 1,
+            'is_active'           => 1,
+            'show_in_catalog'     => 1,
+        ];
+
+        $updateResponse = $this->actingAs($this->admin)->put($updateUrl, $payload);
+        $updateResponse->assertRedirect(route('admin.products.index', $queryParams));
+
+        // 3. Toggle status preserves query parameters
+        $toggleUrl = route('admin.products.toggle-status', array_merge(['product' => $this->product->id], $queryParams));
+        $toggleResponse = $this->actingAs($this->admin)->patch($toggleUrl);
+        $toggleResponse->assertRedirect(route('admin.products.index', $queryParams));
+    }
 }

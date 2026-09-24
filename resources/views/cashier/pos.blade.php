@@ -1529,8 +1529,11 @@
                             <option value="">-- Choose Supplier --</option>
                             @if(isset($suppliers))
                                 @foreach($suppliers as $s)
+                                    @php
+                                        $compName = !empty($s['company_name']) && strcasecmp(trim($s['company_name']), trim($s['name'])) !== 0 ? ' (' . $s['company_name'] . ')' : '';
+                                    @endphp
                                     <option value="{{ $s['id'] }}" data-balance="{{ $s['pending_balance'] }}" data-name="{{ $s['name'] }}" data-phone="{{ $s['phone'] }}">
-                                        {{ $s['name'] }} @if(!empty($s['company_name']))({{ $s['company_name'] }})@endif — Due: PKR {{ number_format($s['pending_balance'], 2) }}
+                                        {{ $s['name'] }}{{ $compName }} — Due: PKR {{ number_format($s['pending_balance'], 2) }}
                                     </option>
                                 @endforeach
                             @endif
@@ -2288,7 +2291,7 @@ function renderSearchDropdown(list) {
                     <span>SKU: ${p.sku || '—'}</span>
                     <span>•</span>
                     <span style="color:${isOos ? '#ef4444' : '#059669'}; font-weight:700;">
-                        ${isOos ? 'Out of Stock' : 'Stock: ' + p.stock_quantity + (p.unit ? ' ' + p.unit : '')}
+                        Stock: ${p.stock_quantity} ${p.unit ? p.unit : ''} ${isOos ? '(Backorder)' : ''}
                     </span>
                     ${p.category ? `<span>•</span><span>${escapeHtml(p.category)}</span>` : ''}
                 </div>
@@ -2379,16 +2382,8 @@ function addToCartFromDrawer(p) {
 function addToCart(p) {
     const existing = cart.find(item => item.id === p.id);
     if (existing) {
-        if (existing.qty >= p.stock_quantity) {
-            toast('Maximum available stock reached for this item.', 'w');
-            return;
-        }
         existing.qty++;
     } else {
-        if (p.stock_quantity <= 0) {
-            toast('Product is out of stock.', 'e');
-            return;
-        }
         cart.push({ ...p, qty: 1 });
     }
     renderCart();
@@ -2408,10 +2403,6 @@ function updateQty(id, delta) {
         removeFromCart(id);
         return;
     }
-    if (newQty > item.stock_quantity) {
-        toast('Maximum available stock reached.', 'w');
-        return;
-    }
     item.qty = newQty;
     renderCart();
 }
@@ -2423,10 +2414,6 @@ function setQty(id, val) {
     if (qty <= 0) {
         removeFromCart(id);
         return;
-    }
-    if (qty > item.stock_quantity) {
-        toast('Exceeds available stock. Set to max available.', 'w');
-        qty = item.stock_quantity;
     }
     item.qty = qty;
     renderCart();
@@ -2461,7 +2448,8 @@ function renderCart() {
 
     cartTableBody.innerHTML = cart.map((item, index) => {
         const lineTotal = parseCleanNumber(item.sale_price) * item.qty;
-        const isLow = item.stock_quantity <= (item.low_stock_threshold || 5);
+        const isLow = item.stock_quantity <= (item.low_stock_threshold || 1);
+        const isNegOrZero = item.stock_quantity <= 0;
         return `
         <tr>
             <td class="td-num">${index + 1}</td>
@@ -2472,7 +2460,7 @@ function renderCart() {
                         <div class="prod-title">${escapeHtml(item.name)}</div>
                         <div class="prod-submeta">
                             ${item.category ? `<span class="cat-chip">${escapeHtml(item.category)}</span>` : ''}
-                            <span class="stock-hint ${isLow ? 'low' : ''}">
+                            <span class="stock-hint ${isLow ? 'low' : ''}" style="${isNegOrZero ? 'color:#ef4444; background:#fef2f2; border-color:#fecaca;' : ''}">
                                 Stock: ${item.stock_quantity} ${item.unit || 'pcs'}
                             </span>
                         </div>
@@ -2489,7 +2477,7 @@ function renderCart() {
             <td style="text-align:center;">
                 <div class="qty-box">
                     <button type="button" class="qty-btn" onclick="updateQty(${item.id}, -1)">−</button>
-                    <input type="number" class="qty-field" value="${item.qty}" min="1" max="${item.stock_quantity}"
+                    <input type="number" class="qty-field" value="${item.qty}" min="1"
                            onchange="setQty(${item.id}, this.value)"
                            onclick="this.select()">
                     <button type="button" class="qty-btn" onclick="updateQty(${item.id}, 1)">+</button>

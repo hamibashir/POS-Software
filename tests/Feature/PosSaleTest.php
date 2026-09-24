@@ -176,25 +176,37 @@ class PosSaleTest extends TestCase
         $this->assertEquals('card', $sale->payment_method);
     }
 
-    public function test_sale_fails_when_insufficient_stock(): void
+    public function test_sale_allows_zero_or_insufficient_stock_and_decrements_to_negative(): void
     {
         $payload = [
             'cart' => [
                 [
                     'product_id' => $this->productA->id,
-                    'quantity'   => 999, // Stock is only 50
+                    'quantity'   => 60, // Stock is 50, selling 60 => -10
                     'unit_price' => 500.00,
                 ],
             ],
             'payment_method'  => 'cash',
-            'paid_amount'     => 500.00,
+            'paid_amount'     => 30000.00,
         ];
 
         $response = $this->actingAs($this->cashier)
             ->postJson(route('cashier.pos.complete-sale'), $payload);
 
-        $response->assertStatus(422)
-            ->assertJsonPath('success', false);
+        $response->assertOk()
+            ->assertJsonPath('success', true);
+
+        $this->productA->refresh();
+        $this->assertEquals(-10, $this->productA->stock_quantity);
+
+        $movement = StockMovement::where('product_id', $this->productA->id)
+            ->where('type', 'sale')
+            ->latest('id')
+            ->first();
+        $this->assertNotNull($movement);
+        $this->assertEquals(50, $movement->stock_before);
+        $this->assertEquals(-10, $movement->stock_after);
+        $this->assertEquals(-60, $movement->quantity);
     }
 
     public function test_credit_sale_assigns_employee_and_records_transaction(): void
@@ -259,7 +271,8 @@ class PosSaleTest extends TestCase
         $response->assertOk()
             ->assertSee($sale->invoice_number)
             ->assertSee('Hammer Pro')
-            ->assertSee('Hassan Corporation');
+            ->assertSee('Hassan Corporation')
+            ->assertDontSee($this->productA->sku);
     }
 
     public function test_sales_listing_can_filter_by_credit_payment_method(): void

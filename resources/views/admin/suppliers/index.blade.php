@@ -129,8 +129,9 @@
                 <i class="bi bi-check2-circle"></i>
             </div>
             <div>
-                <div class="text-muted small fw-semibold">Total Payments Cleared</div>
+                <div class="text-muted small fw-semibold">Total Paid Amount</div>
                 <div class="fs-4 fw-bold text-success">{{ pkr($stats['total_paid'], 2) }}</div>
+                <div class="text-muted small" style="font-size:11px;">Cleared to suppliers</div>
             </div>
         </div>
     </div>
@@ -184,8 +185,8 @@
                 <tr>
                     <th>Supplier / Company</th>
                     <th>Contact Info</th>
-                    <th class="text-end">Total Invoiced</th>
-                    <th class="text-end">Total Cleared</th>
+                    <th class="text-end">Total Purchases</th>
+                    <th class="text-end">Paid Amount</th>
                     <th class="text-end">Pending Balance</th>
                     <th>Status</th>
                     <th class="text-end">Actions</th>
@@ -220,8 +221,9 @@
                     <td class="text-end fw-semibold text-dark">
                         {{ pkr($supplier->total_purchases + (float)$supplier->opening_balance, 2) }}
                     </td>
-                    <td class="text-end fw-semibold text-success">
-                        {{ pkr($supplier->total_paid, 2) }}
+                    <td class="text-end">
+                        <div class="fw-bold text-success fs-6">{{ pkr($supplier->total_paid, 2) }}</div>
+                        <div class="text-muted" style="font-size:11px;">{{ $supplier->payments->count() }} payment(s)</div>
                     </td>
                     <td class="text-end">
                         @if($pending > 0)

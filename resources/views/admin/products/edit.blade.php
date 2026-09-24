@@ -8,7 +8,7 @@
     <div>
         <h1><i class="bi bi-pencil-square me-2" style="color:var(--pos-primary)"></i>Edit Product</h1>
         <p>
-            <a href="{{ route('admin.products.index') }}" style="color:var(--pos-primary); text-decoration:none; font-size:13px;">
+            <a href="{{ route('admin.products.index', request()->query()) }}" style="color:var(--pos-primary); text-decoration:none; font-size:13px;">
                 <i class="bi bi-arrow-left"></i> Back to Products
             </a>
             &nbsp;&middot;&nbsp;
@@ -17,7 +17,7 @@
     </div>
 </div>
 
-<form method="POST" action="{{ route('admin.products.update', $product) }}" enctype="multipart/form-data">
+<form id="productForm" method="POST" action="{{ route('admin.products.update', array_merge(['product' => $product->id], request()->query())) }}" enctype="multipart/form-data">
     @csrf @method('PUT')
     @include('admin.products._form', ['submitLabel' => 'Update Product'])
 </form>

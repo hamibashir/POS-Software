@@ -28,7 +28,7 @@ return new class extends Migration
 
             // Stock
             $table->integer('stock_quantity')->default(0);
-            $table->integer('low_stock_threshold')->default(10);
+            $table->integer('low_stock_threshold')->default(1);
 
             // Catalog
             $table->string('image', 255)->nullable();

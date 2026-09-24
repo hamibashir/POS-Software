@@ -42,15 +42,9 @@ class SaleService
             $totalDiscount  = $saleData['discount_amount'] ?? 0;
             $processedItems = [];
 
-            // Validate stock and prepare items
+            // Prepare items and line totals
             foreach ($cartItems as $item) {
                 $product = Product::lockForUpdate()->findOrFail($item['product_id']);
-
-                if ($product->stock_quantity < $item['quantity']) {
-                    throw new \RuntimeException(
-                        "Insufficient stock for \"{$product->name}\". Available: {$product->stock_quantity}"
-                    );
-                }
 
                 $lineTotal = ($item['unit_price'] * $item['quantity']) - ($item['discount_amount'] ?? 0);
                 $subtotal += $lineTotal;

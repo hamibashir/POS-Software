@@ -124,31 +124,31 @@ class ProductController extends Controller
             $request->boolean('remove_image')
         );
 
-        return redirect()->route('admin.products.index')
+        return redirect()->route('admin.products.index', $request->query())
             ->with('success', "Product \"{$product->name}\" updated successfully.");
     }
 
     /**
      * Toggle active/inactive status.
      */
-    public function toggleStatus(Product $product)
+    public function toggleStatus(Request $request, Product $product)
     {
         $product->update(['is_active' => !$product->is_active]);
         $status = $product->is_active ? 'activated' : 'deactivated';
 
-        return redirect()->route('admin.products.index')
+        return redirect()->route('admin.products.index', $request->query())
             ->with('success', "Product \"{$product->name}\" {$status}.");
     }
 
     /**
      * Soft-delete a product.
      */
-    public function destroy(Product $product)
+    public function destroy(Request $request, Product $product)
     {
         $name = $product->name;
         $this->productService->delete($product);
 
-        return redirect()->route('admin.products.index')
+        return redirect()->route('admin.products.index', $request->query())
             ->with('success', "Product \"{$name}\" deleted.");
     }
 

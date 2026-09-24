@@ -48,13 +48,92 @@ class ProductService
     }
 
     /**
+     * Process image from file upload, base64 paste data, or image URL.
+     */
+    public function processImage(array &$data, ?UploadedFile $image = null, ?Product $existingProduct = null, bool $removeImage = false): void
+    {
+        if ($removeImage && $existingProduct?->image) {
+            $this->deleteImage($existingProduct->image);
+            $data['image'] = null;
+        }
+
+        if ($image) {
+            if ($existingProduct?->image) {
+                $this->deleteImage($existingProduct->image);
+            }
+            $data['image'] = $this->uploadImage($image);
+        } elseif (!empty($data['image_base64'])) {
+            if ($existingProduct?->image) {
+                $this->deleteImage($existingProduct->image);
+            }
+            $saved = $this->saveBase64Image($data['image_base64']);
+            if ($saved) {
+                $data['image'] = $saved;
+            }
+        } elseif (!empty($data['image_url'])) {
+            if ($existingProduct?->image) {
+                $this->deleteImage($existingProduct->image);
+            }
+            $saved = $this->downloadAndSaveImageUrl($data['image_url']);
+            if ($saved) {
+                $data['image'] = $saved;
+            }
+        }
+
+        unset($data['image_base64'], $data['image_url']);
+    }
+
+    /**
+     * Save base64-encoded image data to public storage.
+     */
+    public function saveBase64Image(string $base64String): ?string
+    {
+        if (preg_match('/^data:image\/(\w+);base64,/', $base64String, $type)) {
+            $data = substr($base64String, strpos($base64String, ',') + 1);
+            $type = strtolower($type[1]);
+            if ($type === 'jpeg') $type = 'jpg';
+            $decoded = base64_decode($data);
+            if ($decoded === false) return null;
+
+            $filename = Str::uuid() . '.' . $type;
+            Storage::disk('public')->put('products/' . $filename, $decoded);
+            return 'products/' . $filename;
+        }
+        return null;
+    }
+
+    /**
+     * Download and save image from an external web URL to public storage.
+     */
+    public function downloadAndSaveImageUrl(string $url): ?string
+    {
+        try {
+            $response = \Illuminate\Support\Facades\Http::timeout(12)->get($url);
+            if ($response->successful()) {
+                $content = $response->body();
+                $contentType = strtolower($response->header('Content-Type') ?? '');
+                $ext = 'jpg';
+                if (str_contains($contentType, 'png')) $ext = 'png';
+                elseif (str_contains($contentType, 'webp')) $ext = 'webp';
+                elseif (str_contains($contentType, 'gif')) $ext = 'gif';
+                elseif (str_contains($contentType, 'jpeg')) $ext = 'jpg';
+
+                $filename = Str::uuid() . '.' . $ext;
+                Storage::disk('public')->put('products/' . $filename, $content);
+                return 'products/' . $filename;
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning("Failed to download image from URL: {$url}. Error: " . $e->getMessage());
+        }
+        return null;
+    }
+
+    /**
      * Create a new product with optional image.
      */
     public function create(array $data, ?UploadedFile $image = null): Product
     {
-        if ($image) {
-            $data['image'] = $this->uploadImage($image);
-        }
+        $this->processImage($data, $image);
 
         $data['slug']            = Product::generateSlug($data['name']);
         $data['show_in_catalog'] = isset($data['show_in_catalog']) ? (bool)$data['show_in_catalog'] : true;
@@ -69,16 +148,7 @@ class ProductService
     public function update(Product $product, array $data, ?UploadedFile $image = null, bool $removeImage = false): Product
     {
         return DB::transaction(function () use ($product, $data, $image, $removeImage) {
-            if ($removeImage && $product->image) {
-                $this->deleteImage($product->image);
-                $data['image'] = null;
-            }
-
-            if ($image) {
-                // Delete old image before replacing
-                $this->deleteImage($product->image);
-                $data['image'] = $this->uploadImage($image);
-            }
+            $this->processImage($data, $image, $product, $removeImage);
 
             // Regenerate slug if name changed
             if (isset($data['name']) && $data['name'] !== $product->name) {

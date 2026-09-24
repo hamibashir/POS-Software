@@ -179,9 +179,9 @@
                         Low Stock Alert Threshold <span class="text-danger">*</span>
                     </label>
                     <input type="number" name="low_stock_threshold" min="0"
-                        value="{{ old('low_stock_threshold', $product->low_stock_threshold ?? 10) }}"
+                        value="{{ old('low_stock_threshold', $product->low_stock_threshold ?? 1) }}"
                         class="pos-input @error('low_stock_threshold') is-invalid @enderror"
-                        placeholder="10" required>
+                        placeholder="1" required>
                     <div style="font-size:12px; color:#9ca3af; margin-top:4px;">
                         Alert shown when stock falls at or below this number.
                     </div>
@@ -220,8 +220,11 @@
                 <option value="">— No Supplier Assigned —</option>
                 @if(isset($suppliers))
                     @foreach($suppliers as $sup)
+                        @php
+                            $compName = !empty($sup->company_name) && strcasecmp(trim($sup->company_name), trim($sup->name)) !== 0 ? ' (' . $sup->company_name . ')' : '';
+                        @endphp
                         <option value="{{ $sup->id }}" {{ old('supplier_id', $product->supplier_id ?? '') == $sup->id ? 'selected' : '' }}>
-                            {{ $sup->name }} @if(!empty($sup->company_name))({{ $sup->company_name }})@endif
+                            {{ $sup->name }}{{ $compName }}
                         </option>
                     @endforeach
                 @endif
@@ -232,38 +235,77 @@
             </div>
         </div>
 
-        {{-- Image Upload --}}
+        {{-- Image Upload & Paste --}}
         <div class="pos-card p-4 mb-4">
-            <h6 class="fw-bold mb-3" style="color:#374151; font-size:14px;">
-                <i class="bi bi-image me-2" style="color:var(--pos-primary)"></i>Product Image
-            </h6>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold mb-0" style="color:#374151; font-size:14px;">
+                    <i class="bi bi-image me-2" style="color:var(--pos-primary)"></i>Product Image
+                </h6>
+                <span class="badge bg-light text-secondary border px-2 py-1" style="font-size:11px; font-weight:600;">
+                    <i class="bi bi-clipboard-check me-1 text-primary"></i>Ctrl+V Paste Enabled
+                </span>
+            </div>
 
             {{-- Preview --}}
             <div id="imagePreviewWrap" class="mb-3 text-center" style="{{ ($isEdit && $product->image) ? '' : 'display:none;' }}">
-                <img id="imagePreview"
-                    src="{{ $isEdit && $product->image ? Storage::url($product->image) : '' }}"
-                    alt="Preview"
-                    style="max-width:100%; max-height:180px; border-radius:10px; border:1px solid #e5e7eb; object-fit:contain;">
-                @if($isEdit && $product->image)
-                    <div class="mt-2">
-                        <label style="font-size:12px; color:#ef4444; cursor:pointer;">
+                <div class="position-relative d-inline-block">
+                    <img id="imagePreview"
+                        src="{{ $isEdit && $product->image ? Storage::url($product->image) : '' }}"
+                        alt="Preview"
+                        style="max-width:100%; max-height:200px; border-radius:10px; border:1px solid #e5e7eb; object-fit:contain; background:#f9fafb; padding:4px;">
+                </div>
+                <div class="mt-2 d-flex justify-content-center gap-2 align-items-center">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="triggerChangeImage()" style="font-size:12px; border-radius:6px;">
+                        <i class="bi bi-arrow-repeat me-1"></i>Change Image
+                    </button>
+                    @if($isEdit && $product->image)
+                        <label style="font-size:12px; color:#ef4444; cursor:pointer; margin-bottom:0;" class="ms-2">
                             <input type="checkbox" name="remove_image" value="1" id="removeImageCheck">
                             Remove current image
                         </label>
-                    </div>
-                @endif
+                    @endif
+                </div>
             </div>
 
-            {{-- Upload area --}}
+            {{-- Upload & Paste area --}}
             <div id="uploadArea"
-                onclick="document.getElementById('imageInput').click()"
-                style="border:2px dashed #e5e7eb; border-radius:10px; padding:24px; text-align:center; cursor:pointer; transition:border-color .2s;">
-                <i class="bi bi-cloud-upload" style="font-size:28px; color:#d1d5db;"></i>
-                <p class="mb-0 mt-2" style="font-size:13px; color:#9ca3af;">Click to upload image</p>
-                <p class="mb-0" style="font-size:11px; color:#d1d5db;">JPG, PNG, WebP — max 2MB</p>
+                tabindex="0"
+                style="border:2px dashed #cbd5e1; border-radius:12px; padding:20px; text-align:center; cursor:pointer; background:#f8fafc; transition:all .2s ease; outline:none;"
+                onclick="handleUploadAreaClick(event)">
+                <div class="d-flex justify-content-center gap-3 mb-2 text-muted">
+                    <i class="bi bi-cloud-arrow-up fs-2 text-primary"></i>
+                    <i class="bi bi-clipboard2-pulse fs-2 text-success"></i>
+                </div>
+                <p class="mb-1 fw-bold text-dark" style="font-size:13.5px;">Click to upload, drag & drop, or paste image</p>
+                <p class="mb-2" style="font-size:11.5px; color:#64748b;">
+                    Press <kbd style="background:#e2e8f0; color:#0f172a; padding:2px 6px; border-radius:4px; font-weight:700;">Ctrl + V</kbd> to paste any copied image from the internet or screenshots
+                </p>
+                <div class="d-flex justify-content-center gap-2 mt-3" onclick="event.stopPropagation()">
+                    <button type="button" class="btn btn-sm btn-outline-primary px-2 py-1" style="font-size:11.5px; border-radius:6px;" onclick="pasteFromClipboard()">
+                        <i class="bi bi-clipboard-check me-1"></i>Paste Clipboard
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary px-2 py-1" style="font-size:11.5px; border-radius:6px;" onclick="toggleUrlInput()">
+                        <i class="bi bi-link-45deg me-1"></i>Paste Image URL
+                    </button>
+                </div>
             </div>
+
+            {{-- URL Input Box (Collapsible) --}}
+            <div id="urlInputContainer" class="mt-2 p-2 rounded-2" style="display:none; background:#f1f5f9; border:1px solid #e2e8f0;">
+                <label class="form-label mb-1 text-muted" style="font-size:11.5px; font-weight:600;">Image Web Address (URL):</label>
+                <div class="input-group input-group-sm">
+                    <input type="url" id="imageDirectUrlInput" class="form-control" placeholder="https://example.com/product-image.jpg" style="font-size:12px;">
+                    <button type="button" class="btn btn-primary" onclick="loadImageFromUrlInput()" style="font-size:12px;">Load</button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="toggleUrlInput()" style="font-size:12px;">Cancel</button>
+                </div>
+            </div>
+
             <input type="file" name="image" id="imageInput" accept="image/*" class="d-none" onchange="previewImage(this)">
+            <input type="hidden" name="image_base64" id="imageBase64">
+            <input type="hidden" name="image_url" id="imageUrlInput">
             @error('image')<div class="text-danger mt-1" style="font-size:13px;">{{ $message }}</div>@enderror
+            @error('image_base64')<div class="text-danger mt-1" style="font-size:13px;">{{ $message }}</div>@enderror
+            @error('image_url')<div class="text-danger mt-1" style="font-size:13px;">{{ $message }}</div>@enderror
         </div>
 
         {{-- Settings --}}
@@ -285,10 +327,10 @@
 
         {{-- Action buttons --}}
         <div class="d-flex gap-2">
-            <a href="{{ route('admin.products.index') }}" class="btn-pos-outline flex-fill text-center">
+            <a href="{{ route('admin.products.index', request()->query()) }}" class="btn-pos-outline flex-fill text-center">
                 <i class="bi bi-x-circle"></i> Cancel
             </a>
-            <button type="submit" class="btn-pos flex-fill">
+            <button type="submit" id="submitProductBtn" class="btn-pos flex-fill">
                 <i class="bi bi-check-lg"></i> {{ $submitLabel ?? 'Save Product' }}
             </button>
         </div>
@@ -298,29 +340,166 @@
 
 @push('scripts')
 <script>
-    // ── Image preview ────────────────────────────────
+    // ── Image preview & paste logic ────────────────────
     function previewImage(input) {
         if (!input.files || !input.files[0]) return;
         const reader = new FileReader();
         reader.onload = (e) => {
-            document.getElementById('imagePreview').src = e.target.result;
-            document.getElementById('imagePreviewWrap').style.display = '';
-            document.getElementById('uploadArea').style.display = 'none';
+            showImageInPreview(e.target.result);
+            document.getElementById('imageUrlInput').value = '';
+            document.getElementById('imageBase64').value = '';
         };
         reader.readAsDataURL(input.files[0]);
     }
 
-    // ── Drag over upload area ─────────────────────────
+    function showImageInPreview(srcUrl) {
+        document.getElementById('imagePreview').src = srcUrl;
+        document.getElementById('imagePreviewWrap').style.display = '';
+        document.getElementById('uploadArea').style.display = 'none';
+        document.getElementById('urlInputContainer').style.display = 'none';
+        const removeCheck = document.getElementById('removeImageCheck');
+        if (removeCheck) removeCheck.checked = false;
+    }
+
+    function triggerChangeImage() {
+        document.getElementById('uploadArea').style.display = '';
+        document.getElementById('uploadArea').focus();
+    }
+
+    function handleUploadAreaClick(e) {
+        if (e.target.closest('button') || e.target.closest('input')) return;
+        document.getElementById('imageInput').click();
+    }
+
+    function toggleUrlInput() {
+        const box = document.getElementById('urlInputContainer');
+        box.style.display = box.style.display === 'none' ? 'block' : 'none';
+        if (box.style.display === 'block') {
+            document.getElementById('imageDirectUrlInput').focus();
+        }
+    }
+
+    function loadImageFromUrlInput() {
+        const url = document.getElementById('imageDirectUrlInput').value.trim();
+        if (!url) return;
+        applyImageUrl(url);
+    }
+
+    function applyImageUrl(url) {
+        document.getElementById('imageUrlInput').value = url;
+        document.getElementById('imageBase64').value = '';
+        document.getElementById('imageInput').value = '';
+        showImageInPreview(url);
+    }
+
+    function applyImageBlob(blob) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const dataUrl = e.target.result;
+            document.getElementById('imageBase64').value = dataUrl;
+            document.getElementById('imageUrlInput').value = '';
+
+            // Also populate file input using DataTransfer
+            try {
+                const dt = new DataTransfer();
+                const file = new File([blob], 'pasted_image.' + (blob.type.split('/')[1] || 'png'), { type: blob.type });
+                dt.items.add(file);
+                document.getElementById('imageInput').files = dt.files;
+            } catch (err) {
+                console.log('DataTransfer not supported, base64 fallback active');
+            }
+
+            showImageInPreview(dataUrl);
+        };
+        reader.readAsDataURL(blob);
+    }
+
+    // Direct paste button using clipboard API
+    async function pasteFromClipboard() {
+        try {
+            if (navigator.clipboard && navigator.clipboard.read) {
+                const items = await navigator.clipboard.read();
+                for (const item of items) {
+                    const imageType = item.types.find(t => t.startsWith('image/'));
+                    if (imageType) {
+                        const blob = await item.getType(imageType);
+                        applyImageBlob(blob);
+                        return;
+                    }
+                }
+            }
+
+            // Fallback: read text (if it's an image link)
+            if (navigator.clipboard && navigator.clipboard.readText) {
+                const text = await navigator.clipboard.readText();
+                if (text && (text.match(/^https?:\/\/.+/i) || text.startsWith('data:image/'))) {
+                    applyImageUrl(text.trim());
+                    return;
+                }
+            }
+
+            alert('Please press Ctrl + V to paste your copied image.');
+        } catch (err) {
+            alert('Clipboard permission denied. Please press Ctrl + V on your keyboard to paste the image.');
+        }
+    }
+
+    // ── Global Window Paste Listener ───────────────────
+    window.addEventListener('paste', function (e) {
+        // If actively typing inside another input/textarea that is NOT the URL input
+        const active = document.activeElement;
+        const isUrlInput = active && active.id === 'imageDirectUrlInput';
+        const isOtherText = active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT') && !isUrlInput;
+
+        const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+        let imageFound = false;
+
+        if (items) {
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].type.indexOf('image') !== -1) {
+                    const blob = items[i].getAsFile();
+                    if (blob) {
+                        e.preventDefault();
+                        applyImageBlob(blob);
+                        imageFound = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (!imageFound) {
+            const text = (e.clipboardData || window.clipboardData).getData('text');
+            if (text && (text.match(/^https?:\/\/.+(\.(jpg|jpeg|png|webp|gif|svg)|images\?|img|photo|media).*/i) || text.startsWith('data:image/'))) {
+                if (!isOtherText || isUrlInput || active.id === 'uploadArea') {
+                    e.preventDefault();
+                    applyImageUrl(text.trim());
+                }
+            }
+        }
+    });
+
+    // ── Drag & drop over upload area ───────────────────
     const uploadArea = document.getElementById('uploadArea');
     if (uploadArea) {
-        uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.style.borderColor = 'var(--pos-primary)'; });
-        uploadArea.addEventListener('dragleave', ()  => { uploadArea.style.borderColor = '#e5e7eb'; });
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = 'var(--pos-primary)';
+            uploadArea.style.background = '#eef2ff';
+        });
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.style.borderColor = '#cbd5e1';
+            uploadArea.style.background = '#f8fafc';
+        });
         uploadArea.addEventListener('drop', (e) => {
             e.preventDefault();
-            uploadArea.style.borderColor = '#e5e7eb';
+            uploadArea.style.borderColor = '#cbd5e1';
+            uploadArea.style.background = '#f8fafc';
             const input = document.getElementById('imageInput');
-            input.files = e.dataTransfer.files;
-            previewImage(input);
+            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                input.files = e.dataTransfer.files;
+                previewImage(input);
+            }
         });
     }
 
@@ -346,5 +525,53 @@
         const data = await res.json();
         document.getElementById('skuInput').value = data.sku;
     });
+
+    // ── Enter key triggers product submission / update ──
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.keyCode === 13) {
+            const active = document.activeElement;
+
+            // In multiline textarea: allow normal Enter for new line, but Ctrl+Enter submits
+            if (active && active.tagName === 'TEXTAREA') {
+                if (e.ctrlKey || e.metaKey) {
+                    e.preventDefault();
+                    triggerProductFormSubmit();
+                }
+                return;
+            }
+
+            // In URL direct input: load image on Enter
+            if (active && active.id === 'imageDirectUrlInput') {
+                e.preventDefault();
+                loadImageFromUrlInput();
+                return;
+            }
+
+            // In other non-submit interactive buttons/links: allow normal click
+            if (active && (active.tagName === 'BUTTON' || active.tagName === 'A') && active.id !== 'submitProductBtn') {
+                return;
+            }
+
+            // For all inputs, selects, number boxes, or anywhere else on page: trigger form submit
+            e.preventDefault();
+            triggerProductFormSubmit();
+        }
+    });
+
+    function triggerProductFormSubmit() {
+        const btn = document.getElementById('submitProductBtn');
+        if (btn) {
+            btn.click();
+        } else {
+            const form = document.getElementById('productForm') || document.querySelector('form');
+            if (form) {
+                if (typeof form.requestSubmit === 'function') {
+                    form.requestSubmit();
+                } else {
+                    form.submit();
+                }
+            }
+        }
+    }
 </script>
 @endpush

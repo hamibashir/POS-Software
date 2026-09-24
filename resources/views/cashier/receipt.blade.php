@@ -5,51 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Receipt {{ $sale->invoice_number }} — {{ config('store.name', 'Hassan Corporation') }}</title>
 
-    {{-- Fonts: Inter (UI) + JetBrains Mono (invoice / barcode) --}}
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    {{-- Clean typography for crisp thermal printing --}}
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 
     <style>
-        /* ╔══════════════════════════════════════════════════════╗
-           ║  CSS CUSTOM PROPERTIES                               ║
-           ╚══════════════════════════════════════════════════════╝ */
-        :root {
-            --primary:    #1a6b7c;
-            --primary-dk: #0d4a57;
-            --primary-lt: #e8f4f7;
-            --success:    #10b981;
-            --success-lt: #d1fae5;
-            --success-dk: #065f46;
-            --paper:      #ffffff;
-            --shadow:     0 4px 32px rgba(0,0,0,.12);
-            --receipt-w:  340px;    /* screen preview width */
-        }
-
-        /* ╔══════════════════════════════════════════════════════╗
-           ║  BASE                                                ║
-           ╚══════════════════════════════════════════════════════╝ */
+        /* ═══════════════════════════════════════════════════════
+           BASE & SCREEN LAYOUT
+        ═══════════════════════════════════════════════════════ */
         *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background: #f0f2f5;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #e2e8f0;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 20px 12px 60px;
-            color: #111827;
+            padding: 24px 12px 60px;
+            color: #000000;
         }
 
-        /* ╔══════════════════════════════════════════════════════╗
-           ║  ACTION BAR  (screen only)                           ║
-           ╚══════════════════════════════════════════════════════╝ */
+        /* Top Action Bar (Screen Only) */
         .action-bar {
             display: flex;
-            gap: 8px;
+            gap: 10px;
             width: 100%;
-            max-width: var(--receipt-w);
-            margin-bottom: 16px;
+            max-width: 360px;
+            margin-bottom: 12px;
             flex-wrap: wrap;
         }
 
@@ -58,640 +41,653 @@
             align-items: center;
             justify-content: center;
             gap: 6px;
-            border-radius: 9px;
+            border-radius: 8px;
             padding: 10px 16px;
             font-size: 13px;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
             text-decoration: none;
             border: none;
-            transition: background .15s, transform .1s;
+            transition: all .15s ease;
             white-space: nowrap;
         }
-        .btn:active { transform: scale(.97); }
+        .btn:active { transform: scale(.98); }
 
         .btn-back {
-            background: #fff;
-            color: #374151;
-            border: 1.5px solid #e5e7eb;
+            background: #ffffff;
+            color: #1e293b;
+            border: 1.5px solid #cbd5e1;
         }
-        .btn-back:hover { background: #f9fafb; }
+        .btn-back:hover { background: #f8fafc; border-color: #94a3b8; }
 
         .btn-print {
             flex: 1;
-            background: var(--primary);
-            color: #fff;
+            background: #000000;
+            color: #ffffff;
         }
-        .btn-print:hover { background: var(--primary-dk); }
+        .btn-print:hover { background: #1e293b; }
 
-        /* auto-print toggle */
-        .auto-print-wrap {
+        /* Controls / Preview Mode (Screen Only) */
+        .preview-controls {
             width: 100%;
-            max-width: var(--receipt-w);
-            margin-bottom: 12px;
+            max-width: 360px;
+            margin-bottom: 16px;
             display: flex;
+            justify-content: space-between;
             align-items: center;
+            background: #ffffff;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            font-size: 12px;
             gap: 8px;
         }
-        .auto-print-wrap label {
-            font-size: 12px;
-            color: #6b7280;
+
+        .auto-print-wrap {
             display: flex;
             align-items: center;
             gap: 6px;
+            color: #475569;
             cursor: pointer;
             user-select: none;
         }
-        .auto-print-wrap input[type=checkbox] {
-            width: 15px; height: 15px;
-            accent-color: var(--primary);
+        .auto-print-wrap input {
+            cursor: pointer;
+            accent-color: #000000;
+        }
+
+        .width-switch {
+            display: flex;
+            background: #f1f5f9;
+            border-radius: 6px;
+            padding: 2px;
+            gap: 2px;
+        }
+        .width-btn {
+            border: none;
+            background: transparent;
+            padding: 3px 8px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #64748b;
+            border-radius: 4px;
             cursor: pointer;
         }
-        .kbd-hint {
-            margin-left: auto;
-            font-size: 11px;
-            color: #9ca3af;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .kbd {
-            background: #e5e7eb;
-            border: 1px solid #d1d5db;
-            border-radius: 4px;
-            padding: 1px 5px;
-            font-size: 11px;
-            font-family: monospace;
-            color: #374151;
+        .width-btn.active {
+            background: #000000;
+            color: #ffffff;
         }
 
-        /* ╔══════════════════════════════════════════════════════╗
-           ║  RECEIPT CARD                                        ║
-           ╚══════════════════════════════════════════════════════╝ */
+        /* ═══════════════════════════════════════════════════════
+           THERMAL RECEIPT MONOCHROME BLACK & WHITE DESIGN
+        ═══════════════════════════════════════════════════════ */
         .receipt {
-            background: var(--paper);
+            background: #ffffff;
             width: 100%;
-            max-width: var(--receipt-w);
-            border-radius: 14px;
-            box-shadow: var(--shadow);
-            overflow: hidden;
-            position: relative;
+            max-width: 340px; /* Default 80mm roll preview */
+            padding: 18px 20px 22px 20px; /* balanced padding shifting left side inward right and right side inward left */
+            border-radius: 4px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+            color: #000000;
+            font-size: 12px;
+            line-height: 1.35;
+            transition: max-width 0.2s ease;
         }
 
-        /* ── Store header ────────────────────────────────────── */
-        .receipt-header {
-            background: linear-gradient(150deg, var(--primary) 0%, var(--primary-dk) 100%);
-            color: #fff;
-            padding: 26px 22px 20px;
-            text-align: center;
-            position: relative;
-        }
-        .receipt-header::after {
-            content: '';
-            position: absolute;
-            bottom: 0; left: 0; right: 0;
-            height: 20px;
-            background: var(--paper);
-            clip-path: polygon(
-                0% 100%, 4% 0%, 8% 100%, 12% 0%, 16% 100%, 20% 0%,
-                24% 100%, 28% 0%, 32% 100%, 36% 0%, 40% 100%, 44% 0%,
-                48% 100%, 52% 0%, 56% 100%, 60% 0%, 64% 100%, 68% 0%,
-                72% 100%, 76% 0%, 80% 100%, 84% 0%, 88% 100%, 92% 0%,
-                96% 100%, 100% 0%, 100% 100%
-            );
-        }
-
-        .store-logo {
-            font-size: 30px;
-            margin-bottom: 6px;
-            display: block;
-        }
-        .store-name {
-            font-size: 18px;
-            font-weight: 800;
-            letter-spacing: .4px;
-        }
-        .store-tagline {
+        .receipt.roll-58mm {
+            max-width: 250px;
+            padding: 12px 14px 16px 14px;
             font-size: 11px;
-            opacity: .7;
-            margin-top: 3px;
         }
 
-        /* ── Receipt body ────────────────────────────────────── */
-        .receipt-body {
-            padding: 28px 20px 16px;   /* extra top for zigzag overlap */
-        }
-
-        /* Invoice number section */
-        .invoice-section {
+        /* Store Header */
+        .store-header {
             text-align: center;
-            margin-bottom: 16px;
-            padding-bottom: 14px;
-            border-bottom: 1.5px dashed #e5e7eb;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed #000000;
+            margin-bottom: 10px;
         }
-        .invoice-label {
-            font-size: 10px;
-            font-weight: 600;
-            color: #9ca3af;
-            text-transform: uppercase;
-            letter-spacing: 1.2px;
-        }
-        .invoice-number {
-            font-family: 'JetBrains Mono', monospace;
+        .store-title {
             font-size: 17px;
-            font-weight: 700;
-            color: var(--primary);
-            margin-top: 4px;
-            letter-spacing: .5px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #000000;
+            margin-bottom: 3px;
+        }
+        .store-info {
+            font-size: 11px;
+            font-weight: 500;
+            color: #000000;
+            line-height: 1.3;
         }
 
-        /* Meta info table */
-        .meta-table {
+        /* Document Title */
+        .doc-title-wrap {
+            text-align: center;
+            padding: 4px 0 8px;
+            border-bottom: 1px dashed #000000;
+            margin-bottom: 10px;
+        }
+        .doc-title {
+            font-size: 13px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .doc-invoice-no {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            font-weight: 700;
+            margin-top: 2px;
+        }
+
+        /* Meta Grid */
+        .meta-list {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 16px;
-            background: #f9fafb;
-            border-radius: 8px;
-            overflow: hidden;
+            margin-bottom: 10px;
         }
-        .meta-table td {
-            padding: 7px 11px;
-            font-size: 12px;
+        .meta-list td {
+            padding: 2px 0;
+            font-size: 11.5px;
             vertical-align: top;
+            color: #000000;
         }
-        .meta-table td:first-child {
-            color: #9ca3af;
-            font-weight: 500;
-            text-transform: uppercase;
-            font-size: 10px;
-            letter-spacing: .7px;
-            width: 36%;
-            white-space: nowrap;
-        }
-        .meta-table td:last-child {
-            color: #111827;
+        .meta-list td:first-child {
+            width: 38%;
             font-weight: 600;
+            padding-left: 4px; /* shifted slightly to the right */
         }
-        .meta-table tr { border-bottom: 1px solid #f3f4f6; }
-        .meta-table tr:last-child { border-bottom: none; }
+        .meta-list td:last-child {
+            width: 62%;
+            text-align: right;
+            font-weight: 600;
+            padding-right: 4px; /* shifted slightly to the left */
+        }
 
-        /* Payment badge */
-        .pay-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            background: var(--primary);
-            color: #fff;
-            border-radius: 20px;
-            padding: 2px 9px;
+        .credit-customer-box {
+            border: 1px solid #000000;
+            padding: 6px 8px;
+            margin: 6px 2px 10px 2px;
             font-size: 11px;
-            font-weight: 700;
+        }
+        .credit-customer-title {
+            font-weight: 800;
+            text-transform: uppercase;
+            font-size: 10.5px;
+            border-bottom: 1px dashed #000000;
+            padding-bottom: 3px;
+            margin-bottom: 4px;
         }
 
-        /* ── Items ────────────────────────────────────────────── */
-        .items-title {
-            font-size: 10px;
-            font-weight: 700;
-            color: #9ca3af;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 8px;
-        }
+        /* Items Table */
         .items-table {
             width: 100%;
             border-collapse: collapse;
+            table-layout: fixed;
+            margin: 8px 0;
+            border-top: 1px dashed #000000;
+            border-bottom: 1px dashed #000000;
         }
-        .items-table thead th {
-            font-size: 10px;
-            color: #9ca3af;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: .5px;
-            border-bottom: 1.5px solid #f3f4f6;
-            padding: 5px 0;
-        }
-        .items-table thead th:not(:first-child) { text-align: right; }
-        .items-table tbody td {
-            padding: 8px 0;
-            border-bottom: 1px dashed #f3f4f6;
-            font-size: 12px;
-            color: #374151;
-            vertical-align: top;
-        }
-        .items-table tbody tr:last-child td { border-bottom: none; }
-        .items-table tbody td:not(:first-child) { text-align: right; }
-        .item-name  { font-weight: 600; color: #111827; line-height: 1.3; font-size: 12.5px; }
-        .item-meta  { font-size: 10px; color: #9ca3af; font-family: 'JetBrains Mono', monospace; margin-top: 1px; }
-        .item-total { font-weight: 700; color: #111827; }
-
-        /* ── Totals ────────────────────────────────────────────── */
-        .totals-wrap {
-            margin-top: 12px;
-            border-top: 1.5px dashed #e5e7eb;
-            padding-top: 12px;
-        }
-        .t-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 3px 0;
-            font-size: 12.5px;
-            color: #6b7280;
-        }
-        .t-row.discount { color: var(--success); }
-        .t-row.grand {
-            border-top: 2px solid #111827;
-            margin-top: 8px;
-            padding-top: 10px;
-            font-size: 17px;
+        .items-table th {
+            font-size: 11px;
             font-weight: 800;
-            color: #111827;
+            text-transform: uppercase;
+            padding: 6px 2px;
+            border-bottom: 1px solid #000000;
+            color: #000000;
         }
-        .t-row.paid-row { font-weight: 600; color: #374151; margin-top: 4px; }
-        .change-box {
-            margin-top: 8px;
-            background: var(--success-lt);
-            border-radius: 8px;
-            padding: 9px 12px;
+        .items-table td {
+            padding: 5px 2px;
+            font-size: 11.5px;
+            vertical-align: top;
+            color: #000000;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        .items-table tbody tr:not(:last-child) td {
+            border-bottom: 1px dotted #cccccc;
+        }
+        .col-item  { width: 46%; text-align: left; padding-left: 4px; } /* shifted right */
+        .col-qty   { width: 14%; text-align: center; }
+        .col-rate  { width: 19%; text-align: right; padding-right: 4px; }
+        .col-total { width: 21%; text-align: right; font-weight: 700; padding-right: 4px; } /* shifted left */
+
+        .item-name-text {
+            font-weight: 700;
+            line-height: 1.25;
+            color: #000000;
+        }
+        .item-disc-text {
+            font-size: 10px;
+            font-weight: 600;
+            margin-top: 1px;
+        }
+
+        /* Totals */
+        .totals-section {
+            padding-top: 4px;
+            margin-bottom: 10px;
+        }
+        .calc-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 14px;
+            padding: 2px 0;
+            font-size: 12px;
+            color: #000000;
+        }
+        .calc-row span:first-child {
+            padding-left: 4px; /* shifted right */
+        }
+        .calc-row span:last-child {
+            padding-right: 4px; /* shifted left */
+        }
+        .calc-row.grand-total {
+            border-top: 2px solid #000000;
+            border-bottom: 2px solid #000000;
+            margin: 6px 0;
+            padding: 6px 0;
+            font-size: 16px;
+            font-weight: 800;
+        }
+        .calc-row.paid-line {
             font-weight: 700;
-            color: var(--success-dk);
+        }
+        .calc-row.change-line {
+            font-size: 13px;
+            font-weight: 800;
+            border-top: 1px dashed #000000;
+            padding-top: 4px;
+            margin-top: 4px;
         }
 
-        /* ── Footer ────────────────────────────────────────────── */
+        /* Footer */
         .receipt-footer {
-            padding: 14px 20px 20px;
             text-align: center;
-            border-top: 1.5px dashed #e5e7eb;
-            margin-top: 12px;
+            border-top: 1px dashed #000000;
+            padding-top: 10px;
+            margin-top: 8px;
+            font-size: 11px;
+            line-height: 1.4;
         }
-        .thank-you   { font-size: 14px; font-weight: 700; color: #111827; }
-        .footer-note { font-size: 11px; color: #9ca3af; margin-top: 4px; line-height: 1.5; }
+        .footer-thanks {
+            font-weight: 800;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
 
-        /* Pseudo barcode strip */
-        .barcode-strip {
-            margin-top: 14px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
+        .barcode-section {
+            margin-top: 10px;
+            text-align: center;
         }
-        .barcode-bars {
-            height: 36px;
-            width: 180px;
+        .barcode-lines {
+            display: inline-block;
+            height: 32px;
+            width: 170px;
             background: repeating-linear-gradient(
                 90deg,
                 #000 0px, #000 1px,
                 transparent 1px, transparent 2px,
-                #000 2px, #000 3px,
-                transparent 3px, transparent 5px,
-                #000 5px, #000 7px,
+                #000 2px, #000 4px,
+                transparent 4px, transparent 6px,
+                #000 6px, #000 7px,
                 transparent 7px, transparent 9px,
-                #000 9px, #000 11px,
-                transparent 11px, transparent 14px,
-                #000 14px, #000 15px,
-                transparent 15px, transparent 17px,
-                #000 17px, #000 19px,
-                transparent 19px, transparent 21px,
-                #000 21px, #000 22px,
-                transparent 22px, transparent 25px,
-                #000 25px, #000 26px,
-                transparent 26px, transparent 28px,
-                #000 28px, #000 29px,
-                transparent 29px, transparent 31px,
-                #000 31px, #000 33px,
-                transparent 33px, transparent 36px,
-                #000 36px, #000 37px,
+                #000 9px, #000 12px,
+                transparent 12px, transparent 13px,
+                #000 13px, #000 16px,
+                transparent 16px, transparent 18px,
+                #000 18px, #000 19px,
+                transparent 19px, transparent 22px,
+                #000 22px, #000 24px,
+                transparent 24px, transparent 25px,
+                #000 25px, #000 28px,
+                transparent 28px, transparent 31px,
+                #000 31px, #000 32px,
+                transparent 32px, transparent 35px,
+                #000 35px, #000 37px,
                 transparent 37px, transparent 38px,
-                #000 38px, #000 39px,
-                transparent 39px, transparent 41px,
-                #000 41px, #000 42px,
-                transparent 42px, transparent 45px,
-                #000 45px, #000 46px,
-                transparent 46px, transparent 47px,
-                #000 47px, #000 49px,
-                transparent 49px, transparent 50px,
-                #000 50px, #000 51px,
-                transparent 51px, transparent 54px,
-                #000 54px, #000 55px,
-                transparent 55px, transparent 57px,
-                #000 57px, #000 59px,
-                transparent 59px, transparent 61px,
-                #000 61px, #000 63px,
-                transparent 63px, transparent 65px,
-                #000 65px, #000 67px,
-                transparent 67px, transparent 70px,
-                #000 70px, #000 71px,
-                transparent 71px, transparent 73px,
-                #000 73px, #000 74px,
-                transparent 74px, transparent 76px,
-                #000 76px, #000 77px,
-                transparent 77px, transparent 79px,
-                #000 79px, #000 180px
+                #000 38px, #000 41px,
+                transparent 41px, transparent 44px,
+                #000 44px, #000 46px,
+                transparent 46px, transparent 48px,
+                #000 48px, #000 51px,
+                transparent 51px, transparent 52px,
+                #000 52px, #000 55px,
+                transparent 55px, transparent 58px,
+                #000 58px, #000 60px,
+                transparent 60px, transparent 63px,
+                #000 63px, #000 64px,
+                transparent 64px, transparent 67px,
+                #000 67px, #000 70px,
+                transparent 70px, transparent 71px,
+                #000 71px, #000 74px,
+                transparent 74px, transparent 77px,
+                #000 77px, #000 79px,
+                transparent 79px, transparent 81px,
+                #000 81px, #000 84px,
+                transparent 84px, transparent 86px,
+                #000 86px, #000 88px,
+                transparent 88px, transparent 91px,
+                #000 91px, #000 93px,
+                transparent 93px, transparent 96px,
+                #000 96px, #000 98px,
+                transparent 98px, transparent 101px,
+                #000 101px, #000 104px,
+                transparent 104px, transparent 106px,
+                #000 106px, #000 108px,
+                transparent 108px, transparent 111px,
+                #000 111px, #000 114px,
+                transparent 114px, transparent 116px,
+                #000 116px, #000 118px,
+                transparent 118px, transparent 121px,
+                #000 121px, #000 124px,
+                transparent 124px, transparent 126px,
+                #000 126px, #000 129px,
+                transparent 129px, transparent 132px,
+                #000 132px, #000 135px,
+                transparent 135px, transparent 138px,
+                #000 138px, #000 141px,
+                transparent 141px, transparent 144px,
+                #000 144px, #000 147px,
+                transparent 147px, transparent 150px,
+                #000 150px, #000 153px,
+                transparent 153px, transparent 156px,
+                #000 156px, #000 160px,
+                transparent 160px, transparent 163px,
+                #000 163px, #000 170px
             );
         }
-        .barcode-text {
+        .barcode-digits {
             font-family: 'JetBrains Mono', monospace;
             font-size: 10px;
-            color: #6b7280;
+            font-weight: 700;
             letter-spacing: 2px;
+            margin-top: 2px;
         }
 
         /* ═══════════════════════════════════════════════════════
-           PRINT MEDIA — 80mm thermal paper
+           DYNAMIC PRINT MEDIA RULES (80mm & 58mm Thermal Rolls)
         ═══════════════════════════════════════════════════════ */
         @media print {
             @page {
-                size: 80mm auto;   /* 80mm wide, auto height (thermal roll) */
+                size: auto;
                 margin: 0mm;
             }
 
-            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-
-            body {
-                background: #fff !important;
+            html, body {
+                background: #ffffff !important;
+                color: #000000 !important;
+                width: 100% !important;
+                margin: 0 !important;
                 padding: 0 !important;
                 display: block !important;
-                font-size: 11px !important;
+                font-size: 11.5px !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
             }
 
-            /* Hide everything except the receipt */
             .action-bar,
-            .auto-print-wrap  { display: none !important; }
+            .preview-controls {
+                display: none !important;
+            }
 
             .receipt {
-                box-shadow: none !important;
-                border-radius: 0 !important;
-                max-width: 100% !important;
                 width: 100% !important;
+                max-width: 100% !important;
+                margin: 0 auto !important;
+                padding: 2mm 5mm 4mm 5mm !important; /* 5mm on both left and right ensures comfortable framing on all rolls */
+                border: none !important;
+                border-radius: 0 !important;
+                box-shadow: none !important;
+                background: #ffffff !important;
+                color: #000000 !important;
             }
 
-            /* Solid black header for thermal (saves ink, still readable) */
-            .receipt-header {
-                background: #111 !important;
-                padding: 10px 8px 24px !important;
-            }
-            .receipt-header::after {
-                background: #fff !important;
+            .items-table td.col-item,
+            .items-table th.col-item,
+            .meta-list td:first-child,
+            .calc-row span:first-child {
+                padding-left: 3px !important;
             }
 
-            .store-logo   { font-size: 20px !important; }
-            .store-name   { font-size: 14px !important; }
-            .store-tagline { font-size: 9px !important; }
-
-            .receipt-body { padding: 20px 8px 8px !important; }
-
-            .invoice-number { font-size: 13px !important; }
-
-            /* Meta table */
-            .meta-table td { padding: 4px 6px !important; font-size: 9px !important; }
-            .meta-table td:first-child { font-size: 8px !important; }
-
-            /* Pay badge for print */
-            .pay-badge { background: #000 !important; }
-
-            /* Items */
-            .items-table thead th { font-size: 9px !important; padding: 4px 0 !important; }
-            .items-table tbody td { font-size: 10px !important; padding: 5px 0 !important; }
-            .item-name  { font-size: 10px !important; }
-            .item-meta  { font-size: 8px !important; }
-
-            /* Totals */
-            .t-row       { font-size: 10px !important; }
-            .t-row.grand { font-size: 13px !important; }
-            .t-row.paid-row { font-size: 11px !important; }
-            .change-box  {
-                background: #eee !important;
-                color: #000 !important;
-                font-size: 12px !important;
-                padding: 6px 8px !important;
+            .items-table td.col-total,
+            .items-table th.col-total,
+            .meta-list td:last-child,
+            .calc-row span:last-child {
+                padding-right: 3px !important;
             }
 
-            /* Footer */
-            .receipt-footer   { padding: 8px !important; }
-            .thank-you        { font-size: 11px !important; }
-            .footer-note      { font-size: 9px !important; }
-            .barcode-bars     { height: 28px !important; width: 140px !important; }
-            .barcode-text     { font-size: 8px !important; }
+            .store-title {
+                font-size: 14pt !important;
+            }
+
+            .calc-row.grand-total {
+                font-size: 13pt !important;
+            }
+
+            * {
+                color: #000000 !important;
+                box-shadow: none !important;
+                text-shadow: none !important;
+            }
         }
     </style>
 </head>
 <body>
 
-{{-- ═══════ ACTION BAR (screen only) ═══════════════════════════════ --}}
+{{-- ── SCREEN ACTION BAR ─────────────────────────────────────── --}}
 <div class="action-bar">
     <a href="{{ route('cashier.pos') }}" class="btn btn-back">
-        <i class="bi bi-arrow-left"></i> Back to POS
+        <i class="bi bi-arrow-left"></i> POS Counter
     </a>
     <button class="btn btn-print" onclick="window.print()">
-        <i class="bi bi-printer"></i> Print Receipt
+        <i class="bi bi-printer-fill"></i> Print Thermal Receipt
     </button>
 </div>
 
-{{-- Auto-print toggle + keyboard hint --}}
-<div class="auto-print-wrap">
-    <label>
-        <input type="checkbox" id="autoPrintToggle"> Auto-print when opened
+{{-- ── SCREEN PREVIEW TOGGLE & CONTROLS ───────────────────────── --}}
+<div class="preview-controls">
+    <label class="auto-print-wrap" for="autoPrintToggle">
+        <input type="checkbox" id="autoPrintToggle"> Auto-print on open
     </label>
-    <div class="kbd-hint">
-        <kbd class="kbd">Ctrl</kbd>+<kbd class="kbd">P</kbd> to print
+    <div class="width-switch">
+        <button type="button" class="width-btn active" onclick="setRollWidth('80mm', this)">80mm</button>
+        <button type="button" class="width-btn" onclick="setRollWidth('58mm', this)">58mm</button>
     </div>
 </div>
 
-{{-- ═══════ RECEIPT ══════════════════════════════════════════════════ --}}
+{{-- ── MONOCHROME THERMAL RECEIPT ─────────────────────────────── --}}
 <div class="receipt" id="receiptCard">
 
     {{-- Store Header --}}
-    <div class="receipt-header">
-        <span class="store-logo">🔧</span>
-        <div class="store-name">{{ config('store.name', 'Hassan Corporation') }}</div>
-        <div class="store-tagline">{{ config('store.address', 'Rafi Commercial, Bahria Town Phase 8, Rawalpindi.') }} &bull; {{ config('store.phone', '051-8891930') }}</div>
+    <div class="store-header">
+        <div class="store-title">{{ config('store.name', 'Hassan Corporation') }}</div>
+        <div class="store-info">
+            {{ config('store.address', 'Rafi Commercial, Bahria Town Phase 8, Rawalpindi.') }}<br>
+            Phone: {{ config('store.phone', '051-8891930') }}
+        </div>
     </div>
 
-    {{-- Body --}}
-    <div class="receipt-body">
+    {{-- Document Title & Invoice Number --}}
+    <div class="doc-title-wrap">
+        <div class="doc-title">*** SALES RECEIPT ***</div>
+        <div class="doc-invoice-no">{{ $sale->invoice_number }}</div>
+    </div>
 
-        {{-- Invoice number --}}
-        <div class="invoice-section">
-            <div class="invoice-label">Official Receipt / Invoice</div>
-            <div class="invoice-number">{{ $sale->invoice_number }}</div>
-        </div>
-
-        {{-- Meta info --}}
-        <table class="meta-table">
-            <tbody>
-                <tr>
-                    <td>Date</td>
-                    <td>{{ $sale->created_at->format('d M Y') }}, {{ $sale->created_at->format('g:i A') }}</td>
-                </tr>
-                <tr>
-                    <td>Employee</td>
-                    <td>{{ $sale->user?->name ?? 'N/A' }}</td>
-                </tr>
-                <tr>
-                    <td>Payment</td>
-                    <td>
-                        <span class="pay-badge" style="{{ $sale->payment_method === 'credit' ? 'background:#b91c1c;' : '' }}">
-                            {{ $sale->payment_method === 'cash' ? '💵' : ($sale->payment_method === 'card' ? '💳' : '📋') }}
-                            {{ strtoupper($sale->payment_method) }}
-                        </span>
-                    </td>
-                </tr>
-                @if($sale->employee)
-                <tr>
-                    <td>Customer Credit</td>
-                    <td>
-                        <div style="font-weight:700; color:#111827;">{{ $sale->employee->name }}</div>
-                        <div style="font-size:10px; color:#4b5563;">{{ $sale->employee->phone }} · {{ $sale->employee->address }}</div>
-                        <div style="font-size:10px; color:#b91c1c; font-weight:800; margin-top:2px;">
-                            Total Pending Due: {{ pkr($sale->employee->pending_payment, 2) }}
-                        </div>
-                    </td>
-                </tr>
-                @elseif($sale->customer_name && $sale->customer_name !== 'Walk-in Customer')
-                <tr>
-                    <td>Customer</td>
-                    <td>
-                        {{ $sale->customer_name }}
-                        @if($sale->customer_phone) · {{ $sale->customer_phone }} @endif
-                    </td>
-                </tr>
-                @else
-                <tr>
-                    <td>Customer</td>
-                    <td>Walk-in Customer</td>
-                </tr>
-                @endif
-                @if($sale->notes)
-                <tr>
-                    <td>Notes</td>
-                    <td>{{ $sale->notes }}</td>
-                </tr>
-                @endif
-            </tbody>
-        </table>
-
-        {{-- Items --}}
-        <div class="items-title">Items Purchased ({{ $sale->items->sum('quantity') }} pcs)</div>
-        <table class="items-table">
-            <thead>
-                <tr>
-                    <th style="text-align:left; width:46%;">Item</th>
-                    <th>Qty</th>
-                    <th>Price</th>
-                    <th>Total</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($sale->items as $item)
-                <tr>
-                    <td>
-                        <div class="item-name">{{ $item->product_name }}</div>
-                        <div class="item-meta">{{ $item->product_sku }} · {{ strtoupper($item->product_unit) }}</div>
-                        @if($item->discount_amount > 0)
-                            <div class="item-meta" style="color:#10b981;">−{{ pkr($item->discount_amount,2) }} disc.</div>
-                        @endif
-                    </td>
-                    <td>{{ $item->quantity }}</td>
-                    <td>{{ pkr($item->unit_price, 2) }}</td>
-                    <td class="item-total">{{ pkr($item->total_price, 2) }}</td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
-
-        {{-- Totals --}}
-        <div class="totals-wrap">
-            <div class="t-row">
-                <span>Subtotal</span>
-                <span>{{ pkr($sale->subtotal, 2) }}</span>
-            </div>
-
-            @if($sale->discount_amount > 0)
-            <div class="t-row discount">
-                <span>Discount</span>
-                <span>−{{ pkr($sale->discount_amount, 2) }}</span>
-            </div>
-            @endif
-
-            @if($sale->tax_amount > 0)
-            <div class="t-row">
-                <span>Tax</span>
-                <span>{{ pkr($sale->tax_amount, 2) }}</span>
-            </div>
-            @endif
-
-            <div class="t-row grand">
-                <span>TOTAL</span>
-                <span>{{ pkr($sale->total_amount, 2) }}</span>
-            </div>
-
-            @if($sale->payment_method === 'credit')
-            <div class="t-row paid-row" style="color:#b91c1c; font-weight:700;">
-                <span>Billed to Account</span>
-                <span>{{ pkr($sale->total_amount, 2) }}</span>
-            </div>
-            <div class="change-box" style="background:#fef2f2; color:#b91c1c; border:1px solid #fecaca;">
-                <span>📋 Payment Status</span>
-                <span>Unpaid (Credit)</span>
-            </div>
+    {{-- Meta Information --}}
+    <table class="meta-list">
+        <tbody>
+            <tr>
+                <td>Date & Time:</td>
+                <td>{{ $sale->created_at->format('d-m-Y') }} {{ $sale->created_at->format('h:i A') }}</td>
+            </tr>
+            <tr>
+                <td>Cashier / Staff:</td>
+                <td>{{ $sale->user?->name ?? 'POS Cashier' }}</td>
+            </tr>
+            <tr>
+                <td>Payment Mode:</td>
+                <td><strong>{{ strtoupper($sale->payment_method) }}</strong></td>
+            </tr>
+            @if($sale->employee)
+            <tr>
+                <td>Customer Account:</td>
+                <td><strong>{{ $sale->employee->name }}</strong></td>
+            </tr>
+            @elseif($sale->customer_name && $sale->customer_name !== 'Walk-in Customer')
+            <tr>
+                <td>Customer:</td>
+                <td>{{ $sale->customer_name }} {{ $sale->customer_phone ? '(' . $sale->customer_phone . ')' : '' }}</td>
+            </tr>
             @else
-            <div class="t-row paid-row">
-                <span>Paid ({{ strtoupper($sale->payment_method) }})</span>
-                <span>{{ pkr($sale->paid_amount, 2) }}</span>
-            </div>
+            <tr>
+                <td>Customer:</td>
+                <td>Walk-in Customer</td>
+            </tr>
+            @endif
+            @if($sale->notes)
+            <tr>
+                <td>Notes / Ref:</td>
+                <td>{{ $sale->notes }}</td>
+            </tr>
+            @endif
+        </tbody>
+    </table>
 
-            @if($sale->change_amount > 0)
-            <div class="change-box">
-                <span>💵 Change Due</span>
-                <span>{{ pkr($sale->change_amount, 2) }}</span>
-            </div>
-            @endif
-            @endif
+    {{-- Credit Customer Balance Info if Credit Sale --}}
+    @if($sale->payment_method === 'credit' && $sale->employee)
+    <div class="credit-customer-box">
+        <div class="credit-customer-title">Customer Ledger Status</div>
+        <div style="display:flex; justify-content:space-between; padding:0 4px;">
+            <span>Current Invoice Billed:</span>
+            <strong>{{ pkr($sale->total_amount, 0) }}</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; padding:0 4px; margin-top:2px;">
+            <span>Total Outstanding Due:</span>
+            <strong>{{ pkr($sale->employee->pending_payment, 0) }}</strong>
+        </div>
+    </div>
+    @endif
+
+    {{-- Purchased Items Table (Clean, NO decimal points, NO product ID, NO unit/type) --}}
+    <table class="items-table">
+        <thead>
+            <tr>
+                <th class="col-item">Item Description</th>
+                <th class="col-qty">Qty</th>
+                <th class="col-rate">Rate</th>
+                <th class="col-total">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($sale->items as $item)
+            <tr>
+                <td class="col-item">
+                    <div class="item-name-text">{{ $item->product_name }}</div>
+                    @if($item->discount_amount > 0)
+                        <div class="item-disc-text">(Disc: -{{ pkr($item->discount_amount, 0) }})</div>
+                    @endif
+                </td>
+                <td class="col-qty">{{ $item->quantity }}</td>
+                <td class="col-rate">{{ pkr($item->unit_price, 0) }}</td>
+                <td class="col-total">{{ pkr($item->total_price, 0) }}</td>
+            </tr>
+            @endforeach
+        </tbody>
+    </table>
+
+    {{-- Totals Summary (Whole integers, no points, balanced margins) --}}
+    <div class="totals-section">
+        <div class="calc-row">
+            <span>Subtotal ({{ $sale->items->sum('quantity') }} items):</span>
+            <span>{{ pkr($sale->subtotal, 0) }}</span>
         </div>
 
+        @if($sale->discount_amount > 0)
+        <div class="calc-row">
+            <span>Special Discount:</span>
+            <span>-{{ pkr($sale->discount_amount, 0) }}</span>
+        </div>
+        @endif
+
+        @if($sale->tax_amount > 0)
+        <div class="calc-row">
+            <span>Sales Tax:</span>
+            <span>{{ pkr($sale->tax_amount, 0) }}</span>
+        </div>
+        @endif
+
+        <div class="calc-row grand-total">
+            <span>TOTAL AMOUNT:</span>
+            <span>{{ pkr($sale->total_amount, 0) }}</span>
+        </div>
+
+        @if($sale->payment_method === 'credit')
+        <div class="calc-row paid-line">
+            <span>Billed on Credit (Unpaid):</span>
+            <span>{{ pkr($sale->total_amount, 0) }}</span>
+        </div>
+        @else
+        <div class="calc-row paid-line">
+            <span>Amount Paid ({{ strtoupper($sale->payment_method) }}):</span>
+            <span>{{ pkr($sale->paid_amount, 0) }}</span>
+        </div>
+
+        @if($sale->change_amount > 0)
+        <div class="calc-row change-line">
+            <span>Change Returned:</span>
+            <span>{{ pkr($sale->change_amount, 0) }}</span>
+        </div>
+        @endif
+        @endif
     </div>
 
-    {{-- Footer --}}
+    {{-- Receipt Footer --}}
     <div class="receipt-footer">
-        <div class="thank-you">Thank You for Shopping! 🎉</div>
-        <div class="footer-note">
-            We appreciate your business.<br>
-            Please retain this receipt — exchanges within 7 days.
-        </div>
+        <div class="footer-thanks">THANK YOU FOR YOUR BUSINESS!</div>
+        <div>Goods once sold are exchangeable within 7 days with original receipt.</div>
 
-        {{-- CSS bar-code strip --}}
-        <div class="barcode-strip">
-            <div class="barcode-bars"></div>
-            <div class="barcode-text">{{ $sale->invoice_number }}</div>
+        {{-- Barcode --}}
+        <div class="barcode-section">
+            <div class="barcode-lines"></div>
+            <div class="barcode-digits">{{ $sale->invoice_number }}</div>
         </div>
     </div>
 
 </div>
 
 <script>
-    // ── Auto-print query param (?print=1) ──────────────────────
+    // ── Preview Roll Width Switcher (Screen Only) ─────────────────
+    function setRollWidth(width, btn) {
+        const receipt = document.getElementById('receiptCard');
+        document.querySelectorAll('.width-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        if (width === '58mm') {
+            receipt.classList.add('roll-58mm');
+        } else {
+            receipt.classList.remove('roll-58mm');
+        }
+    }
+
+    // ── Auto-print handling (?print=1) ───────────────────────────
     const params    = new URLSearchParams(window.location.search);
     const autoPrint = params.get('print') === '1';
     const toggle    = document.getElementById('autoPrintToggle');
 
-    // Reflect URL state in checkbox
     toggle.checked = autoPrint;
 
-    // If ?print=1, trigger print after a short delay (allows fonts to load)
     if (autoPrint) {
         window.addEventListener('load', () => {
-            setTimeout(() => window.print(), 600);
+            setTimeout(() => window.print(), 500);
         });
     }
 
-    // Checkbox: update URL and trigger print immediately when checked
     toggle.addEventListener('change', function () {
         if (this.checked) {
-            // Add ?print=1 to URL (no page reload)
             const url = new URL(window.location.href);
             url.searchParams.set('print', '1');
             history.replaceState({}, '', url.toString());

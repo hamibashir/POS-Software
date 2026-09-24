@@ -109,7 +109,7 @@ class PosController extends Controller
                 'sale_price'          => (float) $p->sale_price,
                 'cost_price'          => (float) $p->cost_price,
                 'stock_quantity'      => $p->stock_quantity,
-                'low_stock_threshold' => $p->low_stock_threshold ?? 5,
+                'low_stock_threshold' => $p->low_stock_threshold ?? 1,
                 'unit'                => $p->unit,
                 'category'            => $p->category?->name,
                 'image_url'           => $p->image ? asset('storage/' . $p->image) : asset('images/no-image.png'),
@@ -240,7 +240,7 @@ class PosController extends Controller
         $lowStockProducts = Product::whereIn('id', $allProductIds)
             ->where('is_active', true)
             ->where(function ($q) {
-                $q->whereRaw('stock_quantity <= COALESCE(low_stock_threshold, 10)')
+                $q->whereRaw('stock_quantity <= COALESCE(low_stock_threshold, 1)')
                   ->orWhere('stock_quantity', '<=', 0);
             })
             ->with('category:id,name')
@@ -253,7 +253,7 @@ class PosController extends Controller
                 'unit'                => $p->unit ?? 'pcs',
                 'category'            => $p->category?->name ?? 'General',
                 'stock_quantity'      => (int) $p->stock_quantity,
-                'low_stock_threshold' => (int) ($p->low_stock_threshold ?? 10),
+                'low_stock_threshold' => (int) ($p->low_stock_threshold ?? 1),
                 'is_out_of_stock'     => (int) $p->stock_quantity <= 0,
                 'cost_price'          => (float) $p->cost_price,
                 'sale_price'          => (float) $p->sale_price,
