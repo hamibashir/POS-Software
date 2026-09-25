@@ -52,6 +52,10 @@ Route::middleware(['auth', 'admin'])
         // Products — generate-sku must be BEFORE resource to avoid wildcard conflict
         Route::get('products/generate-sku', [ProductController::class, 'generateSku'])
             ->name('products.generate-sku');
+        Route::patch('products/{product}/quick-stock', [ProductController::class, 'quickStockUpdate'])
+            ->name('products.quick-stock');
+        Route::post('products/{product}/quick-image', [ProductController::class, 'quickImageUpdate'])
+            ->name('products.quick-image');
         Route::resource('products', ProductController::class);
         Route::patch('products/{product}/toggle-status', [ProductController::class, 'toggleStatus'])
             ->name('products.toggle-status');

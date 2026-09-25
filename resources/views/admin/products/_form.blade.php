@@ -273,14 +273,18 @@
                 style="border:2px dashed #cbd5e1; border-radius:12px; padding:20px; text-align:center; cursor:pointer; background:#f8fafc; transition:all .2s ease; outline:none;"
                 onclick="handleUploadAreaClick(event)">
                 <div class="d-flex justify-content-center gap-3 mb-2 text-muted">
-                    <i class="bi bi-cloud-arrow-up fs-2 text-primary"></i>
-                    <i class="bi bi-clipboard2-pulse fs-2 text-success"></i>
+                    <i class="bi bi-camera-fill fs-2 text-success" title="Phone Camera"></i>
+                    <i class="bi bi-cloud-arrow-up fs-2 text-primary" title="Upload File"></i>
+                    <i class="bi bi-clipboard2-pulse fs-2 text-info" title="Paste Image"></i>
                 </div>
-                <p class="mb-1 fw-bold text-dark" style="font-size:13.5px;">Click to upload, drag & drop, or paste image</p>
+                <p class="mb-1 fw-bold text-dark" style="font-size:13.5px;">Take photo, upload file, or paste image</p>
                 <p class="mb-2" style="font-size:11.5px; color:#64748b;">
-                    Press <kbd style="background:#e2e8f0; color:#0f172a; padding:2px 6px; border-radius:4px; font-weight:700;">Ctrl + V</kbd> to paste any copied image from the internet or screenshots
+                    On phones, tap <strong>Take Photo</strong> to capture with camera on the spot &middot; or press <kbd style="background:#e2e8f0; color:#0f172a; padding:2px 6px; border-radius:4px; font-weight:700;">Ctrl + V</kbd> to paste
                 </p>
-                <div class="d-flex justify-content-center gap-2 mt-3" onclick="event.stopPropagation()">
+                <div class="d-flex justify-content-center gap-2 mt-3 flex-wrap" onclick="event.stopPropagation()">
+                    <button type="button" class="btn btn-sm btn-success px-2 py-1 text-white shadow-sm" style="font-size:11.5px; border-radius:6px; font-weight:600;" onclick="triggerFormCamera()">
+                        <i class="bi bi-camera-fill me-1"></i>Take Photo (Camera)
+                    </button>
                     <button type="button" class="btn btn-sm btn-outline-primary px-2 py-1" style="font-size:11.5px; border-radius:6px;" onclick="pasteFromClipboard()">
                         <i class="bi bi-clipboard-check me-1"></i>Paste Clipboard
                     </button>
@@ -301,6 +305,7 @@
             </div>
 
             <input type="file" name="image" id="imageInput" accept="image/*" class="d-none" onchange="previewImage(this)">
+            <input type="file" id="cameraInput" accept="image/*" capture="environment" class="d-none" onchange="handleFormCameraCapture(this)">
             <input type="hidden" name="image_base64" id="imageBase64">
             <input type="hidden" name="image_url" id="imageUrlInput">
             @error('image')<div class="text-danger mt-1" style="font-size:13px;">{{ $message }}</div>@enderror
@@ -369,6 +374,26 @@
     function handleUploadAreaClick(e) {
         if (e.target.closest('button') || e.target.closest('input')) return;
         document.getElementById('imageInput').click();
+    }
+
+    function triggerFormCamera() {
+        const cam = document.getElementById('cameraInput');
+        if (cam) {
+            cam.value = '';
+            cam.click();
+        }
+    }
+
+    function handleFormCameraCapture(input) {
+        if (!input.files || !input.files[0]) return;
+        try {
+            const dt = new DataTransfer();
+            dt.items.add(input.files[0]);
+            document.getElementById('imageInput').files = dt.files;
+        } catch (e) {
+            console.log('DataTransfer fallback');
+        }
+        previewImage(input);
     }
 
     function toggleUrlInput() {

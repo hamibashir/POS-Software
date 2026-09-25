@@ -102,12 +102,22 @@
     /* ── Product grid ───────────────────────────────────── */
     .cat-prod-grid {
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
         gap: 16px;
+        width: 100%;
     }
-    @media (max-width: 1200px) { .cat-prod-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; } }
-    @media (max-width: 768px)  { .cat-prod-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } }
-    @media (max-width: 360px)  { .cat-prod-grid { grid-template-columns: 1fr; gap: 10px; } }
+    @media (max-width: 992px) {
+        .cat-prod-grid {
+            grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
+            gap: 12px;
+        }
+    }
+    @media (max-width: 640px) {
+        .cat-prod-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+    }
 
     /* ── Product card ───────────────────────────────────── */
     .prod-card {
@@ -130,7 +140,7 @@
     }
     .prod-img-wrap {
         width: 100%;
-        aspect-ratio: 1 / 1;
+        height: 180px;
         overflow: hidden;
         position: relative;
         background: #f8fafc;
@@ -138,6 +148,11 @@
         align-items: center;
         justify-content: center;
         border-bottom: 1px solid #f1f5f9;
+    }
+    @media (max-width: 640px) {
+        .prod-img-wrap {
+            height: 145px;
+        }
     }
     .prod-img-bg {
         width: 100%;
@@ -156,6 +171,13 @@
         display: inline-flex; align-items: center; gap: 4px;
         font-size: 10px; font-weight: 700;
         padding: 3px 7px; border-radius: 5px;
+    }
+    @media (max-width: 640px) {
+        .stock-badge {
+            font-size: 9px;
+            padding: 2px 5px;
+            top: 6px; left: 6px;
+        }
     }
     .stock-badge .dot { width: 5px; height: 5px; border-radius: 50%; display: block; flex-shrink: 0; }
     .badge-instock  { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
@@ -189,6 +211,11 @@
         flex-direction: column;
         min-width: 0;
     }
+    @media (max-width: 640px) {
+        .prod-card-body {
+            padding: 10px 10px;
+        }
+    }
     .prod-cat-label {
         font-size: 11px;
         font-weight: 600;
@@ -215,6 +242,12 @@
         overflow-wrap: break-word;
         transition: color .15s;
     }
+    @media (max-width: 640px) {
+        .prod-title {
+            font-size: 12.5px;
+            margin-bottom: 6px;
+        }
+    }
     .prod-card:hover .prod-title { color: var(--primary); }
     .prod-card-footer {
         margin-top: auto;
@@ -228,6 +261,11 @@
         font-size: 15px;
         font-weight: 700;
         color: #0f172a;
+    }
+    @media (max-width: 640px) {
+        .prod-price {
+            font-size: 13.5px;
+        }
     }
     .prod-price.strike {
         color: #94a3b8;
@@ -391,13 +429,13 @@
                         <span class="material-symbols-outlined" style="font-size:16px;">chevron_left</span>
                     </span>
                 @else
-                    <a href="{{ $products->previousPageUrl() }}" class="page-link">
+                    <a href="{{ $products->appends(request()->query())->previousPageUrl() }}" class="page-link">
                         <span class="material-symbols-outlined" style="font-size:16px;">chevron_left</span>
                     </a>
                 @endif
 
                 {{-- Pages --}}
-                @foreach($products->getUrlRange(1, $products->lastPage()) as $page => $url)
+                @foreach($products->appends(request()->query())->getUrlRange(1, $products->lastPage()) as $page => $url)
                     <a href="{{ $url }}" class="page-link {{ $page == $products->currentPage() ? 'active' : '' }}">
                         {{ $page }}
                     </a>
@@ -405,7 +443,7 @@
 
                 {{-- Next --}}
                 @if($products->hasMorePages())
-                    <a href="{{ $products->nextPageUrl() }}" class="page-link">
+                    <a href="{{ $products->appends(request()->query())->nextPageUrl() }}" class="page-link">
                         <span class="material-symbols-outlined" style="font-size:16px;">chevron_right</span>
                     </a>
                 @else

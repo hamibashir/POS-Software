@@ -10,6 +10,7 @@ use App\Models\Product;
 use App\Models\Supplier;
 use App\Services\ProductService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
@@ -150,6 +151,109 @@ class ProductController extends Controller
 
         return redirect()->route('admin.products.index', $request->query())
             ->with('success', "Product \"{$name}\" deleted.");
+    }
+
+    /**
+     * Quick stock adjustment directly from the products list.
+     */
+    public function quickStockUpdate(Request $request, Product $product)
+    {
+        $request->validate([
+            'stock_quantity' => 'nullable|integer',
+            'add_quantity'   => 'nullable|integer',
+            'notes'          => 'nullable|string|max:255',
+        ]);
+
+        $stockBefore = (int) $product->stock_quantity;
+
+        if ($request->filled('add_quantity')) {
+            $add = (int) $request->input('add_quantity');
+            $stockAfter = $stockBefore + $add;
+        } elseif ($request->has('stock_quantity') && $request->input('stock_quantity') !== null && $request->input('stock_quantity') !== '') {
+            $stockAfter = (int) $request->input('stock_quantity');
+        } else {
+            $stockAfter = $stockBefore;
+        }
+
+        $diff = $stockAfter - $stockBefore;
+
+        if ($diff !== 0) {
+            \App\Models\StockMovement::create([
+                'product_id'   => $product->id,
+                'type'         => $diff > 0 ? 'adjustment_in' : 'adjustment_out',
+                'quantity'     => abs($diff),
+                'stock_before' => $stockBefore,
+                'stock_after'  => $stockAfter,
+                'user_id'      => auth()->id(),
+                'notes'        => $request->input('notes') ?: 'Quick stock adjustment from product list',
+            ]);
+
+            $product->update(['stock_quantity' => $stockAfter]);
+        }
+
+        $product->refresh();
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success'            => true,
+                'product_id'         => $product->id,
+                'stock_quantity'     => (int) $product->stock_quantity,
+                'stock_status'       => $product->stock_status,
+                'stock_status_label' => $product->stock_status_label,
+                'badge_class'        => $product->stock_status === 'in_stock' ? 'stock-in' : ($product->stock_status === 'low_stock' ? 'stock-low' : 'stock-out'),
+                'message'            => "Stock for \"{$product->name}\" updated to {$product->stock_quantity}.",
+            ]);
+        }
+
+        return redirect()->route('admin.products.index', $request->query())
+            ->with('success', "Stock for \"{$product->name}\" updated to {$product->stock_quantity}.");
+    }
+
+    /**
+     * Update product image directly from products table (AJAX or standard POST).
+     */
+    public function quickImageUpdate(Request $request, Product $product)
+    {
+        $request->validate([
+            'image'        => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp,gif', 'max:5120'],
+            'image_base64' => ['nullable', 'string'],
+            'image_url'    => ['nullable', 'url'],
+            'remove_image' => ['nullable'],
+        ]);
+
+        $removeImage = $request->boolean('remove_image');
+        $data = [];
+
+        if ($request->filled('image_base64')) {
+            $data['image_base64'] = $request->input('image_base64');
+        }
+        if ($request->filled('image_url')) {
+            $data['image_url'] = $request->input('image_url');
+        }
+
+        $this->productService->processImage($data, $request->file('image'), $product, $removeImage);
+
+        if (array_key_exists('image', $data) || $removeImage) {
+            $product->update(['image' => $data['image'] ?? null]);
+        }
+
+        $product->refresh();
+
+        $imageUrl = $product->image ? Storage::url($product->image) : asset('images/no-image.png');
+        $hasImage = (bool) $product->image;
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success'    => true,
+                'product_id' => $product->id,
+                'image_url'  => $imageUrl,
+                'has_image'  => $hasImage,
+                'message'    => $hasImage ? "Image for \"{$product->name}\" updated successfully." : "Image removed for \"{$product->name}\".",
+            ]);
+        }
+
+        return redirect()->route('admin.products.index', $request->query())
+            ->with('success', $hasImage ? "Image for \"{$product->name}\" updated successfully." : "Image removed for \"{$product->name}\".");
     }
 
     /**

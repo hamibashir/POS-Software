@@ -7,6 +7,8 @@ use App\Models\Product;
 use App\Models\StockMovement;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class ProductManagementTest extends TestCase
@@ -283,4 +285,116 @@ class ProductManagementTest extends TestCase
         $toggleResponse = $this->actingAs($this->admin)->patch($toggleUrl);
         $toggleResponse->assertRedirect(route('admin.products.index', $queryParams));
     }
+
+    public function test_admin_can_quick_update_stock_outside_edit_panel(): void
+    {
+        // 1. Direct stock quantity update via AJAX
+        $url = route('admin.products.quick-stock', $this->product);
+        $response = $this->actingAs($this->admin)
+            ->json('PATCH', $url, ['stock_quantity' => 45]);
+
+        $response->assertOk()
+            ->assertJson([
+                'success'        => true,
+                'product_id'     => $this->product->id,
+                'stock_quantity' => 45,
+                'stock_status'   => 'in_stock',
+            ]);
+
+        $this->assertEquals(45, $this->product->fresh()->stock_quantity);
+
+        $this->assertDatabaseHas('stock_movements', [
+            'product_id'   => $this->product->id,
+            'type'         => 'adjustment_in',
+            'stock_before' => 30,
+            'stock_after'  => 45,
+            'quantity'     => 15,
+        ]);
+
+        // 2. Relative stock addition (+10 units)
+        $responseAdd = $this->actingAs($this->admin)
+            ->json('PATCH', $url, ['add_quantity' => 10]);
+
+        $responseAdd->assertOk()
+            ->assertJson([
+                'success'        => true,
+                'stock_quantity' => 55,
+            ]);
+
+        $this->assertEquals(55, $this->product->fresh()->stock_quantity);
+
+        // 3. Form submission preserves query parameters on redirect
+        $queryParams = ['page' => '2', 'search' => 'Mixer'];
+        $redirectUrl = route('admin.products.quick-stock', array_merge(['product' => $this->product->id], $queryParams));
+        $formResponse = $this->actingAs($this->admin)
+            ->patch($redirectUrl, ['stock_quantity' => 30]);
+
+        $formResponse->assertRedirect(route('admin.products.index', $queryParams));
+        $this->assertEquals(30, $this->product->fresh()->stock_quantity);
+    }
+
+    public function test_admin_can_quick_update_image_outside_edit_panel(): void
+    {
+        Storage::fake('public');
+
+        // 1. Upload new image file via quick image endpoint
+        $file = UploadedFile::fake()->image('drill.png', 400, 400);
+        $url = route('admin.products.quick-image', $this->product);
+
+        $response = $this->actingAs($this->admin)
+            ->post($url, ['image' => $file], ['Accept' => 'application/json']);
+
+        $response->assertOk()
+            ->assertJson([
+                'success'    => true,
+                'product_id' => $this->product->id,
+                'has_image'  => true,
+            ]);
+
+        $this->product->refresh();
+        $this->assertNotNull($this->product->image);
+        Storage::disk('public')->assertExists($this->product->image);
+
+        // 2. Base64 pasted image update
+        $base64Data = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+        $responseBase64 = $this->actingAs($this->admin)
+            ->post($url, ['image_base64' => $base64Data], ['Accept' => 'application/json']);
+
+        $responseBase64->assertOk()
+            ->assertJson([
+                'success'    => true,
+                'product_id' => $this->product->id,
+                'has_image'  => true,
+            ]);
+
+        $this->product->refresh();
+        $this->assertNotNull($this->product->image);
+        Storage::disk('public')->assertExists($this->product->image);
+
+        // 3. Remove image
+        $responseRemove = $this->actingAs($this->admin)
+            ->post($url, ['remove_image' => '1'], ['Accept' => 'application/json']);
+
+        $responseRemove->assertOk()
+            ->assertJson([
+                'success'    => true,
+                'product_id' => $this->product->id,
+                'has_image'  => false,
+            ]);
+
+        $this->product->refresh();
+        $this->assertNull($this->product->image);
+
+        // 4. Non-AJAX POST preserves query parameters
+        $queryParams = ['page' => '3', 'category_id' => '1'];
+        $redirectUrl = route('admin.products.quick-image', array_merge(['product' => $this->product->id], $queryParams));
+        $file2 = UploadedFile::fake()->image('pipe.jpg');
+
+        $redirectResponse = $this->actingAs($this->admin)
+            ->post($redirectUrl, ['image' => $file2]);
+
+        $redirectResponse->assertRedirect(route('admin.products.index', $queryParams));
+        $this->assertNotNull($this->product->fresh()->image);
+    }
 }
+

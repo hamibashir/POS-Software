@@ -1,34 +1,33 @@
 @extends('layouts.catalog')
 
 @section('title', $q ? 'Search: "' . $q . '"' : 'All Products')
-@section('meta_description', $q ? 'Search results for "' . $q . '" in our sanitary and hardware product catalog.' : 'Browse all sanitary, hardware, plumbing, electrical, and tool products.')
+@section('meta_description', $q ? 'Search results for "' . $q . '" in our catalog.' : 'Browse all sanitary, hardware, plumbing, electrical, appliances, and tool products.')
 
 @push('styles')
 <style>
-    /* ── Page grid ──────────────────────────────────────────── */
-    .search-page-grid {
+    /* ── Page grid ──────────────────────────────────────── */
+    .cat-page-grid {
         display: grid;
         grid-template-columns: 240px 1fr;
         gap: 28px;
         align-items: start;
     }
     @media (max-width: 860px) {
-        .search-page-grid { grid-template-columns: 1fr; }
-        .cat-sidebar        { display: none; }
+        .cat-page-grid { grid-template-columns: 1fr; }
+        .cat-sidebar    { display: none; }
     }
 
-    /* ── Breadcrumb ─────────────────────────────────────────── */
+    /* ── Breadcrumb ─────────────────────────────────────── */
     .breadcrumb-row {
         display: flex; align-items: center; gap: 6px;
-        font-size: 13px; font-weight: 500; color: #64748b;
+        font-size: 13px; color: #64748b;
         margin-bottom: 24px;
     }
-    .breadcrumb-row a { color: #64748b; text-decoration: none; transition: color .15s; }
-    .breadcrumb-row a:hover { color: var(--primary); }
-    .breadcrumb-row .current { color: #0f172a; font-weight: 600; }
-    .breadcrumb-row .ms-icon { font-size: 14px; color: #cbd5e1; }
+    .breadcrumb-row a { color: var(--primary); text-decoration: none; font-weight: 500; }
+    .breadcrumb-row a:hover { text-decoration: underline; }
+    .breadcrumb-row .sep { color: #cbd5e1; }
 
-    /* ── Sidebar ────────────────────────────────────────────── */
+    /* ── Sidebar ────────────────────────────────────────── */
     .cat-sidebar {
         background: #fff;
         border: 1px solid #e2e8f0;
@@ -52,7 +51,7 @@
         justify-content: space-between;
     }
     .sidebar-link:hover  { background: #f1f5f9; color: var(--primary); }
-    .sidebar-link.all-active { background: var(--primary-lt); color: var(--primary); font-weight: 600; }
+    .sidebar-link.active { background: var(--primary-lt); color: var(--primary); font-weight: 600; }
     .sidebar-link .left  { display: flex; align-items: center; gap: 8px; }
     .sidebar-link .ms-icon { font-size: 18px; }
     .sidebar-link .badge {
@@ -61,24 +60,33 @@
         padding: 2px 7px; border-radius: 10px;
         min-width: 24px; text-align: center;
     }
-    .sidebar-link.all-active .badge { background: rgba(30,109,138,.15); color: var(--primary); }
+    .sidebar-link.active .badge { background: rgba(30,109,138,.15); color: var(--primary); }
 
-    /* ── Main header ────────────────────────────────────────── */
+    /* ── Main area ──────────────────────────────────────── */
     .main-header {
         display: flex; align-items: flex-start;
-        justify-content: space-between; flex-wrap: wrap; gap: 12px;
+        justify-content: space-between;
+        flex-wrap: wrap; gap: 12px;
         margin-bottom: 22px;
     }
-    .main-header h1 { font-size: 22px; font-weight: 800; color: #0f172a; margin: 0; }
-    .main-header .sub { font-size: 13px; color: #64748b; margin-top: 4px; }
+    .main-header h1 {
+        font-size: 24px; font-weight: 800;
+        color: #0f172a; margin: 0;
+    }
+    .main-header .sub {
+        font-size: 13px; color: #64748b; margin-top: 4px;
+    }
 
-    /* search bar */
-    .inline-search { display: flex; gap: 8px; }
+    /* inline search */
+    .inline-search {
+        display: flex; gap: 8px;
+    }
     .inline-search input {
-        width: 240px; height: 40px;
+        width: 220px; height: 40px;
         border: 1.5px solid #e2e8f0; border-radius: 8px;
         padding: 0 14px; font-size: 14px; color: #0f172a;
-        outline: none; transition: border-color .15s; background: #f8fafc;
+        outline: none; transition: border-color .15s;
+        background: #f8fafc;
     }
     .inline-search input:focus { border-color: var(--primary); background: #fff; }
     .inline-search button {
@@ -87,21 +95,31 @@
         border: none; border-radius: 8px; cursor: pointer;
         display: flex; align-items: center; gap: 6px;
         font-size: 14px; font-weight: 600;
-        transition: background .15s; white-space: nowrap;
+        transition: background .15s;
     }
     .inline-search button:hover { background: var(--primary-dk); }
 
-    /* ── Product grid ───────────────────────────────────────── */
-    .search-grid {
+    /* ── Product grid ───────────────────────────────────── */
+    .cat-prod-grid {
         display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
         gap: 16px;
+        width: 100%;
     }
-    @media (max-width: 1200px) { .search-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; } }
-    @media (max-width: 768px)  { .search-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } }
-    @media (max-width: 360px)  { .search-grid { grid-template-columns: 1fr; gap: 10px; } }
+    @media (max-width: 992px) {
+        .cat-prod-grid {
+            grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
+            gap: 12px;
+        }
+    }
+    @media (max-width: 640px) {
+        .cat-prod-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+    }
 
-    /* ── Product card ───────────────────────────────────────── */
+    /* ── Product card ───────────────────────────────────── */
     .prod-card {
         background: #fff;
         border-radius: 12px;
@@ -122,7 +140,7 @@
     }
     .prod-img-wrap {
         width: 100%;
-        aspect-ratio: 1 / 1;
+        height: 180px;
         overflow: hidden;
         position: relative;
         background: #f8fafc;
@@ -130,6 +148,11 @@
         align-items: center;
         justify-content: center;
         border-bottom: 1px solid #f1f5f9;
+    }
+    @media (max-width: 640px) {
+        .prod-img-wrap {
+            height: 145px;
+        }
     }
     .prod-img-bg {
         width: 100%;
@@ -148,6 +171,13 @@
         display: inline-flex; align-items: center; gap: 4px;
         font-size: 10px; font-weight: 700;
         padding: 3px 7px; border-radius: 5px;
+    }
+    @media (max-width: 640px) {
+        .stock-badge {
+            font-size: 9px;
+            padding: 2px 5px;
+            top: 6px; left: 6px;
+        }
     }
     .stock-badge .dot { width: 5px; height: 5px; border-radius: 50%; display: block; flex-shrink: 0; }
     .badge-instock  { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
@@ -181,6 +211,11 @@
         flex-direction: column;
         min-width: 0;
     }
+    @media (max-width: 640px) {
+        .prod-card-body {
+            padding: 10px 10px;
+        }
+    }
     .prod-cat-label {
         font-size: 11px;
         font-weight: 600;
@@ -207,6 +242,12 @@
         overflow-wrap: break-word;
         transition: color .15s;
     }
+    @media (max-width: 640px) {
+        .prod-title {
+            font-size: 12.5px;
+            margin-bottom: 6px;
+        }
+    }
     .prod-card:hover .prod-title { color: var(--primary); }
     .prod-card-footer {
         margin-top: auto;
@@ -220,6 +261,11 @@
         font-size: 15px;
         font-weight: 700;
         color: #0f172a;
+    }
+    @media (max-width: 640px) {
+        .prod-price {
+            font-size: 13.5px;
+        }
     }
     .prod-price.strike {
         color: #94a3b8;
@@ -241,7 +287,7 @@
     }
     .wish-btn:hover { background: var(--primary-lt); }
 
-    /* ── Pagination ─────────────────────────────────────────── */
+    /* ── Pagination ─────────────────────────────────────── */
     .pg-wrap { display: flex; justify-content: center; margin-top: 32px; gap: 6px; }
     .pg-wrap .page-link {
         display: flex; align-items: center; justify-content: center;
@@ -254,37 +300,6 @@
     .pg-wrap .page-link:hover   { border-color: var(--primary); color: var(--primary); background: var(--primary-lt); }
     .pg-wrap .page-link.active  { background: var(--primary); color: #fff; border-color: var(--primary); }
     .pg-wrap .page-link.disabled{ color: #cbd5e1; pointer-events: none; }
-
-    /* ── Category banner strip ──────────────────────────────── */
-    .cat-banner-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-        gap: 12px;
-        margin-bottom: 32px;
-    }
-    .cat-banner-card {
-        display: flex; flex-direction: column;
-        align-items: center; text-align: center;
-        padding: 16px 10px; border-radius: 12px;
-        background: #fff; border: 1px solid #e2e8f0;
-        text-decoration: none; color: var(--text);
-        transition: border-color .2s, box-shadow .2s, transform .2s;
-    }
-    .cat-banner-card:hover {
-        border-color: rgba(30,109,138,.45);
-        box-shadow: 0 4px 16px rgba(0,0,0,.08);
-        transform: translateY(-2px);
-    }
-    .cat-banner-card .icon-wrap {
-        width: 48px; height: 48px; border-radius: 50%;
-        background: #eff6ff;
-        display: flex; align-items: center; justify-content: center;
-        margin-bottom: 8px; transition: background .2s;
-    }
-    .cat-banner-card:hover .icon-wrap { background: var(--primary-lt); }
-    .cat-banner-card .ms-icon { font-size: 22px; color: var(--primary); }
-    .cat-banner-card .cat-name { font-size: 12px; font-weight: 600; color: #374151; }
-    .cat-banner-card .cat-count { font-size: 11px; color: #94a3b8; margin-top: 2px; }
 </style>
 @endpush
 
@@ -292,62 +307,28 @@
 <div class="cat-page">
 
     {{-- Breadcrumb --}}
-    <nav class="breadcrumb-row">
-        <a href="{{ route('catalog.home') }}">Home</a>
-        <span class="material-symbols-outlined ms-icon">chevron_right</span>
-        @if($q)
-            <a href="{{ route('catalog.search') }}" style="color:#64748b;">All Products</a>
-            <span class="material-symbols-outlined ms-icon">chevron_right</span>
-            <span class="current">Search: "{{ $q }}"</span>
-        @else
-            <span class="current">All Products</span>
-        @endif
-    </nav>
-
-    {{-- ── Category quick-access strip (only on browse-all, not search results) --}}
-    @if(!$q && $categories->count())
-    @php
-    $iconMap = [
-        'electric tool' => 'handyman',
-        'hand tool'     => 'construction',
-        'sanitary'      => 'plumbing',
-        'paint'         => 'format_paint',
-        'hardware'      => 'hardware',
-        'appliance'     => 'kitchen',
-        'light'         => 'lightbulb',
-        'electric'      => 'bolt',
-        'power'         => 'handyman',
-        'tool'          => 'construction',
-    ];
-    @endphp
-    <div class="cat-banner-grid">
-        @foreach($categories as $cat)
-        @php
-            $msIcon = 'category';
-            foreach ($iconMap as $k => $v) {
-                if (stripos($cat->name, $k) !== false || ($cat->icon && stripos($cat->icon, $k) !== false)) {
-                    $msIcon = $v; break;
-                }
-            }
-        @endphp
-        <a href="{{ route('catalog.category', $cat->slug) }}" class="cat-banner-card">
-            <div class="icon-wrap">
-                <span class="material-symbols-outlined ms-icon">{{ $msIcon }}</span>
-            </div>
-            <span class="cat-name">{{ $cat->name }}</span>
-            <span class="cat-count">{{ $cat->products_count }} items</span>
+    <div class="breadcrumb-row">
+        <a href="{{ route('catalog.home') }}">
+            <span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;">home</span>
+            Home
         </a>
-        @endforeach
+        <span class="sep">/</span>
+        @if($q)
+            <a href="{{ route('catalog.search') }}">All Products</a>
+            <span class="sep">/</span>
+            <span style="color:#0f172a;font-weight:600;">Search: "{{ $q }}"</span>
+        @else
+            <span style="color:#0f172a;font-weight:600;">All Products</span>
+        @endif
     </div>
-    @endif
 
-    <div class="search-page-grid">
+    <div class="cat-page-grid">
 
-        {{-- ── Sidebar ───────────────────────────────────── --}}
+        {{-- ── Sidebar ─────────────────────────────────── --}}
         <aside class="cat-sidebar">
             <div class="sidebar-title">Categories</div>
             <a href="{{ route('catalog.search') }}"
-               class="sidebar-link {{ !$q ? 'all-active' : '' }}">
+               class="sidebar-link {{ !$q ? 'active' : '' }}">
                 <span class="left">
                     <span class="material-symbols-outlined ms-icon">grid_view</span>
                     All Products
@@ -356,7 +337,7 @@
             </a>
 
             @php
-            $iconMap2 = [
+            $iconMap = [
                 'electric tool' => 'handyman',
                 'hand tool'     => 'construction',
                 'sanitary'      => 'plumbing',
@@ -369,10 +350,11 @@
                 'tool'          => 'construction',
             ];
             @endphp
+
             @foreach($categories as $cat)
             @php
                 $msIcon = 'category';
-                foreach ($iconMap2 as $k => $v) {
+                foreach ($iconMap as $k => $v) {
                     if (stripos($cat->name, $k) !== false || ($cat->icon && stripos($cat->icon, $k) !== false)) {
                         $msIcon = $v; break;
                     }
@@ -388,24 +370,16 @@
             @endforeach
         </aside>
 
-        {{-- ── Main ─────────────────────────────────────── --}}
+        {{-- ── Main content ────────────────────────────── --}}
         <div>
+            {{-- Header --}}
             <div class="main-header">
                 <div>
-                    <h1>
-                        @if($q)
-                            Results for "<span style="color:var(--primary);">{{ $q }}</span>"
-                        @else
-                            All Products
-                        @endif
-                    </h1>
+                    <h1>{{ $q ? 'Results for "' . $q . '"' : 'All Products' }}</h1>
                     <p class="sub">
                         {{ $products->total() }} product{{ $products->total() !== 1 ? 's' : '' }} found
-                        @if($q) &nbsp;·&nbsp;
-                            <a href="{{ route('catalog.search') }}"
-                               style="color:var(--primary);text-decoration:none;font-weight:600;">
-                                Clear search
-                            </a>
+                        @if($q)
+                            &nbsp;·&nbsp;<a href="{{ route('catalog.search') }}" style="color:var(--primary);font-weight:600;text-decoration:none;">Clear search</a>
                         @endif
                     </p>
                 </div>
@@ -419,11 +393,14 @@
                 </form>
             </div>
 
+            {{-- Product grid --}}
             @if($products->count())
-            <div class="search-grid">
+            <div class="cat-prod-grid">
                 @foreach($products as $product)
                 <a href="{{ route('catalog.product', $product->slug) }}" class="prod-card">
+
                     <div class="prod-img-wrap">
+                        {{-- Stock badge --}}
                         @if($product->stock_status === 'in_stock')
                             <span class="stock-badge badge-instock"><span class="dot"></span> In Stock</span>
                         @elseif($product->stock_status === 'low_stock')
@@ -431,14 +408,17 @@
                         @else
                             <span class="stock-badge badge-outstock"><span class="dot"></span> Out of Stock</span>
                         @endif
+
                         <div class="prod-img-bg {{ $product->stock_status === 'out_of_stock' ? 'out-of-stock' : '' }}"
                              style="background-image: url('{{ $product->image_url }}');"></div>
+
                         <div class="prod-img-overlay">
                             <button class="prod-overlay-btn" tabindex="-1">
                                 @if($product->stock_status === 'out_of_stock') Notify Me @else Quick View @endif
                             </button>
                         </div>
                     </div>
+
                     <div class="prod-card-body">
                         <div class="prod-cat-label">{{ $product->category?->name }}</div>
                         <div class="prod-title" title="{{ $product->name }}">{{ $product->name }}</div>
@@ -458,20 +438,27 @@
             {{-- Pagination --}}
             @if($products->hasPages())
             <div class="pg-wrap">
+                {{-- Prev --}}
                 @if($products->onFirstPage())
                     <span class="page-link disabled">
                         <span class="material-symbols-outlined" style="font-size:16px;">chevron_left</span>
                     </span>
                 @else
-                    <a href="{{ $products->previousPageUrl() }}" class="page-link">
+                    <a href="{{ $products->appends(request()->query())->previousPageUrl() }}" class="page-link">
                         <span class="material-symbols-outlined" style="font-size:16px;">chevron_left</span>
                     </a>
                 @endif
-                @foreach($products->getUrlRange(1, $products->lastPage()) as $page => $url)
-                    <a href="{{ $url }}" class="page-link {{ $page == $products->currentPage() ? 'active' : '' }}">{{ $page }}</a>
+
+                {{-- Pages --}}
+                @foreach($products->appends(request()->query())->getUrlRange(1, $products->lastPage()) as $page => $url)
+                    <a href="{{ $url }}" class="page-link {{ $page == $products->currentPage() ? 'active' : '' }}">
+                        {{ $page }}
+                    </a>
                 @endforeach
+
+                {{-- Next --}}
                 @if($products->hasMorePages())
-                    <a href="{{ $products->nextPageUrl() }}" class="page-link">
+                    <a href="{{ $products->appends(request()->query())->nextPageUrl() }}" class="page-link">
                         <span class="material-symbols-outlined" style="font-size:16px;">chevron_right</span>
                     </a>
                 @else
@@ -483,18 +470,21 @@
             @endif
 
             @else
-            <div style="text-align:center;padding:72px 24px;color:#94a3b8;">
-                <span class="material-symbols-outlined" style="font-size:52px;display:block;margin-bottom:14px;">search_off</span>
-                <p style="font-size:16px;color:#475569;">
-                    No products found for <strong>"{{ $q }}"</strong>.
+            <div style="text-align:center;padding:80px 24px;color:#94a3b8;">
+                <span class="material-symbols-outlined" style="font-size:52px;display:block;margin-bottom:14px;">inventory_2</span>
+                <p style="font-size:16px;">No products found
+                    @if($q) for "<strong style="color:#475569;">{{ $q }}</strong>"@endif
                 </p>
+                @if($q)
                 <a href="{{ route('catalog.search') }}"
                    style="display:inline-block;margin-top:12px;color:var(--primary);font-weight:600;text-decoration:none;">
-                    ← Browse All Products
+                    Clear search
                 </a>
+                @endif
             </div>
             @endif
         </div>{{-- /main --}}
-    </div>{{-- /search-page-grid --}}
+
+    </div>{{-- /page-grid --}}
 </div>
 @endsection
