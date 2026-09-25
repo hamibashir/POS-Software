@@ -1,6 +1,6 @@
 @extends('layouts.catalog')
 
-@section('title', 'Hassan Corporation — Next-Gen Hardware, Tools, Sanitary & Plumbing')
+@section('title', 'Next-Gen Hardware, Tools, Sanitary & Plumbing')
 @section('meta_description', 'Discover professional-grade hardware tools, sanitary ware, plumbing, and electrical supplies at Hassan Corporation. Interactive catalog and instant phone/WhatsApp ordering.')
 
 @push('styles')
@@ -442,56 +442,63 @@
     /* ── Product grid ──────────────────────────────────── */
     .prod-grid {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 22px;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
     }
-    @media (max-width: 1180px) { .prod-grid { grid-template-columns: repeat(3, 1fr); } }
-    @media (max-width: 780px)  { .prod-grid { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 480px)  { .prod-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 1200px) { .prod-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; } }
+    @media (max-width: 768px)  { .prod-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } }
+    @media (max-width: 360px)  { .prod-grid { grid-template-columns: 1fr; gap: 10px; } }
 
     .prod-card {
         background: #fff;
-        border-radius: 16px;
+        border-radius: 12px;
         border: 1px solid #e2e8f0;
         overflow: hidden;
         text-decoration: none;
         color: inherit;
         display: flex;
         flex-direction: column;
-        transition: box-shadow .3s, border-color .3s, transform .25s;
+        height: 100%;
+        min-width: 0;
+        transition: box-shadow .2s ease, border-color .2s ease, transform .2s ease;
     }
     .prod-card:hover {
-        box-shadow: 0 18px 40px rgba(0,0,0,.08);
+        box-shadow: 0 10px 25px rgba(0,0,0,.08);
         border-color: rgba(2, 132, 199, .35);
-        transform: translateY(-3px);
+        transform: translateY(-2px);
     }
 
     .prod-img-wrap {
         width: 100%;
-        aspect-ratio: 4/3;
+        aspect-ratio: 1 / 1;
         overflow: hidden;
         position: relative;
-        background: #f1f5f9;
+        background: #f8fafc;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-bottom: 1px solid #f1f5f9;
     }
     .prod-img-bg {
         width: 100%;
         height: 100%;
-        background-size: cover;
+        background-size: contain;
         background-position: center;
         background-repeat: no-repeat;
-        transition: transform .5s cubic-bezier(.25,.46,.45,.94);
+        padding: 10px;
+        transition: transform .35s cubic-bezier(.25,.46,.45,.94);
     }
-    .prod-card:hover .prod-img-bg { transform: scale(1.08); }
-    .prod-img-bg.out-of-stock { opacity: .6; filter: grayscale(.5); }
+    .prod-card:hover .prod-img-bg { transform: scale(1.06); }
+    .prod-img-bg.out-of-stock { opacity: .55; filter: grayscale(.6); }
 
     .stock-badge {
-        position: absolute; top: 12px; left: 12px; z-index: 5;
-        display: inline-flex; align-items: center; gap: 5px;
-        font-size: 11px; font-weight: 700;
-        padding: 4px 9px; border-radius: 6px;
+        position: absolute; top: 8px; left: 8px; z-index: 5;
+        display: inline-flex; align-items: center; gap: 4px;
+        font-size: 10px; font-weight: 700;
+        padding: 3px 7px; border-radius: 5px;
     }
     .stock-badge .dot {
-        width: 6px; height: 6px; border-radius: 50%; display: block; flex-shrink: 0;
+        width: 5px; height: 5px; border-radius: 50%; display: block; flex-shrink: 0;
     }
     .badge-instock  { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
     .badge-instock  .dot { background: #22c55e; }
@@ -501,10 +508,11 @@
     .badge-outstock .dot { background: #ef4444; }
 
     .prod-card-body {
-        padding: 18px;
+        padding: 12px 14px;
         flex: 1;
         display: flex;
         flex-direction: column;
+        min-width: 0;
     }
     .prod-cat-label {
         font-size: 11px;
@@ -512,42 +520,42 @@
         color: #64748b;
         margin-bottom: 4px;
         text-transform: uppercase;
-        letter-spacing: .4px;
+        letter-spacing: .3px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
     .prod-title {
-        font-size: 15px;
+        font-size: 13.5px;
         font-weight: 700;
         color: #0f172a;
         line-height: 1.35;
-        margin-bottom: 6px;
-        transition: color .15s;
-    }
-    .prod-card:hover .prod-title { color: #0284c7; }
-    .prod-description {
-        font-size: 13px;
-        color: #475569;
-        line-height: 1.5;
+        margin-bottom: 8px;
         display: -webkit-box;
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
-        margin-bottom: 14px;
+        height: 2.7em;
+        word-break: break-word;
+        overflow-wrap: break-word;
+        transition: color .15s;
     }
+    .prod-card:hover .prod-title { color: #0284c7; }
     .prod-card-footer {
         margin-top: auto;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding-top: 10px;
-        border-top: 1px solid #f1f5f9;
+        padding-top: 8px;
+        border-top: 1px solid #f8fafc;
     }
     .prod-price {
-        font-size: 18px;
-        font-weight: 800;
+        font-size: 15px;
+        font-weight: 700;
         color: #0f172a;
     }
     .prod-price.strike {
-        font-size: 16px;
+        font-size: 13.5px;
         font-weight: 600;
         color: #94a3b8;
         text-decoration: line-through;
@@ -828,11 +836,8 @@
                 <div class="prod-card-body">
                     <div class="prod-cat-label">{{ $product->category?->name ?? 'Hardware' }}</div>
                     <a href="{{ route('catalog.product', $product->slug) }}" style="text-decoration:none;">
-                        <div class="prod-title">{{ $product->name }}</div>
+                        <div class="prod-title" title="{{ $product->name }}">{{ $product->name }}</div>
                     </a>
-                    @if($product->description)
-                    <div class="prod-description">{{ $product->description }}</div>
-                    @endif
                     
                     <div class="prod-card-footer">
                         <div>

@@ -1,6 +1,6 @@
 @extends('layouts.catalog')
 
-@section('title', $product->name . ' — Hassan Corporation')
+@section('title', $product->name)
 @section('meta_description', Str::limit(strip_tags($product->description ?? $product->name . ' available at Hassan Corporation.'), 155))
 
 @push('styles')
@@ -160,49 +160,108 @@
     /* ── Related Products ───────────────────────────────── */
     .related-grid {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 20px;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
     }
-    @media (max-width: 900px)  { .related-grid { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 480px)  { .related-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 1200px) { .related-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; } }
+    @media (max-width: 768px)  { .related-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } }
+    @media (max-width: 360px)  { .related-grid { grid-template-columns: 1fr; gap: 10px; } }
 
     .prod-card {
-        background: #fff; border-radius: 14px;
-        border: 1px solid #e2e8f0; overflow: hidden;
-        text-decoration: none; color: inherit;
-        display: flex; flex-direction: column;
-        transition: box-shadow .25s, border-color .25s;
+        background: #fff;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        overflow: hidden;
+        text-decoration: none;
+        color: inherit;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        min-width: 0;
+        transition: box-shadow .2s ease, border-color .2s ease, transform .2s ease;
     }
-    .prod-card:hover { box-shadow: 0 12px 32px rgba(0,0,0,.09); border-color: rgba(30,109,138,.28); }
+    .prod-card:hover {
+        box-shadow: 0 10px 25px rgba(0,0,0,.08);
+        border-color: rgba(30,109,138,.35);
+        transform: translateY(-2px);
+    }
     .prod-img-wrap {
-        width: 100%; aspect-ratio: 4/3;
-        overflow: hidden; position: relative; background: #f1f5f9;
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        overflow: hidden;
+        position: relative;
+        background: #f8fafc;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-bottom: 1px solid #f1f5f9;
     }
     .prod-img-bg {
-        width: 100%; height: 100%;
-        background-size: cover; background-position: center;
-        transition: transform .5s;
+        width: 100%;
+        height: 100%;
+        background-size: contain;
+        background-position: center;
+        background-repeat: no-repeat;
+        padding: 10px;
+        transition: transform .35s cubic-bezier(.25,.46,.45,.94);
     }
-    .prod-card:hover .prod-img-bg { transform: scale(1.08); }
-    .prod-card-body { padding: 14px; flex: 1; display: flex; flex-direction: column; }
-    .prod-cat-label { font-size: 11px; color: #64748b; margin-bottom: 4px; }
-    .prod-title-sm  { font-size: 14px; font-weight: 700; color: #0f172a; line-height: 1.3; margin-bottom: 10px; transition: color .15s; }
-    .prod-card:hover .prod-title-sm { color: var(--primary); }
-    .prod-price-sm  { font-size: 16px; font-weight: 700; color: #0f172a; margin-top: auto; }
+    .prod-card:hover .prod-img-bg { transform: scale(1.06); }
+    .prod-img-bg.out-of-stock { opacity: .55; filter: grayscale(.6); }
 
     .stock-badge {
-        position: absolute; top: 10px; left: 10px; z-index: 5;
+        position: absolute; top: 8px; left: 8px; z-index: 5;
         display: inline-flex; align-items: center; gap: 4px;
         font-size: 10px; font-weight: 700;
-        padding: 3px 8px; border-radius: 5px;
+        padding: 3px 7px; border-radius: 5px;
     }
-    .stock-badge .dot { width: 5px; height: 5px; border-radius: 50%; }
+    .stock-badge .dot { width: 5px; height: 5px; border-radius: 50%; display: block; flex-shrink: 0; }
     .badge-instock  { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
     .badge-instock  .dot { background: #22c55e; }
     .badge-lowstock { background: #fef9c3; color: #a16207; border: 1px solid #fde68a; }
     .badge-lowstock .dot { background: #eab308; }
     .badge-outstock { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
     .badge-outstock .dot { background: #ef4444; }
+
+    .prod-card-body {
+        padding: 12px 14px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+    .prod-cat-label {
+        font-size: 11px;
+        font-weight: 600;
+        color: #64748b;
+        margin-bottom: 4px;
+        text-transform: uppercase;
+        letter-spacing: .3px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .prod-title-sm {
+        font-size: 13.5px;
+        font-weight: 700;
+        color: #0f172a;
+        line-height: 1.35;
+        margin-bottom: 8px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        height: 2.7em;
+        word-break: break-word;
+        overflow-wrap: break-word;
+        transition: color .15s;
+    }
+    .prod-card:hover .prod-title-sm { color: var(--primary); }
+    .prod-price-sm {
+        font-size: 15px;
+        font-weight: 700;
+        color: #0f172a;
+        margin-top: auto;
+    }
 
     .sec-title { font-size: 20px; font-weight: 700; color: #0f172a; }
 </style>
