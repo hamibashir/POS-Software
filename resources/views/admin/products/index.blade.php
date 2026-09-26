@@ -416,13 +416,65 @@
             </tbody>
         </table>
 
-        {{-- Pagination --}}
-        @if($products->hasPages())
-            <div class="px-4 py-3 border-top d-flex justify-content-between align-items-center">
-                <p class="text-muted mb-0" style="font-size:13px;">
-                    Showing {{ $products->firstItem() }}–{{ $products->lastItem() }} of {{ $products->total() }} products
-                </p>
-                {{ $products->links('vendor.pagination.bootstrap-5') }}
+        {{-- Pagination & Quick Page Navigation --}}
+        @if($products->hasPages() || $products->total() > 0)
+            <div class="px-4 py-3 border-top d-flex flex-wrap justify-content-between align-items-center gap-3">
+                {{-- Results Count & Page Summary --}}
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <p class="text-muted mb-0" style="font-size:13px;">
+                        Showing <strong class="text-dark">{{ $products->firstItem() ?? 0 }}</strong> to <strong class="text-dark">{{ $products->lastItem() ?? 0 }}</strong> of <strong class="text-dark">{{ $products->total() }}</strong> results
+                        <span class="badge bg-light text-secondary border ms-1" style="font-size:11.5px; font-weight:600;">Page {{ $products->currentPage() }} of {{ $products->lastPage() }}</span>
+                    </p>
+                </div>
+
+                @if($products->lastPage() > 1)
+                {{-- Direct Page Jump & Quick Slider Navigation --}}
+                <div class="d-flex align-items-center gap-3 flex-wrap">
+                    {{-- Quick Page Search / Jump --}}
+                    <form method="GET" action="{{ route('admin.products.index') }}" class="d-flex align-items-center gap-1 mb-0" id="pageJumpForm">
+                        @foreach(request()->except('page') as $k => $v)
+                            @if(is_array($v))
+                                @foreach($v as $subKey => $subVal)
+                                    <input type="hidden" name="{{ $k }}[{{ $subKey }}]" value="{{ $subVal }}">
+                                @endforeach
+                            @elseif($v !== null && $v !== '')
+                                <input type="hidden" name="{{ $k }}" value="{{ $v }}">
+                            @endif
+                        @endforeach
+                        
+                        <label for="pageJumpInput" class="text-muted mb-0" style="font-size:12px; font-weight:600;">Page:</label>
+                        <div class="input-group input-group-sm" style="width: 120px;">
+                            <input type="number" name="page" id="pageJumpInput" 
+                                min="1" max="{{ $products->lastPage() }}" 
+                                value="{{ $products->currentPage() }}" 
+                                class="form-control text-center fw-bold" 
+                                style="font-size:12.5px; border-radius:6px 0 0 6px; border-color:#d1d5db;"
+                                placeholder="1-{{ $products->lastPage() }}"
+                                title="Type page number (1 to {{ $products->lastPage() }})">
+                            <button type="submit" class="btn btn-pos btn-sm px-2" style="border-radius:0 6px 6px 0; font-size:12px;" title="Go to page">
+                                Go <i class="bi bi-arrow-right-short"></i>
+                            </button>
+                        </div>
+                    </form>
+
+                    {{-- Page Scroller / Slider for easy jump from e.g. page 21 to 228 --}}
+                    <div class="d-none d-sm-flex align-items-center gap-2 ps-3 border-start" style="border-color:#e5e7eb !important;">
+                        <span class="text-muted" style="font-size:11.5px; font-weight:600;"><i class="bi bi-sliders me-1"></i>Scroll Page:</span>
+                        <input type="range" class="form-range" id="pageScrollRange"
+                            min="1" max="{{ $products->lastPage() }}" value="{{ $products->currentPage() }}"
+                            style="width: 140px; cursor: pointer; accent-color: var(--pos-primary);"
+                            title="Slide to browse pages (1 to {{ $products->lastPage() }})"
+                            oninput="document.getElementById('pageJumpInput').value = this.value; document.getElementById('rangePageBadge').textContent = 'Page ' + this.value;"
+                            onchange="document.getElementById('pageJumpForm').submit();">
+                        <span id="rangePageBadge" class="badge bg-secondary text-white" style="font-size:11px; min-width:65px;">Page {{ $products->currentPage() }}</span>
+                    </div>
+                </div>
+                @endif
+
+                {{-- Standard Pagination Links --}}
+                <div class="d-flex align-items-center">
+                    {{ $products->links('vendor.pagination.bootstrap-5') }}
+                </div>
             </div>
         @endif
     @endif
