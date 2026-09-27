@@ -143,12 +143,18 @@ function recalcGrand() {
 }
 
 function removeRow(idx) {
+    const prodEl = document.getElementById(`prod_${idx}`);
+    if (prodEl && prodEl.tomselect) {
+        prodEl.tomselect.destroy();
+    }
     const row = document.querySelector(`.product-row[data-idx="${idx}"]`);
     if (row) { row.remove(); recalcGrand(); }
 }
 
 function onProductChange(idx) {
-    const pid     = parseInt(document.getElementById(`prod_${idx}`).value);
+    const prodEl = document.getElementById(`prod_${idx}`);
+    if (!prodEl) return;
+    const pid = parseInt(prodEl.value);
     const product = PRODUCTS.find(p => p.id === pid);
     if (product) {
         document.getElementById(`cost_${idx}`).value = parseFloat(product.cost_price).toFixed(2);
@@ -167,11 +173,10 @@ function addRow() {
     const html = `
     <div class="product-row" data-idx="${idx}">
         <div class="fg">
-            <label style="font-size:11px;color:#6b7280;">Product</label>
+            <label style="font-size:11px;color:#6b7280;">Product (Search & Select)</label>
             <select id="prod_${idx}" name="items[${idx}][product_id]"
-                    class="select-search" required
-                    onchange="onProductChange(${idx})">
-                <option value="">&mdash; Select product &mdash;</option>
+                    class="select-search" required>
+                <option value="">&mdash; Type to search product name or SKU &mdash;</option>
                 ${opts}
             </select>
         </div>
@@ -197,7 +202,17 @@ function addRow() {
     </div>`;
 
     container.insertAdjacentHTML('beforeend', html);
-    document.getElementById(`prod_${idx}`).focus();
+    
+    const newSelect = document.getElementById(`prod_${idx}`);
+    if (window.initTomSelect && newSelect) {
+        window.initTomSelect(newSelect, {
+            placeholder: '🔍 Type product name or SKU to search...',
+            onChange: function() {
+                onProductChange(idx);
+            }
+        });
+    }
+
     recalcGrand();
 }
 
@@ -211,6 +226,18 @@ function onSupplierSelected(select) {
         document.getElementById('supplierIdInput').value = '';
     }
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    const supSelect = document.getElementById('supplierSelect');
+    if (supSelect && window.initTomSelect) {
+        window.initTomSelect(supSelect, {
+            placeholder: '🔍 Search registered supplier by name...',
+            onChange: function() {
+                onSupplierSelected(supSelect);
+            }
+        });
+    }
+});
 
 document.getElementById('addRowBtn').addEventListener('click', addRow);
 addRow(); // Start with one row

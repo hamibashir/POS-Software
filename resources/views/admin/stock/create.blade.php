@@ -67,7 +67,18 @@ function updatePreview() {
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('input[name="type"]').forEach(r => r.addEventListener('change', updatePreview));
     document.getElementById('quantity').addEventListener('input', updatePreview);
-    document.getElementById('product_id').addEventListener('change', onProductChange);
+    
+    const prodSelect = document.getElementById('product_id');
+    if (prodSelect && window.initTomSelect) {
+        window.initTomSelect(prodSelect, {
+            placeholder: '🔍 Type product name or SKU to search...',
+            onChange: function() {
+                onProductChange();
+            }
+        });
+    } else if (prodSelect) {
+        prodSelect.addEventListener('change', onProductChange);
+    }
 });
 </script>
 @endpush
@@ -101,9 +112,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             {{-- Product --}}
             <div class="fg">
-                <label for="product_id">Product <span class="req">*</span></label>
-                <select id="product_id" name="product_id" class="pos-input" required onchange="onProductChange()">
-                    <option value="">— Select a product —</option>
+                <label for="product_id">Product (Search & Select) <span class="req">*</span></label>
+                <select id="product_id" name="product_id" class="pos-input select-search" required>
+                    <option value="">— Type to search product name or SKU —</option>
                     @foreach($products as $p)
                         <option value="{{ $p->id }}" {{ old('product_id') == $p->id ? 'selected' : '' }}>
                             {{ $p->name }} — {{ $p->sku }} (Stock: {{ $p->stock_quantity }})

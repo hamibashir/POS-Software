@@ -230,7 +230,7 @@
 
         <div class="col-md-3 col-sm-6">
             <label class="form-label small fw-bold text-muted mb-1">Category</label>
-            <select name="category" class="pos-input">
+            <select name="category" class="pos-input searchable-select" placeholder="All Categories / Search...">
                 <option value="">All Categories</option>
                 @foreach($categories as $catName => $catMeta)
                     <option value="{{ $catName }}" {{ $category === $catName ? 'selected' : '' }}>

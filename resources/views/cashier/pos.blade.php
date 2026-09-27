@@ -1519,14 +1519,8 @@
                     {{-- Supplier Selector --}}
                     <div class="mb-3">
                         <label class="form-label fw-bold small text-secondary">Select Supplier <span class="text-danger">*</span></label>
-                        <div class="input-group input-group-sm mb-2">
-                            <span class="input-group-text bg-light text-muted border-end-0" style="border-radius:8px 0 0 8px;">
-                                <i class="bi bi-search"></i>
-                            </span>
-                            <input type="text" id="posSupplierFilterSearch" class="form-control border-start-0" placeholder="Type to filter supplier names..." style="border-radius:0 8px 8px 0; font-size:12px;" oninput="filterPosSupplierSelect(this.value)">
-                        </div>
-                        <select id="posSupplierSelect" class="form-select" style="height:44px; border-radius:10px; font-weight:600;" required onchange="onPosSupplierChange(this)">
-                            <option value="">-- Choose Supplier --</option>
+                        <select id="posSupplierSelect" class="form-select searchable-select" style="min-height:44px; border-radius:10px; font-weight:600;" required onchange="onPosSupplierChange(this)" placeholder="Search supplier name or company...">
+                            <option value="">-- Search & Choose Supplier --</option>
                             @if(isset($suppliers))
                                 @foreach($suppliers as $s)
                                     @php
@@ -1633,8 +1627,8 @@
                     {{-- Customer Selector --}}
                     <div class="mb-3">
                         <label class="form-label fw-bold small text-secondary">Select Customer <span class="text-danger">*</span></label>
-                        <select id="posEmployeeSelect" class="form-select" style="height:44px; border-radius:10px; font-weight:600;" required onchange="onPosEmployeeChange(this)">
-                            <option value="">-- Choose Customer --</option>
+                        <select id="posEmployeeSelect" class="form-select searchable-select" style="min-height:44px; border-radius:10px; font-weight:600;" required onchange="onPosEmployeeChange(this)" placeholder="Search customer name or phone...">
+                            <option value="">-- Search & Choose Customer --</option>
                             @if(isset($employees))
                                 @foreach($employees as $e)
                                     <option value="{{ $e['id'] }}" data-pending="{{ $e['pending_payment'] }}" data-name="{{ $e['name'] }}" data-phone="{{ $e['phone'] }}" data-address="{{ $e['address'] }}">
@@ -1884,8 +1878,8 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label fw-bold small text-secondary">Customer Account (Credit)</label>
-                            <select id="posReturnEmployeeSelect" class="form-select" style="height:42px; border-radius:10px;" onchange="onReturnEmployeeChange(this)">
-                                <option value="">-- None (Walk-in) --</option>
+                            <select id="posReturnEmployeeSelect" class="form-select searchable-select" style="min-height:42px; border-radius:10px;" onchange="onReturnEmployeeChange(this)" placeholder="Search customer account...">
+                                <option value="">-- None (Walk-in) / Search Customer --</option>
                                 @if(isset($employees))
                                     @foreach($employees as $e)
                                         <option value="{{ $e['id'] }}">{{ $e['name'] }} — Due: PKR {{ number_format($e['pending_payment'], 2) }}</option>
@@ -2876,14 +2870,15 @@ const supplierLowStockUrlTemplate = "{{ route('cashier.pos.supplier-low-stock', 
 function openSupplierPayModal() {
     posSupplierModal.show();
     setTimeout(() => {
-        const searchInput = document.getElementById('posSupplierFilterSearch');
-        if (searchInput) {
-            searchInput.value = '';
-            filterPosSupplierSelect('');
-            searchInput.focus();
-        } else {
-            const sel = document.getElementById('posSupplierSelect');
-            if (sel) sel.focus();
+        const sel = document.getElementById('posSupplierSelect');
+        if (sel) {
+            if (sel.tomselect) {
+                sel.tomselect.focus();
+            } else if (window.initTomSelect) {
+                window.initTomSelect(sel)?.focus();
+            } else {
+                sel.focus();
+            }
         }
     }, 200);
 }
@@ -3115,11 +3110,17 @@ function openEmployeePayModal(preSelectedEmployeeId = null) {
     setTimeout(() => {
         const sel = document.getElementById('posEmployeeSelect');
         if (sel) {
+            const ts = sel.tomselect || (window.initTomSelect ? window.initTomSelect(sel) : null);
             if (preSelectedEmployeeId) {
-                sel.value = preSelectedEmployeeId;
-                onPosEmployeeChange(sel);
+                if (ts) {
+                    ts.setValue(preSelectedEmployeeId);
+                } else {
+                    sel.value = preSelectedEmployeeId;
+                    onPosEmployeeChange(sel);
+                }
             }
-            sel.focus();
+            if (ts) ts.focus();
+            else sel.focus();
         }
     }, 200);
 }

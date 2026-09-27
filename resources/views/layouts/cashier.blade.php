@@ -17,6 +17,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- TomSelect Searchable Dropdowns -->
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
 
     <style>
         :root {
@@ -24,6 +26,52 @@
             --pos-primary-dk: #0d4a57;
             --pos-primary-lt: #e8f4f7;
             --pos-bar-h:      52px;
+        }
+
+        /* ── TomSelect Searchable Dropdown Overrides ─────────────────────── */
+        .ts-wrapper.form-select, .ts-wrapper.form-control, .ts-control {
+            border-radius: 10px !important;
+            border: 1.5px solid #d1d5db !important;
+            padding: 8px 12px !important;
+            font-size: 13.5px !important;
+            font-family: 'Inter', sans-serif !important;
+            background-color: #ffffff !important;
+            min-height: 44px !important;
+            display: flex !important;
+            align-items: center !important;
+            box-shadow: none !important;
+            transition: border-color .15s ease, box-shadow .15s ease !important;
+        }
+        .ts-wrapper.focus .ts-control, .ts-control:focus {
+            border-color: var(--pos-primary) !important;
+            box-shadow: 0 0 0 3px rgba(26, 107, 124, 0.18) !important;
+            outline: none !important;
+        }
+        .ts-dropdown {
+            border-radius: 10px !important;
+            border: 1.5px solid #e5e7eb !important;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+            font-size: 13px !important;
+            font-family: 'Inter', sans-serif !important;
+            z-index: 1080 !important;
+            overflow: hidden !important;
+        }
+        .ts-dropdown .option {
+            padding: 9px 12px !important;
+            cursor: pointer !important;
+            transition: background-color .1s ease !important;
+        }
+        .ts-dropdown .option:hover, .ts-dropdown .active {
+            background-color: var(--pos-primary-lt) !important;
+            color: var(--pos-primary) !important;
+            font-weight: 600 !important;
+        }
+        .ts-dropdown .selected {
+            background-color: var(--pos-primary) !important;
+            color: #ffffff !important;
+        }
+        .ts-wrapper .ts-control input {
+            font-size: 13.5px !important;
         }
         * { font-family: 'Inter', sans-serif; box-sizing: border-box; }
         body { background: #f1f5f9; margin: 0; overflow: hidden; height: 100vh; }
@@ -84,6 +132,41 @@
 @yield('content')
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- TomSelect JS -->
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+
+<script>
+    window.initTomSelect = function(elementOrSelector, options = {}) {
+        const el = typeof elementOrSelector === 'string' ? document.querySelector(elementOrSelector) : elementOrSelector;
+        if (!el) return null;
+        if (el.tomselect) return el.tomselect;
+
+        const defaultOptions = {
+            create: false,
+            allowEmptyOption: true,
+            plugins: ['dropdown_input', 'clear_button'],
+            maxOptions: 500,
+            placeholder: el.getAttribute('placeholder') || el.options[0]?.text || '-- Search and select --',
+            render: {
+                no_results: function(data, escape) {
+                    return '<div class="no-results p-2 text-muted small text-center"><i class="bi bi-search me-1"></i>No matching results found</div>';
+                }
+            },
+            ...options
+        };
+
+        return new TomSelect(el, defaultOptions);
+    };
+
+    // Auto-initialize all searchable-select and select-search elements
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('select.searchable-select, select.select-search').forEach(function(selectEl) {
+            if (!selectEl.tomselect) {
+                window.initTomSelect(selectEl);
+            }
+        });
+    });
+</script>
 
 @stack('scripts')
 </body>

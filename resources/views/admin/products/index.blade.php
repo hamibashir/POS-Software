@@ -178,9 +178,9 @@
             </div>
 
             {{-- Category --}}
-            <div style="min-width:160px;">
+            <div style="min-width:180px;">
                 <label class="form-label" style="font-size:12px; font-weight:600; color:#6b7280; margin-bottom:4px;">Category</label>
-                <select name="category_id" class="pos-input">
+                <select name="category_id" class="pos-input searchable-select" placeholder="All Categories / Search...">
                     <option value="">All Categories</option>
                     @foreach($categories as $cat)
                         <option value="{{ $cat->id }}" {{ request('category_id') == $cat->id ? 'selected' : '' }}>
@@ -191,9 +191,9 @@
             </div>
 
             {{-- Supplier --}}
-            <div style="min-width:170px;">
+            <div style="min-width:190px;">
                 <label class="form-label" style="font-size:12px; font-weight:600; color:#6b7280; margin-bottom:4px;">Supplier</label>
-                <select name="supplier_id" class="pos-input">
+                <select name="supplier_id" class="pos-input searchable-select" placeholder="All Suppliers / Search...">
                     <option value="">All Suppliers</option>
                     @foreach($suppliers as $sup)
                         <option value="{{ $sup->id }}" {{ request('supplier_id') == $sup->id ? 'selected' : '' }}>

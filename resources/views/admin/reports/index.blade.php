@@ -359,9 +359,9 @@
             <input type="text" name="search" class="pos-input" value="{{ $search }}" placeholder="Search name or SKU...">
         </div>
 
-        <div class="fg" style="min-width:160px;">
+        <div class="fg" style="min-width:180px;">
             <label>Category</label>
-            <select name="category_id" class="pos-input">
+            <select name="category_id" class="pos-input searchable-select" placeholder="All Categories / Search...">
                 <option value="">All Categories</option>
                 @foreach($categories as $cat)
                     <option value="{{ $cat->id }}" {{ (string)$categoryId === (string)$cat->id ? 'selected' : '' }}>
@@ -496,7 +496,7 @@
         </div>
         <div class="fg">
             <label>Category</label>
-            <select name="category_id" class="pos-input" style="min-width:180px;">
+            <select name="category_id" class="pos-input searchable-select" style="min-width:180px;" placeholder="All Categories / Search...">
                 <option value="">All Categories</option>
                 @foreach($categories as $cat)
                     <option value="{{ $cat->id }}" {{ (string)$categoryId === (string)$cat->id ? 'selected' : '' }}>
@@ -714,7 +714,7 @@
         </div>
         <div class="fg">
             <label>Supplier</label>
-            <select name="supplier_id" class="pos-input" style="min-width:180px;">
+            <select name="supplier_id" class="pos-input searchable-select" style="min-width:200px;" placeholder="All Suppliers / Search...">
                 <option value="">All Suppliers</option>
                 @foreach($suppliersList as $sup)
                     @php

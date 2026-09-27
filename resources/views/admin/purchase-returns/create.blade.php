@@ -66,8 +66,8 @@
 
         <div class="form-grid-3 mb-3">
             <div>
-                <label class="form-label">Link to Existing Purchase (Optional)</label>
-                <select name="purchase_id" id="purchaseSelect" class="pos-input">
+                <label class="form-label">Link to Existing Purchase (Optional Search)</label>
+                <select name="purchase_id" id="purchaseSelect" class="pos-input select-search">
                     <option value="">-- No link (Direct Return) --</option>
                     @foreach($recentPurchases as $p)
                     <option value="{{ $p->id }}"
@@ -79,7 +79,7 @@
                     </option>
                     @endforeach
                 </select>
-                <div class="form-hint">Selecting an order will auto-fill supplier and available items</div>
+                <div class="form-hint">Search an invoice to auto-fill supplier and items</div>
             </div>
 
             <div>
@@ -296,6 +296,15 @@
         costInput.addEventListener('input', () => updateRowSubtotal(idx));
         qtyInput.addEventListener('input', () => updateRowSubtotal(idx));
 
+        if (window.initTomSelect && select) {
+            window.initTomSelect(select, {
+                placeholder: '🔍 Type product name or SKU to search...',
+                onChange: function() {
+                    select.dispatchEvent(new Event('change'));
+                }
+            });
+        }
+
         if (data.product_id) {
             updateRowSubtotal(idx);
         }
@@ -304,6 +313,10 @@
     function removeRow(idx) {
         const row = document.getElementById(`row-${idx}`);
         if (row) {
+            const sel = row.querySelector('.product-select');
+            if (sel && sel.tomselect) {
+                sel.tomselect.destroy();
+            }
             row.remove();
             calculateTotals();
         }
@@ -352,9 +365,9 @@
     document.getElementById('btnAddRow').addEventListener('click', () => addRow());
 
     // Handle Linked Purchase dropdown selection
-    document.getElementById('purchaseSelect').addEventListener('change', function() {
-        const opt = this.selectedOptions[0];
-        if (!opt.value) return;
+    function onPurchaseSelectChange(sel) {
+        const opt = sel.options[sel.selectedIndex];
+        if (!opt || !opt.value) return;
 
         if (opt.dataset.supplier) {
             document.getElementById('supplierName').value = opt.dataset.supplier;
@@ -382,7 +395,20 @@
                 console.error(e);
             }
         }
-    });
+    }
+
+    const pSel = document.getElementById('purchaseSelect');
+    if (pSel) {
+        pSel.addEventListener('change', function() { onPurchaseSelectChange(this); });
+        if (window.initTomSelect) {
+            window.initTomSelect(pSel, {
+                placeholder: '🔍 Search invoice # or supplier...',
+                onChange: function() {
+                    onPurchaseSelectChange(pSel);
+                }
+            });
+        }
+    }
 
     // Auto-populate from preloaded purchase if available
     window.addEventListener('DOMContentLoaded', () => {

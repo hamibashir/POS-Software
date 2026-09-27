@@ -198,10 +198,10 @@
         {{-- Category --}}
         <div class="pos-card p-4 mb-4">
             <h6 class="fw-bold mb-3" style="color:#374151; font-size:14px;">
-                <i class="bi bi-tags me-2" style="color:var(--pos-primary)"></i>Category
+                <i class="bi bi-tags me-2" style="color:var(--pos-primary)"></i>Category (Search & Select)
             </h6>
-            <select name="category_id" class="pos-input @error('category_id') is-invalid @enderror">
-                <option value="">— Uncategorized —</option>
+            <select name="category_id" class="pos-input searchable-select @error('category_id') is-invalid @enderror">
+                <option value="">— Uncategorized / Type to search —</option>
                 @foreach($categories as $cat)
                     <option value="{{ $cat->id }}" {{ old('category_id', $product->category_id ?? '') == $cat->id ? 'selected' : '' }}>
                         {{ $cat->name }}
@@ -214,10 +214,10 @@
         {{-- Supplier / Vendor --}}
         <div class="pos-card p-4 mb-4">
             <h6 class="fw-bold mb-3" style="color:#374151; font-size:14px;">
-                <i class="bi bi-truck me-2" style="color:var(--pos-primary)"></i>Supplier / Vendor
+                <i class="bi bi-truck me-2" style="color:var(--pos-primary)"></i>Supplier / Vendor (Search & Select)
             </h6>
-            <select name="supplier_id" class="pos-input @error('supplier_id') is-invalid @enderror">
-                <option value="">— No Supplier Assigned —</option>
+            <select name="supplier_id" class="pos-input searchable-select @error('supplier_id') is-invalid @enderror">
+                <option value="">— No Supplier / Type to search —</option>
                 @if(isset($suppliers))
                     @foreach($suppliers as $sup)
                         @php
