@@ -160,6 +160,20 @@ class ReportsCalculationTest extends TestCase
             ->assertSee('OUT'); // Out of stock badge
     }
 
+    public function test_stock_valuation_tab_calculates_total_available_stock_and_shop_values(): void
+    {
+        $response = $this->actingAs($this->admin)
+            ->get(route('admin.reports.index', ['tab' => 'stock']));
+
+        $response->assertOk()
+            ->assertSee('Stock & Shop Valuation', false)
+            ->assertSee('Total Available Stock')
+            ->assertSee('Shop Cost Valuation')
+            ->assertSee('Shop Retail Valuation')
+            ->assertSee('Category-wise Stock Valuation Breakdown')
+            ->assertSee('Detailed Product Stock & Shop Valuation', false);
+    }
+
     public function test_top_selling_tab_groups_by_category_and_calculates_units(): void
     {
         $response = $this->actingAs($this->admin)

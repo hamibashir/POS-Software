@@ -70,6 +70,10 @@
        class="tab-btn {{ $tab==='range' ? 'active' : '' }}">
         <i class="bi bi-calendar-range"></i> Date Range
     </a>
+    <a href="{{ route('admin.reports.index', ['tab'=>'stock']) }}"
+       class="tab-btn {{ in_array($tab, ['stock', 'inventory']) ? 'active' : '' }}">
+        <i class="bi bi-boxes"></i> Stock & Shop Valuation
+    </a>
     <a href="{{ route('admin.reports.index', ['tab'=>'lowstock']) }}"
        class="tab-btn {{ $tab==='lowstock' ? 'active' : '' }}">
         <i class="bi bi-exclamation-triangle"></i> Low Stock
@@ -327,12 +331,377 @@
     </div>
 
 {{-- ════════════════════════════════════════════════════════
-     TAB 3 — LOW STOCK
+     TAB 3 — STOCK VALUATION & TOTAL INVENTORY
+═════════════════════════════════════════════════════════ --}}
+@elseif($tab === 'stock' || $tab === 'inventory')
+
+    {{-- Shop Stock Summary Stat Cards --}}
+    <div class="stat-grid" style="grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); margin-bottom: 20px;">
+        <div class="stat-card" style="border-left: 4px solid var(--pos-primary); background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);">
+            <div class="stat-label" style="color: var(--pos-primary);"><i class="bi bi-box-seam me-1"></i> Total Available Stock</div>
+            <div class="stat-value" style="color: var(--pos-primary);">{{ number_format($overallStats->total_available_units ?? 0) }} <span style="font-size:13px; font-weight:600; color:#64748b;">Units</span></div>
+            <div class="stat-sub">{{ number_format($overallStats->total_products ?? 0) }} active products in inventory</div>
+        </div>
+
+        <div class="stat-card" style="border-left: 4px solid #0284c7; background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);">
+            <div class="stat-label" style="color: #0284c7;"><i class="bi bi-cash-stack me-1"></i> Shop Cost Valuation</div>
+            <div class="stat-value" style="color: #0369a1;">{{ pkr($shopCostValue, 2) }}</div>
+            <div class="stat-sub">Capital invested in available stock</div>
+        </div>
+
+        <div class="stat-card" style="border-left: 4px solid #059669; background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);">
+            <div class="stat-label" style="color: #059669;"><i class="bi bi-tag me-1"></i> Shop Retail Valuation</div>
+            <div class="stat-value" style="color: #047857;">{{ pkr($shopRetailValue, 2) }}</div>
+            <div class="stat-sub">Expected revenue at selling prices</div>
+        </div>
+
+        <div class="stat-card" style="border-left: 4px solid #8b5cf6; background: linear-gradient(135deg, #ffffff 0%, #faf5ff 100%);">
+            <div class="stat-label" style="color: #7c3aed;"><i class="bi bi-graph-up-arrow me-1"></i> Projected Stock Profit</div>
+            <div class="stat-value" style="color: #6d28d9;">{{ pkr($shopProjectedProfit, 2) }}</div>
+            <div class="stat-sub">Avg Margin: <strong style="color:#6d28d9;">{{ $shopProfitMargin }}%</strong></div>
+        </div>
+
+        <div class="stat-card" style="border-left: 4px solid #f59e0b;">
+            <div class="stat-label" style="color: #d97706;"><i class="bi bi-shield-exclamation me-1"></i> Inventory Alerts</div>
+            <div class="stat-value" style="font-size: 18px; margin-top:6px;">
+                <span class="badge bg-danger text-white me-1">{{ $overallStats->out_of_stock_count ?? 0 }} Out</span>
+                <span class="badge bg-warning text-dark">{{ $overallStats->low_stock_count ?? 0 }} Low</span>
+            </div>
+            <div class="stat-sub" style="margin-top:6px;">Needs purchase replenishment</div>
+        </div>
+    </div>
+
+    {{-- Category-wise Valuation Breakdown --}}
+    @if(isset($categoryBreakdown) && $categoryBreakdown->isNotEmpty())
+    <div class="report-card mb-4">
+        <div class="report-card-header">
+            <span><i class="bi bi-pie-chart-fill me-2" style="color:var(--pos-primary);"></i> Category-wise Stock Valuation Breakdown</span>
+            <span style="font-size:12px; font-weight:600; color:#64748b;">{{ $categoryBreakdown->count() }} Categories</span>
+        </div>
+        <div style="overflow-x:auto;">
+            <table class="rpt-table">
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th style="text-align:center;">Products / SKUs</th>
+                        <th style="text-align:right;">Available Units</th>
+                        <th style="text-align:right;">Total Cost Value</th>
+                        <th style="text-align:right;">Total Retail Value</th>
+                        <th style="text-align:right;">Projected Profit</th>
+                        <th style="text-align:center;">Margin %</th>
+                        <th style="text-align:center; width:130px;">Valuation Share</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @php
+                        $totCatProducts = 0;
+                        $totCatUnits = 0;
+                        $totCatCost = 0;
+                        $totCatRetail = 0;
+                        $totCatProfit = 0;
+                    @endphp
+                    @foreach($categoryBreakdown as $cat)
+                    @php
+                        $totCatProducts += $cat->product_count;
+                        $totCatUnits += $cat->total_stock;
+                        $totCatCost += $cat->cost_value;
+                        $totCatRetail += $cat->retail_value;
+                        $totCatProfit += $cat->profit;
+                    @endphp
+                    <tr>
+                        <td>
+                            <strong style="color:#1e293b;">{{ $cat->name }}</strong>
+                        </td>
+                        <td style="text-align:center; color:#64748b; font-weight:600;">
+                            {{ $cat->product_count }}
+                        </td>
+                        <td style="text-align:right; font-weight:700; color:#0f172a;">
+                            {{ number_format($cat->total_stock) }}
+                        </td>
+                        <td style="text-align:right; font-weight:700; color:#0369a1;">
+                            {{ pkr($cat->cost_value, 2) }}
+                        </td>
+                        <td style="text-align:right; font-weight:700; color:#047857;">
+                            {{ pkr($cat->retail_value, 2) }}
+                        </td>
+                        <td style="text-align:right; font-weight:700; color:#6d28d9;">
+                            {{ pkr($cat->profit, 2) }}
+                        </td>
+                        <td style="text-align:center;">
+                            <span class="badge" style="background:#f3e8ff; color:#6b21a8; font-weight:700; font-size:11px;">
+                                {{ $cat->margin }}%
+                            </span>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="progress flex-grow-1" style="height:6px; background:#e2e8f0; border-radius:3px;">
+                                    <div class="progress-bar" style="width:{{ min(100, $cat->share_pct) }}%; background:var(--pos-primary); border-radius:3px;"></div>
+                                </div>
+                                <span style="font-size:11px; font-weight:700; color:#64748b; width:36px; text-align:right;">{{ $cat->share_pct }}%</span>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+                <tfoot>
+                    <tr style="background:#f8fafc; font-weight:800; border-top:2px solid #cbd5e1;">
+                        <td style="color:#0f172a;">TOTAL SUMMARY</td>
+                        <td style="text-align:center; color:#0f172a;">{{ number_format($totCatProducts) }}</td>
+                        <td style="text-align:right; color:#0f172a;">{{ number_format($totCatUnits) }}</td>
+                        <td style="text-align:right; color:#0369a1;">{{ pkr($totCatCost, 2) }}</td>
+                        <td style="text-align:right; color:#047857;">{{ pkr($totCatRetail, 2) }}</td>
+                        <td style="text-align:right; color:#6d28d9;">{{ pkr($totCatProfit, 2) }}</td>
+                        <td style="text-align:center;">
+                            <span class="badge" style="background:#dbeafe; color:#1e40af; font-size:11px;">
+                                {{ $totCatRetail > 0 ? round(($totCatProfit / $totCatRetail) * 100, 1) : 0 }}%
+                            </span>
+                        </td>
+                        <td style="text-align:center; color:#64748b; font-size:11px;">100%</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+    @endif
+
+    {{-- Filter Bar for Product Inventory Details --}}
+    <form method="GET" action="{{ route('admin.reports.index') }}" class="rfilter p-3 rounded-3 mb-3" style="background:#ffffff; border:1px solid #e2e8f0;">
+        <input type="hidden" name="tab" value="stock">
+
+        <div class="fg" style="min-width:200px; flex:1;">
+            <label>Search Product / SKU / Barcode</label>
+            <input type="text" name="search" class="pos-input" value="{{ $search }}" placeholder="Search name, SKU, barcode...">
+        </div>
+
+        <div class="fg" style="min-width:180px;">
+            <label>Category</label>
+            <select name="category_id" class="pos-input searchable-select" placeholder="All Categories / Search...">
+                <option value="">All Categories</option>
+                @foreach($categories as $cat)
+                    <option value="{{ $cat->id }}" {{ (string)$categoryId === (string)$cat->id ? 'selected' : '' }}>
+                        {{ $cat->name }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
+        <div class="fg" style="min-width:180px;">
+            <label>Supplier</label>
+            <select name="supplier_id" class="pos-input searchable-select" placeholder="All Suppliers / Search...">
+                <option value="">All Suppliers</option>
+                @foreach($suppliers as $sup)
+                    <option value="{{ $sup->id }}" {{ (string)$supplierId === (string)$sup->id ? 'selected' : '' }}>
+                        {{ $sup->name }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
+        <div class="fg" style="min-width:140px;">
+            <label>Stock Status</label>
+            <select name="stock_filter" class="pos-input" onchange="this.form.submit()">
+                <option value="all"       {{ $stockFilter === 'all'       ? 'selected' : '' }}>All Items</option>
+                <option value="in_stock"  {{ $stockFilter === 'in_stock'  ? 'selected' : '' }}>In Stock Only (>0)</option>
+                <option value="low"       {{ $stockFilter === 'low'       ? 'selected' : '' }}>Low Stock (&le; Alert)</option>
+                <option value="out"       {{ $stockFilter === 'out'       ? 'selected' : '' }}>Out of Stock (0)</option>
+                <option value="negative"  {{ $stockFilter === 'negative'  ? 'selected' : '' }}>Negative Stock (&lt;0)</option>
+            </select>
+        </div>
+
+        <div class="fg" style="min-width:150px;">
+            <label>Sort By</label>
+            <select name="sort" class="pos-input" onchange="this.form.submit()">
+                <option value="cost_value_desc" {{ $sortBy === 'cost_value_desc' ? 'selected' : '' }}>Highest Cost Value</option>
+                <option value="sale_value_desc" {{ $sortBy === 'sale_value_desc' ? 'selected' : '' }}>Highest Retail Value</option>
+                <option value="stock_desc"      {{ $sortBy === 'stock_desc'      ? 'selected' : '' }}>Highest Stock Qty</option>
+                <option value="stock_asc"       {{ $sortBy === 'stock_asc'       ? 'selected' : '' }}>Lowest Stock Qty</option>
+                <option value="name_asc"        {{ $sortBy === 'name_asc'        ? 'selected' : '' }}>Product Name (A-Z)</option>
+            </select>
+        </div>
+
+        <div class="fg" style="width:100px;">
+            <label>Per Page</label>
+            <select name="per_page" class="pos-input" onchange="this.form.submit()">
+                @foreach([25, 50, 100, 250, 500] as $n)
+                    <option value="{{ $n }}" {{ $perPage == $n ? 'selected' : '' }}>{{ $n }}</option>
+                @endforeach
+            </select>
+        </div>
+
+        <div class="fg">
+            <label>&nbsp;</label>
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn-pos"><i class="bi bi-funnel"></i> Filter</button>
+                @if($search || $categoryId || $supplierId || $stockFilter !== 'all' || $sortBy !== 'cost_value_desc' || $perPage != 50)
+                    <a href="{{ route('admin.reports.index', ['tab'=>'stock']) }}" class="btn-pos-outline" style="text-decoration:none; padding:8px 12px; border:1px solid #d1d5db; border-radius:8px; font-size:13px; color:#4b5563;">
+                        <i class="bi bi-x-circle"></i> Clear
+                    </a>
+                @endif
+                <button type="button" class="btn-pos-outline" onclick="window.print()" style="padding:8px 12px; border:1px solid #0284c7; border-radius:8px; font-size:13px; color:#0284c7; background:#f0f9ff;">
+                    <i class="bi bi-printer"></i> Print
+                </button>
+            </div>
+        </div>
+    </form>
+
+    {{-- Filtered Results Summary Banner --}}
+    @if(isset($filteredTotals))
+    <div class="p-3 mb-3 rounded-3 d-flex flex-wrap align-items-center justify-content-between gap-3" style="background:#f8fafc; border:1.5px solid #e2e8f0;">
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+            <div>
+                <span class="text-muted small">Filtered Items:</span>
+                <strong class="text-dark ms-1">{{ number_format($filteredTotals->count) }}</strong>
+            </div>
+            <div style="border-left:1px solid #cbd5e1; height:18px;"></div>
+            <div>
+                <span class="text-muted small">Available Units:</span>
+                <strong class="text-primary ms-1">{{ number_format($filteredTotals->units ?? 0) }}</strong>
+            </div>
+            <div style="border-left:1px solid #cbd5e1; height:18px;"></div>
+            <div>
+                <span class="text-muted small">Total Cost Value:</span>
+                <strong style="color:#0369a1;" class="ms-1">{{ pkr($filteredTotals->cost_value ?? 0, 2) }}</strong>
+            </div>
+            <div style="border-left:1px solid #cbd5e1; height:18px;"></div>
+            <div>
+                <span class="text-muted small">Total Retail Value:</span>
+                <strong style="color:#047857;" class="ms-1">{{ pkr($filteredTotals->retail_value ?? 0, 2) }}</strong>
+            </div>
+        </div>
+        <div class="text-muted small">
+            Showing {{ $products->firstItem() ?? 0 }} to {{ $products->lastItem() ?? 0 }} of {{ $products->total() }}
+        </div>
+    </div>
+    @endif
+
+    {{-- Product Valuation Table --}}
+    @if($products->isEmpty())
+        <div class="report-card">
+            <div style="padding:60px; text-align:center; color:#9ca3af;">
+                <i class="bi bi-box" style="font-size:48px; display:block; margin-bottom:12px; color:#9ca3af;"></i>
+                <p style="font-size:16px; font-weight:700; color:#475569;">No products match your search criteria</p>
+                <p style="font-size:13px; color:#64748b;">Try adjusting your category, supplier, or stock filters.</p>
+            </div>
+        </div>
+    @else
+    <div class="report-card">
+        <div class="report-card-header">
+            <span><i class="bi bi-list-check me-2" style="color:var(--pos-primary);"></i> Detailed Product Stock & Shop Valuation</span>
+            <span style="font-size:12px; font-weight:700; color:var(--pos-primary);">Page {{ $products->currentPage() }} of {{ $products->lastPage() }}</span>
+        </div>
+        <div style="overflow-x:auto;">
+            <table class="rpt-table">
+                <thead>
+                    <tr>
+                        <th style="width:50px;">#</th>
+                        <th>Product & Category</th>
+                        <th>SKU / Barcode</th>
+                        <th>Supplier</th>
+                        <th style="text-align:right;">Available Stock</th>
+                        <th style="text-align:right;">Unit Cost</th>
+                        <th style="text-align:right;">Unit Sale</th>
+                        <th style="text-align:right;">Total Cost Value</th>
+                        <th style="text-align:right;">Total Retail Value</th>
+                        <th style="text-align:right;">Potential Profit</th>
+                        <th style="text-align:center; width:100px;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($products as $idx => $p)
+                    @php
+                        $qty = $p->stock_quantity;
+                        $isOut = $qty <= 0;
+                        $isLow = $qty > 0 && $qty <= $p->low_stock_threshold;
+                        $costVal = max(0, $qty) * $p->cost_price;
+                        $saleVal = max(0, $qty) * $p->sale_price;
+                        $profitVal = max(0, $saleVal - $costVal);
+                        $marginPct = $saleVal > 0 ? round(($profitVal / $saleVal) * 100, 1) : 0;
+                        $rowNum = ($products->currentPage() - 1) * $products->perPage() + $idx + 1;
+                    @endphp
+                    <tr>
+                        <td style="color:#94a3b8; font-size:12px; font-weight:600;">
+                            {{ $rowNum }}
+                        </td>
+                        <td>
+                            <div style="font-weight:700; color:#0f172a; font-size:13.5px;">{{ $p->name }}</div>
+                            <div style="margin-top:2px;">
+                                <span style="display:inline-block; padding:1px 6px; border-radius:10px; font-size:10.5px; font-weight:600; background:#f1f5f9; color:#475569; border:1px solid #e2e8f0;">
+                                    {{ $p->category?->name ?? 'Uncategorized' }}
+                                </span>
+                            </div>
+                        </td>
+                        <td style="font-family:monospace; font-size:11.5px; color:#475569;">
+                            <div>{{ $p->sku ?: '—' }}</div>
+                            @if($p->barcode && $p->barcode !== $p->sku)
+                                <div style="color:#94a3b8; font-size:10.5px;">{{ $p->barcode }}</div>
+                            @endif
+                        </td>
+                        <td style="font-size:12px; color:#334155;">
+                            {{ $p->supplier?->name ?? '—' }}
+                        </td>
+                        <td style="text-align:right;">
+                            @if($isOut)
+                                <span class="badge bg-danger text-white" style="font-size:12px; font-weight:700;">
+                                    {{ $qty }} {{ strtoupper($p->unit) }} (OUT)
+                                </span>
+                            @elseif($isLow)
+                                <span class="badge" style="background:#fef3c7; color:#b45309; border:1px solid #fde68a; font-size:12px; font-weight:700;">
+                                    {{ $qty }} {{ strtoupper($p->unit) }} (LOW)
+                                </span>
+                            @else
+                                <span class="badge" style="background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; font-size:12.5px; font-weight:800;">
+                                    {{ $qty }} {{ strtoupper($p->unit) }}
+                                </span>
+                            @endif
+                        </td>
+                        <td style="text-align:right; color:#475569; font-weight:600;">
+                            {{ pkr($p->cost_price, 2) }}
+                        </td>
+                        <td style="text-align:right; color:#0f172a; font-weight:700;">
+                            {{ pkr($p->sale_price, 2) }}
+                        </td>
+                        <td style="text-align:right; font-weight:800; color:#0369a1; background:#f0f9ff;">
+                            {{ pkr($costVal, 2) }}
+                        </td>
+                        <td style="text-align:right; font-weight:800; color:#047857; background:#f0fdf4;">
+                            {{ pkr($saleVal, 2) }}
+                        </td>
+                        <td style="text-align:right; font-weight:700; color:#6d28d9;">
+                            <div>{{ pkr($profitVal, 2) }}</div>
+                            <div style="font-size:10.5px; color:#8b5cf6;">{{ $marginPct }}% margin</div>
+                        </td>
+                        <td style="text-align:center;">
+                            <a href="{{ route('admin.stock.create') }}?product_id={{ $p->id }}" class="btn-pos-outline" style="font-size:11.5px; padding:3px 8px; text-decoration:none; border-radius:6px; display:inline-flex; align-items:center; gap:3px;">
+                                <i class="bi bi-plus-circle"></i> Stock
+                            </a>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+
+        {{-- Pagination --}}
+        @if($products->hasPages())
+        <div class="p-3 border-top d-flex justify-content-between align-items-center bg-light">
+            <div class="text-muted small">
+                Showing {{ $products->firstItem() }} to {{ $products->lastItem() }} of {{ $products->total() }} results
+            </div>
+            <div>
+                {{ $products->links() }}
+            </div>
+        </div>
+        @endif
+    </div>
+    @endif
+
+{{-- ════════════════════════════════════════════════════════
+     TAB 4 — LOW STOCK
 ═════════════════════════════════════════════════════════ --}}
 @elseif($tab === 'lowstock')
 
     {{-- Stat Cards --}}
-    <div class="stat-grid" style="margin-bottom:18px;">
+    <div class="stat-grid" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); margin-bottom:18px;">
         <div class="stat-card" style="border-left:4px solid #ef4444;">
             <div class="stat-label" style="color:#ef4444;">Out of Stock</div>
             <div class="stat-value" style="color:#ef4444;">{{ $outOfStockCount }}</div>
@@ -343,10 +712,20 @@
             <div class="stat-value" style="color:#d97706;">{{ $lowStockCount }}</div>
             <div class="stat-sub">products below alert threshold</div>
         </div>
-        <div class="stat-card">
-            <div class="stat-label">Items In Filter</div>
-            <div class="stat-value">{{ $products->count() }}</div>
-            <div class="stat-sub">products listed below</div>
+        <div class="stat-card" style="border-left:4px solid var(--pos-primary);">
+            <div class="stat-label" style="color:var(--pos-primary);">Total Shop Available Stock</div>
+            <div class="stat-value" style="color:var(--pos-primary);">{{ number_format($shopTotalUnits ?? 0) }} <span style="font-size:12px;color:#64748b;">Units</span></div>
+            <div class="stat-sub">Total inventory units in shop</div>
+        </div>
+        <div class="stat-card" style="border-left:4px solid #0284c7;">
+            <div class="stat-label" style="color:#0284c7;">Shop Stock Cost Value</div>
+            <div class="stat-value" style="color:#0369a1;">{{ pkr($shopCostValue ?? 0, 2) }}</div>
+            <div class="stat-sub">Total capital in stock</div>
+        </div>
+        <div class="stat-card" style="border-left:4px solid #059669;">
+            <div class="stat-label" style="color:#059669;">Shop Stock Retail Value</div>
+            <div class="stat-value" style="color:#047857;">{{ pkr($shopRetailValue ?? 0, 2) }}</div>
+            <div class="stat-sub">Expected revenue at retail</div>
         </div>
     </div>
 

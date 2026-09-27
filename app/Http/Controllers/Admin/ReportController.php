@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Sale;
+use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -16,12 +17,13 @@ class ReportController extends Controller
         $tab = $request->get('tab', 'daily');
 
         $data = match($tab) {
-            'daily'     => $this->dailySales($request),
-            'range'     => $this->dateRange($request),
-            'lowstock'  => $this->lowStock($request),
-            'topsell'   => $this->topSelling($request),
-            'suppliers' => $this->supplierPayments($request),
-            default     => $this->dailySales($request),
+            'daily'                  => $this->dailySales($request),
+            'range'                  => $this->dateRange($request),
+            'stock', 'inventory'     => $this->stockValuation($request),
+            'lowstock'               => $this->lowStock($request),
+            'topsell'                => $this->topSelling($request),
+            'suppliers'              => $this->supplierPayments($request),
+            default                  => $this->dailySales($request),
         };
 
         return view('admin.reports.index', array_merge(['tab' => $tab], $data));
@@ -388,6 +390,138 @@ class ReportController extends Controller
         return compact('summary', 'byDay', 'from', 'to', 'totalExpenses', 'supplierPaidTotal');
     }
 
+    /* ── Stock Valuation & Total Available Inventory ──────── */
+    private function stockValuation(Request $request): array
+    {
+        $categoryId  = $request->get('category_id');
+        $supplierId  = $request->get('supplier_id');
+        $stockFilter = $request->get('stock_filter', 'all'); // 'all', 'in_stock', 'low', 'out', 'negative'
+        $search      = $request->get('search');
+        $sortBy      = $request->get('sort', 'cost_value_desc'); // 'cost_value_desc', 'sale_value_desc', 'stock_desc', 'stock_asc', 'name_asc'
+        $perPage     = (int) $request->get('per_page', 50);
+        $perPage     = in_array($perPage, [25, 50, 100, 250, 500]) ? $perPage : 50;
+
+        $categories = Category::orderBy('name')->get();
+        $suppliers  = Supplier::orderBy('name')->get();
+
+        // 1. Overall Shop Stock Metrics (across all active products in the shop)
+        $overallStats = Product::active()
+            ->selectRaw("
+                COUNT(id) as total_products,
+                SUM(stock_quantity) as total_units_raw,
+                SUM(CASE WHEN stock_quantity > 0 THEN stock_quantity ELSE 0 END) as total_available_units,
+                SUM(CASE WHEN stock_quantity > 0 THEN stock_quantity * cost_price ELSE 0 END) as total_cost_value,
+                SUM(CASE WHEN stock_quantity > 0 THEN stock_quantity * sale_price ELSE 0 END) as total_retail_value,
+                SUM(CASE WHEN stock_quantity <= 0 THEN 1 ELSE 0 END) as out_of_stock_count,
+                SUM(CASE WHEN stock_quantity > 0 AND stock_quantity <= low_stock_threshold THEN 1 ELSE 0 END) as low_stock_count,
+                SUM(CASE WHEN stock_quantity < 0 THEN 1 ELSE 0 END) as negative_stock_count
+            ")
+            ->first();
+
+        $shopCostValue       = (float) ($overallStats->total_cost_value ?? 0);
+        $shopRetailValue     = (float) ($overallStats->total_retail_value ?? 0);
+        $shopProjectedProfit = max(0, $shopRetailValue - $shopCostValue);
+        $shopProfitMargin    = $shopRetailValue > 0 ? round(($shopProjectedProfit / $shopRetailValue) * 100, 1) : 0;
+
+        // 2. Category-wise Stock Breakdown
+        $categoryBreakdown = DB::table('categories')
+            ->leftJoin('products', function ($join) {
+                $join->on('products.category_id', '=', 'categories.id')
+                     ->where('products.is_active', true)
+                     ->whereNull('products.deleted_at');
+            })
+            ->select(
+                'categories.id',
+                'categories.name',
+                DB::raw('COUNT(products.id) as product_count'),
+                DB::raw('SUM(CASE WHEN products.stock_quantity > 0 THEN products.stock_quantity ELSE 0 END) as total_stock'),
+                DB::raw('SUM(CASE WHEN products.stock_quantity > 0 THEN products.stock_quantity * products.cost_price ELSE 0 END) as cost_value'),
+                DB::raw('SUM(CASE WHEN products.stock_quantity > 0 THEN products.stock_quantity * products.sale_price ELSE 0 END) as retail_value')
+            )
+            ->groupBy('categories.id', 'categories.name')
+            ->having('product_count', '>', 0)
+            ->orderByDesc('cost_value')
+            ->get()
+            ->map(function ($cat) use ($shopCostValue) {
+                $cat->cost_value   = (float) $cat->cost_value;
+                $cat->retail_value = (float) $cat->retail_value;
+                $cat->profit       = max(0, $cat->retail_value - $cat->cost_value);
+                $cat->margin       = $cat->retail_value > 0 ? round(($cat->profit / $cat->retail_value) * 100, 1) : 0;
+                $cat->share_pct    = $shopCostValue > 0 ? round(($cat->cost_value / $shopCostValue) * 100, 1) : 0;
+                return $cat;
+            });
+
+        // 3. Filtered Product Query for detailed list & pagination
+        $query = Product::with(['category:id,name', 'supplier:id,name'])
+            ->where('is_active', true);
+
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $categoryId);
+        }
+
+        if ($request->filled('supplier_id')) {
+            $query->where('supplier_id', $supplierId);
+        }
+
+        if ($request->filled('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('sku', 'like', "%{$search}%")
+                  ->orWhere('barcode', 'like', "%{$search}%");
+            });
+        }
+
+        if ($stockFilter === 'in_stock') {
+            $query->where('stock_quantity', '>', 0);
+        } elseif ($stockFilter === 'low') {
+            $query->whereColumn('stock_quantity', '<=', 'low_stock_threshold')
+                  ->where('stock_quantity', '>', 0);
+        } elseif ($stockFilter === 'out') {
+            $query->where('stock_quantity', '<=', 0);
+        } elseif ($stockFilter === 'negative') {
+            $query->where('stock_quantity', '<', 0);
+        }
+
+        // Filtered totals
+        $filteredTotals = (clone $query)->selectRaw("
+            COUNT(id) as count,
+            SUM(CASE WHEN stock_quantity > 0 THEN stock_quantity ELSE 0 END) as units,
+            SUM(CASE WHEN stock_quantity > 0 THEN stock_quantity * cost_price ELSE 0 END) as cost_value,
+            SUM(CASE WHEN stock_quantity > 0 THEN stock_quantity * sale_price ELSE 0 END) as retail_value
+        ")->first();
+
+        // Apply Sorting
+        match($sortBy) {
+            'cost_value_desc' => $query->orderByRaw('(stock_quantity * cost_price) DESC'),
+            'sale_value_desc' => $query->orderByRaw('(stock_quantity * sale_price) DESC'),
+            'stock_desc'      => $query->orderBy('stock_quantity', 'desc'),
+            'stock_asc'       => $query->orderBy('stock_quantity', 'asc'),
+            'name_asc'        => $query->orderBy('name', 'asc'),
+            default           => $query->orderByRaw('(stock_quantity * cost_price) DESC'),
+        };
+
+        $products = $query->paginate($perPage)->withQueryString();
+
+        return compact(
+            'overallStats',
+            'shopCostValue',
+            'shopRetailValue',
+            'shopProjectedProfit',
+            'shopProfitMargin',
+            'categoryBreakdown',
+            'products',
+            'filteredTotals',
+            'categories',
+            'suppliers',
+            'categoryId',
+            'supplierId',
+            'stockFilter',
+            'search',
+            'sortBy',
+            'perPage'
+        );
+    }
+
     /* ── Low stock report ────────────────────────────────── */
     private function lowStock(Request $request): array
     {
@@ -434,7 +568,24 @@ class ReportController extends Controller
         $outOfStockCount = Product::active()->where('stock_quantity', '<=', 0)->count();
         $lowStockCount   = Product::active()->whereColumn('stock_quantity', '<=', 'low_stock_threshold')->where('stock_quantity', '>', 0)->count();
 
-        return compact('products', 'threshold', 'categories', 'categoryId', 'stockFilter', 'search', 'outOfStockCount', 'lowStockCount');
+        // Overall shop stock summary
+        $shopStockStats = Product::active()
+            ->selectRaw("
+                SUM(CASE WHEN stock_quantity > 0 THEN stock_quantity ELSE 0 END) as total_units,
+                SUM(CASE WHEN stock_quantity > 0 THEN stock_quantity * cost_price ELSE 0 END) as total_cost_value,
+                SUM(CASE WHEN stock_quantity > 0 THEN stock_quantity * sale_price ELSE 0 END) as total_retail_value
+            ")
+            ->first();
+
+        $shopTotalUnits  = (int) ($shopStockStats->total_units ?? 0);
+        $shopCostValue   = (float) ($shopStockStats->total_cost_value ?? 0);
+        $shopRetailValue = (float) ($shopStockStats->total_retail_value ?? 0);
+
+        return compact(
+            'products', 'threshold', 'categories', 'categoryId', 'stockFilter',
+            'search', 'outOfStockCount', 'lowStockCount',
+            'shopTotalUnits', 'shopCostValue', 'shopRetailValue'
+        );
     }
 
     /* ── Top selling products ────────────────────────────── */
