@@ -396,5 +396,67 @@ class ProductManagementTest extends TestCase
         $redirectResponse->assertRedirect(route('admin.products.index', $queryParams));
         $this->assertNotNull($this->product->fresh()->image);
     }
+
+    public function test_admin_can_view_product_sales_and_stock_details_analytics(): void
+    {
+        // 1. Create a sale with this product
+        $sale = \App\Models\Sale::create([
+            'invoice_number' => 'INV-TEST-001',
+            'subtotal'       => 1500,
+            'tax_amount'     => 0,
+            'discount_amount'=> 0,
+            'total_amount'   => 1500,
+            'cash_received'  => 1500,
+            'change_returned'=> 0,
+            'payment_method' => 'cash',
+            'user_id'        => $this->admin->id,
+        ]);
+
+        \App\Models\SaleItem::create([
+            'sale_id'      => $sale->id,
+            'product_id'   => $this->product->id,
+            'product_name' => $this->product->name,
+            'product_sku'  => $this->product->sku,
+            'quantity'     => 2,
+            'cost_price'   => 500,
+            'unit_price'   => 750,
+            'total_price'  => 1500,
+        ]);
+
+        // 2. Create a stock movement
+        \App\Models\StockMovement::create([
+            'product_id'   => $this->product->id,
+            'type'         => 'sale',
+            'quantity'     => -2,
+            'stock_before' => 30,
+            'stock_after'  => 28,
+            'reference_id' => $sale->id,
+            'reference_type'=> 'Sale',
+            'notes'        => 'Sale Invoice #' . $sale->invoice_number,
+            'user_id'      => $this->admin->id,
+        ]);
+
+        // 3. Test viewing the full show page
+        $response = $this->actingAs($this->admin)
+            ->get(route('admin.products.show', $this->product));
+
+        $response->assertOk()
+            ->assertSee($this->product->name)
+            ->assertSee($this->product->sku)
+            ->assertSee('INV-TEST-001')
+            ->assertSee('Sales History')
+            ->assertSee('Stock Movement Audit');
+
+        // 4. Test JSON response for quick modal preview
+        $jsonResponse = $this->actingAs($this->admin)
+            ->getJson(route('admin.products.show', $this->product));
+
+        $jsonResponse->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('product.id', $this->product->id)
+            ->assertJsonPath('stats.total_sold_qty', 2)
+            ->assertJsonPath('stats.total_sales_revenue', 1500);
+    }
 }
+
 

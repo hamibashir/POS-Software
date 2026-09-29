@@ -289,7 +289,11 @@
 
                     {{-- Product name + description --}}
                     <td>
-                        <div style="font-weight:600; color:#111827;">{{ $product->name }}</div>
+                        <div>
+                            <a href="{{ route('admin.products.show', $product) }}" class="text-decoration-none fw-bold" style="color:#111827;" onmouseover="this.style.color='var(--pos-primary)'" onmouseout="this.style.color='#111827'" title="View Sales & Stock Details">
+                                {{ $product->name }}
+                            </a>
+                        </div>
                         @if($product->description)
                             <div style="font-size:12px; color:#9ca3af;">{{ Str::limit($product->description, 50) }}</div>
                         @endif
@@ -388,6 +392,10 @@
                     {{-- Actions --}}
                     <td>
                         <div class="d-flex gap-1">
+                            <a href="{{ route('admin.products.show', $product) }}"
+                               class="btn btn-sm btn-outline-info" style="border-radius:7px;" title="Sales & Stock Details">
+                                <i class="bi bi-clock-history"></i>
+                            </a>
                             <button type="button" class="btn btn-sm btn-outline-primary" style="border-radius:7px;" title="Quick Change Image" onclick="document.getElementById('img-wrap-{{ $product->id }}').click()">
                                 <i class="bi bi-camera"></i>
                             </button>
