@@ -2374,11 +2374,14 @@ function addToCartFromDrawer(p) {
 
 /* ── Cart Operations ─────────────────────────── */
 function addToCart(p) {
-    const existing = cart.find(item => item.id === p.id);
-    if (existing) {
-        existing.qty++;
+    const existingIndex = cart.findIndex(item => item.id === p.id);
+    if (existingIndex !== -1) {
+        cart[existingIndex].qty++;
+        // Move recently updated item to the top (#1)
+        const item = cart.splice(existingIndex, 1)[0];
+        cart.unshift(item);
     } else {
-        cart.push({ ...p, qty: 1 });
+        cart.unshift({ ...p, qty: 1 });
     }
     renderCart();
     toast(`Added "${p.name}" to order`, 's');
