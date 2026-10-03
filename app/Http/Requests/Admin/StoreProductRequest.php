@@ -20,7 +20,7 @@ class StoreProductRequest extends FormRequest
             'sku'                 => ['required', 'string', 'max:100', 'unique:products,sku'],
             'barcode'             => ['nullable', 'string', 'max:100', 'unique:products,barcode'],
             'description'         => ['nullable', 'string', 'max:1000'],
-            'unit'                => ['required', 'string', 'in:pc,kg,meter,box,liter,pair,set,roll,sheet,bag'],
+            'unit'                => ['required', 'string', 'in:pc,kg,meter,feet,ft,box,liter,pair,set,roll,sheet,bag'],
             'cost_price'          => ['required', 'numeric', 'min:0', 'max:9999999.99'],
             'sale_price'          => ['required', 'numeric', 'min:0', 'max:9999999.99'],
             'stock_quantity'      => ['required', 'integer', 'min:0'],

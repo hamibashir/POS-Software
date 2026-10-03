@@ -25,7 +25,7 @@ class UpdateProductRequest extends FormRequest
             'barcode'             => ['nullable', 'string', 'max:100',
                                       Rule::unique('products', 'barcode')->ignore($productId)->whereNull('deleted_at')],
             'description'         => ['nullable', 'string', 'max:1000'],
-            'unit'                => ['required', 'string', 'in:pc,kg,meter,box,liter,pair,set,roll,sheet,bag'],
+            'unit'                => ['required', 'string', 'in:pc,kg,meter,feet,ft,box,liter,pair,set,roll,sheet,bag'],
             'cost_price'          => ['required', 'numeric', 'min:0', 'max:9999999.99'],
             'sale_price'          => ['required', 'numeric', 'min:0', 'max:9999999.99'],
             'stock_quantity'      => [auth()->user()?->isAdmin() ? 'required' : 'nullable', 'integer', 'min:0'],

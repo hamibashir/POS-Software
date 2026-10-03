@@ -60,17 +60,19 @@ class ProductManagementTest extends TestCase
 
     public function test_product_create_and_edit_forms_render_with_rupee_symbols(): void
     {
-        // 1. Create page renders with Rs.
+        // 1. Create page renders with Rs. and Feet unit
         $createResponse = $this->actingAs($this->admin)->get(route('admin.products.create'));
         $createResponse->assertOk()
             ->assertSee('bi-currency-rupee')
-            ->assertSee('Rs.');
+            ->assertSee('Rs.')
+            ->assertSee('Feet (ft)');
 
-        // 2. Edit page renders with Rs.
+        // 2. Edit page renders with Rs. and Feet unit
         $editResponse = $this->actingAs($this->admin)->get(route('admin.products.edit', $this->product));
         $editResponse->assertOk()
             ->assertSee('bi-currency-rupee')
             ->assertSee('Rs.')
+            ->assertSee('Feet (ft)')
             ->assertSee('Admin privilege: You can modify the stock quantity directly.');
     }
 

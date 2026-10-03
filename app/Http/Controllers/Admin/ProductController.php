@@ -414,6 +414,7 @@ class ProductController extends Controller
             'pc'     => 'Piece (pc)',
             'kg'     => 'Kilogram (kg)',
             'meter'  => 'Meter (m)',
+            'feet'   => 'Feet (ft)',
             'box'    => 'Box',
             'liter'  => 'Liter (L)',
             'pair'   => 'Pair',
