@@ -6,13 +6,14 @@
 <style>
     .form-section {
         background: #fff; border: 1px solid #e5e7eb;
-        border-radius: 12px; overflow: hidden; margin-bottom: 20px;
+        border-radius: 12px; overflow: visible; margin-bottom: 20px;
     }
     .form-section-header {
         background: #f9fafb; border-bottom: 1px solid #e5e7eb;
         padding: 12px 20px; font-size: 11px; font-weight: 700;
         color: #6b7280; text-transform: uppercase; letter-spacing: 1px;
         display: flex; align-items: center; gap: 8px;
+        border-top-left-radius: 12px; border-top-right-radius: 12px;
     }
     .form-section-body { padding: 20px; }
 
@@ -27,9 +28,9 @@
 
     .product-row {
         display: grid;
-        grid-template-columns: 2.5fr 1fr 1fr 1fr 38px;
-        gap: 10px; align-items: start;
-        padding: 12px 0;
+        grid-template-columns: 3.2fr 1fr 1.1fr 1.2fr 40px;
+        gap: 12px; align-items: start;
+        padding: 14px 0;
         border-bottom: 1px solid #f3f4f6;
         animation: fadeIn .2s ease;
     }
@@ -37,13 +38,13 @@
     @keyframes fadeIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:none; } }
 
     .product-row .col-header {
-        font-size: 10px; font-weight: 700; color: #9ca3af;
+        font-size: 11px; font-weight: 700; color: #64748b;
         text-transform: uppercase; letter-spacing: .7px; padding-bottom: 4px;
     }
 
     .btn-remove-row {
         background: #fee2e2; color: #991b1b; border: none;
-        border-radius: 8px; width: 34px; height: 38px;
+        border-radius: 8px; width: 36px; height: 46px;
         display: flex; align-items: center; justify-content: center;
         cursor: pointer; font-size: 15px; margin-top: 22px;
         transition: background .15s;
@@ -54,9 +55,9 @@
         display: inline-flex; align-items: center; gap: 8px;
         background: var(--pos-primary-lt); color: var(--pos-primary);
         border: 1.5px dashed var(--pos-primary);
-        border-radius: 10px; padding: 10px 18px;
-        font-size: 13px; font-weight: 600; cursor: pointer;
-        transition: background .15s; margin-top: 8px; width: 100%;
+        border-radius: 10px; padding: 12px 18px;
+        font-size: 14px; font-weight: 700; cursor: pointer;
+        transition: all .15s; margin-top: 10px; width: 100%;
         justify-content: center;
     }
     .btn-add-row:hover { background: #d1eff5; }
@@ -85,24 +86,130 @@
     .btn-submit:hover { opacity: .88; }
     .btn-submit:disabled { opacity: .5; cursor: not-allowed; }
 
-    /* product select search wrapper */
-    .select-wrap { position: relative; }
-    .select-search {
-        width: 100%; border: 1.5px solid #e5e7eb; border-radius: 8px;
-        padding: 8px 12px; font-size: 13px; font-family: 'Inter', sans-serif;
-        color: #111827; cursor: pointer; background: #fff;
-        -webkit-appearance: none; appearance: none;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%236b7280' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
-        background-repeat: no-repeat; background-position: right 10px center;
-        padding-right: 30px;
+    /* ── Big, Readable Product TomSelect Dropdown (POS Style) ── */
+    .product-select-wrap { position: relative; width: 100%; }
+    .product-select-wrap .ts-wrapper { width: 100%; }
+    .product-select-wrap .ts-control {
+        min-height: 46px !important;
+        padding: 8px 14px !important;
+        border-radius: 10px !important;
+        border: 1.5px solid #cbd5e1 !important;
+        font-size: 13.5px !important;
+        background: #ffffff !important;
+        transition: all 0.2s ease !important;
     }
-    .select-search:focus { outline: none; border-color: var(--pos-primary); box-shadow: 0 0 0 3px rgba(26,107,124,.1); }
+    .product-select-wrap .ts-wrapper.focus .ts-control {
+        border-color: #0f766e !important;
+        box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.15) !important;
+    }
+    .product-select-wrap .ts-dropdown {
+        min-width: 580px !important;
+        max-height: 420px !important;
+        border-radius: 14px !important;
+        border: 1.5px solid #cbd5e1 !important;
+        box-shadow: 0 18px 45px rgba(15, 23, 42, 0.18), 0 4px 14px rgba(15, 23, 42, 0.08) !important;
+        overflow-y: auto !important;
+        z-index: 1060 !important;
+    }
+    .ts-product-option {
+        padding: 10px 14px !important;
+        border-bottom: 1px solid #f1f5f9;
+        cursor: pointer;
+        transition: background 0.12s;
+    }
+    .ts-product-option:hover, .ts-dropdown .active.ts-product-option {
+        background: #f0fdfa !important;
+    }
+    .ts-prod-img {
+        width: 44px;
+        height: 44px;
+        border-radius: 8px;
+        object-fit: cover;
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        flex-shrink: 0;
+    }
+    .ts-prod-img-fallback {
+        width: 44px;
+        height: 44px;
+        border-radius: 8px;
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #94a3b8;
+        font-size: 20px;
+        flex-shrink: 0;
+    }
+    .ts-prod-name {
+        font-size: 13.5px;
+        font-weight: 700;
+        color: #0f172a;
+        line-height: 1.35;
+    }
+    .ts-prod-meta {
+        font-size: 11px;
+        color: #64748b;
+    }
+    .ts-badge {
+        font-size: 11px;
+        font-weight: 700;
+        padding: 2px 7px;
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        letter-spacing: 0.2px;
+    }
+    .ts-badge-sku {
+        background: #e0f2fe;
+        color: #0369a1;
+        border: 1px solid #bae6fd;
+    }
+    .ts-badge-success {
+        background: #dcfce7;
+        color: #15803d;
+        border: 1px solid #bbf7d0;
+    }
+    .ts-badge-warning {
+        background: #fef3c7;
+        color: #b45309;
+        border: 1px solid #fde68a;
+    }
+    .ts-badge-danger {
+        background: #fee2e2;
+        color: #b91c1c;
+        border: 1px solid #fecaca;
+    }
+    .ts-badge-sale {
+        background: #f3e8ff;
+        color: #7e22ce;
+        border: 1px solid #e9d5ff;
+    }
+    .ts-price-label {
+        font-size: 10px;
+        text-transform: uppercase;
+        font-weight: 700;
+        color: #64748b;
+        letter-spacing: 0.5px;
+    }
+    .ts-price-val {
+        font-size: 14.5px;
+        font-weight: 800;
+        color: #0f766e;
+    }
+
+    .pos-input-tall {
+        height: 46px !important;
+        font-size: 14px !important;
+    }
 
     .line-total-display {
         background: #f9fafb; border: 1.5px solid #e5e7eb;
-        border-radius: 8px; padding: 8px 12px; font-size: 14px;
-        font-weight: 700; color: #111827; margin-top: 22px;
-        text-align: right;
+        border-radius: 8px; padding: 11px 12px; font-size: 14.5px;
+        font-weight: 800; color: #111827; margin-top: 22px;
+        text-align: right; height: 46px;
+        display: flex; align-items: center; justify-content: flex-end;
     }
 
     /* error styles */
@@ -117,13 +224,16 @@ const PRODUCTS = @json($products);
 let rowIndex = 0;
 
 function formatCurrency(n) {
-    return 'Rs. ' + parseFloat(n || 0).toFixed(2);
+    return 'Rs. ' + parseFloat(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function recalcRow(idx) {
-    const qty  = parseFloat(document.getElementById(`qty_${idx}`).value)  || 0;
-    const cost = parseFloat(document.getElementById(`cost_${idx}`).value) || 0;
-    document.getElementById(`line_${idx}`).textContent = formatCurrency(qty * cost);
+    const qty  = parseFloat(document.getElementById(`qty_${idx}`)?.value)  || 0;
+    const cost = parseFloat(document.getElementById(`cost_${idx}`)?.value) || 0;
+    const lineEl = document.getElementById(`line_${idx}`);
+    if (lineEl) {
+        lineEl.textContent = formatCurrency(qty * cost);
+    }
     recalcGrand();
 }
 
@@ -135,7 +245,10 @@ function recalcGrand() {
         const qty  = parseFloat(document.getElementById(`qty_${idx}`)?.value)  || 0;
         const cost = parseFloat(document.getElementById(`cost_${idx}`)?.value) || 0;
         grand += qty * cost;
-        document.getElementById(`line_${idx}`).textContent = formatCurrency(qty * cost);
+        const lineEl = document.getElementById(`line_${idx}`);
+        if (lineEl) {
+            lineEl.textContent = formatCurrency(qty * cost);
+        }
     });
     document.getElementById('grandTotal').textContent = formatCurrency(grand);
     document.getElementById('rowCount').textContent   = rows.length;
@@ -151,13 +264,14 @@ function removeRow(idx) {
     if (row) { row.remove(); recalcGrand(); }
 }
 
-function onProductChange(idx) {
-    const prodEl = document.getElementById(`prod_${idx}`);
-    if (!prodEl) return;
-    const pid = parseInt(prodEl.value);
+function onProductChange(idx, selectedId) {
+    const pid = parseInt(selectedId || document.getElementById(`prod_${idx}`)?.value);
     const product = PRODUCTS.find(p => p.id === pid);
     if (product) {
-        document.getElementById(`cost_${idx}`).value = parseFloat(product.cost_price).toFixed(2);
+        const costInput = document.getElementById(`cost_${idx}`);
+        if (costInput) {
+            costInput.value = parseFloat(product.cost_price || 0).toFixed(2);
+        }
         recalcRow(idx);
     }
 }
@@ -166,37 +280,31 @@ function addRow() {
     const idx       = rowIndex++;
     const container = document.getElementById('productRows');
 
-    const opts = PRODUCTS.map(p =>
-        `<option value="${p.id}">${p.name} \u2014 ${p.sku} (Stock: ${p.stock_quantity})</option>`
-    ).join('');
-
     const html = `
     <div class="product-row" data-idx="${idx}">
-        <div class="fg">
-            <label style="font-size:11px;color:#6b7280;">Product (Search & Select)</label>
-            <select id="prod_${idx}" name="items[${idx}][product_id]"
-                    class="select-search" required>
+        <div class="fg product-select-wrap">
+            <label style="font-size:11px;color:#6b7280;">Product (Search Name or SKU)</label>
+            <select id="prod_${idx}" name="items[${idx}][product_id]" required>
                 <option value="">&mdash; Type to search product name or SKU &mdash;</option>
-                ${opts}
             </select>
         </div>
         <div class="fg">
             <label style="font-size:11px;color:#6b7280;">Qty</label>
             <input type="number" id="qty_${idx}" name="items[${idx}][quantity]"
-                   class="pos-input" min="0.001" step="any" value="1" style="text-align:right;" required
+                   class="pos-input pos-input-tall" min="0.001" step="any" value="1" style="text-align:right; margin-top:0;" required
                    oninput="recalcRow(${idx})">
         </div>
         <div class="fg">
             <label style="font-size:11px;color:#6b7280;">Unit Cost (PKR)</label>
             <input type="number" id="cost_${idx}" name="items[${idx}][unit_cost]"
-                   class="pos-input" min="0" step="0.01" value="0.00" style="text-align:right;" required
+                   class="pos-input pos-input-tall" min="0" step="0.01" value="0.00" style="text-align:right; margin-top:0;" required
                    oninput="recalcRow(${idx})">
         </div>
         <div class="fg">
             <label style="font-size:11px;color:#6b7280;">Line Total</label>
-            <div class="line-total-display" id="line_${idx}">Rs. 0.00</div>
+            <div class="line-total-display" id="line_${idx}" style="margin-top:0;">Rs. 0.00</div>
         </div>
-        <button type="button" class="btn-remove-row" onclick="removeRow(${idx})" title="Remove">
+        <button type="button" class="btn-remove-row" onclick="removeRow(${idx})" title="Remove" style="margin-top:23px;">
             <i class="bi bi-x-lg"></i>
         </button>
     </div>`;
@@ -204,11 +312,59 @@ function addRow() {
     container.insertAdjacentHTML('beforeend', html);
     
     const newSelect = document.getElementById(`prod_${idx}`);
-    if (window.initTomSelect && newSelect) {
-        window.initTomSelect(newSelect, {
-            placeholder: '🔍 Type product name or SKU to search...',
-            onChange: function() {
-                onProductChange(idx);
+    if (newSelect) {
+        new TomSelect(newSelect, {
+            options: PRODUCTS,
+            valueField: 'id',
+            labelField: 'name',
+            searchField: ['name', 'sku'],
+            placeholder: '🔍 Type product name or SKU (e.g. PRD-1403, Fan, Pipe)...',
+            maxOptions: 500,
+            plugins: ['dropdown_input', 'clear_button'],
+            render: {
+                option: function(data, escape) {
+                    const imgHtml = data.image_url 
+                        ? `<img src="${escape(data.image_url)}" class="ts-prod-img" onerror="this.outerHTML='<div class=\\\'ts-prod-img-fallback\\\'><i class=\\\'bi bi-box-seam\\\'></i></div>'"/>` 
+                        : `<div class="ts-prod-img-fallback"><i class="bi bi-box-seam"></i></div>`;
+                    
+                    const stockQty = parseFloat(data.stock_quantity || 0).toFixed(2);
+                    const stockBadgeClass = parseFloat(data.stock_quantity || 0) <= 0 
+                        ? 'ts-badge-danger' 
+                        : (parseFloat(data.stock_quantity || 0) <= 5 ? 'ts-badge-warning' : 'ts-badge-success');
+                    
+                    return `
+                        <div class="ts-product-option d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center gap-3" style="min-width: 0; flex: 1;">
+                                ${imgHtml}
+                                <div class="ts-prod-info" style="min-width: 0; flex: 1;">
+                                    <div class="ts-prod-name text-truncate" title="${escape(data.name)}">${escape(data.name)}</div>
+                                    <div class="ts-prod-meta d-flex align-items-center gap-2 mt-1 flex-wrap">
+                                        <span class="ts-badge ts-badge-sku"><i class="bi bi-upc-scan me-1"></i>${escape(data.sku)}</span>
+                                        <span class="ts-badge ${stockBadgeClass}"><i class="bi bi-boxes me-1"></i>Stock: ${stockQty} ${escape(data.unit || 'Pcs')}</span>
+                                        ${data.sale_price ? `<span class="ts-badge ts-badge-sale">Sale: Rs. ${parseFloat(data.sale_price).toFixed(2)}</span>` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="ts-prod-price-box text-end ms-3 flex-shrink-0">
+                                <div class="ts-price-label">Cost Price</div>
+                                <div class="ts-price-val">Rs. ${parseFloat(data.cost_price || 0).toFixed(2)}</div>
+                            </div>
+                        </div>
+                    `;
+                },
+                item: function(data, escape) {
+                    return `<div class="d-flex align-items-center gap-2 py-1">
+                        <span class="fw-bold text-dark">${escape(data.name)}</span>
+                        <span class="badge bg-light text-muted border">${escape(data.sku)}</span>
+                        <span class="fw-semibold small" style="color:#0f766e;">(Cost: Rs. ${parseFloat(data.cost_price || 0).toFixed(2)})</span>
+                    </div>`;
+                },
+                no_results: function(data, escape) {
+                    return '<div class="no-results p-3 text-muted text-center"><i class="bi bi-search me-1"></i> No matching products found for "' + escape(data.input) + '"</div>';
+                }
+            },
+            onChange: function(value) {
+                onProductChange(idx, value);
             }
         });
     }
@@ -234,6 +390,35 @@ document.addEventListener('DOMContentLoaded', function() {
             placeholder: '🔍 Search registered supplier by name...',
             onChange: function() {
                 onSupplierSelected(supSelect);
+            }
+        });
+    }
+
+    // Prevent ENTER key from submitting/completing the purchase
+    const purchaseForm = document.getElementById('purchaseForm');
+    if (purchaseForm) {
+        purchaseForm.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.keyCode === 13) {
+                if (e.target.tagName !== 'TEXTAREA' && e.target.type !== 'submit') {
+                    e.preventDefault();
+                    
+                    // If on unit_cost input, add new product row and focus it
+                    if (e.target.name && e.target.name.includes('[unit_cost]')) {
+                        addRow();
+                        setTimeout(() => {
+                            const allRows = document.querySelectorAll('.product-row[data-idx]');
+                            if (allRows.length > 0) {
+                                const lastRow = allRows[allRows.length - 1];
+                                const lastIdx = lastRow.dataset.idx;
+                                const prodSelect = document.getElementById(`prod_${lastIdx}`);
+                                if (prodSelect && prodSelect.tomselect) {
+                                    prodSelect.tomselect.focus();
+                                }
+                            }
+                        }, 50);
+                    }
+                    return false;
+                }
             }
         });
     }
@@ -323,11 +508,6 @@ addRow(); // Start with one row
                     <input type="date" name="received_at" class="pos-input"
                         value="{{ old('received_at', date('Y-m-d')) }}">
                 </div>
-                <div class="fg" style="grid-column: span 2;">
-                    <label>Notes (optional)</label>
-                    <textarea name="notes" class="pos-input" rows="2"
-                        placeholder="e.g. Batch #44, partial delivery…">{{ old('notes') }}</textarea>
-                </div>
             </div>
         </div>
     </div>
@@ -339,7 +519,7 @@ addRow(); // Start with one row
 
             {{-- Column headers --}}
             <div class="product-row" style="padding-top:0; border-bottom:1.5px solid #e5e7eb; animation:none;">
-                <div class="col-header">Product</div>
+                <div class="col-header">Product (Search & Select)</div>
                 <div class="col-header" style="text-align:right;">Quantity</div>
                 <div class="col-header" style="text-align:right;">Unit Cost (PKR)</div>
                 <div class="col-header" style="text-align:right;">Line Total</div>
@@ -368,7 +548,6 @@ addRow(); // Start with one row
     </div>
 
 </form>
-
 
 @endsection
 

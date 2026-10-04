@@ -52,7 +52,19 @@ class PurchaseController extends Controller
     {
         $products = Product::where('is_active', true)
             ->orderBy('name')
-            ->get(['id', 'name', 'sku', 'unit', 'cost_price', 'stock_quantity']);
+            ->get(['id', 'name', 'sku', 'unit', 'cost_price', 'sale_price', 'stock_quantity', 'image'])
+            ->map(function ($p) {
+                return [
+                    'id'             => $p->id,
+                    'name'           => $p->name,
+                    'sku'            => $p->sku,
+                    'unit'           => $p->unit ?? 'Pcs',
+                    'cost_price'     => (float) $p->cost_price,
+                    'sale_price'     => (float) $p->sale_price,
+                    'stock_quantity' => (float) $p->stock_quantity,
+                    'image_url'      => $p->image ? asset('storage/' . $p->image) : null,
+                ];
+            });
 
         $suppliers = Supplier::where('is_active', true)
             ->orderBy('name')
