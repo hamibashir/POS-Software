@@ -23,6 +23,7 @@ class SaleItem extends Model
     protected function casts(): array
     {
         return [
+            'quantity'        => 'decimal:3',
             'unit_price'      => 'decimal:2',
             'cost_price'      => 'decimal:2',
             'discount_amount' => 'decimal:2',
@@ -45,13 +46,13 @@ class SaleItem extends Model
         return $this->hasMany(SaleReturnItem::class);
     }
 
-    public function getReturnedQuantityAttribute(): int
+    public function getReturnedQuantityAttribute(): float
     {
-        return (int) $this->returnItems()->sum('quantity');
+        return (float) $this->returnItems()->sum('quantity');
     }
 
-    public function getReturnableQuantityAttribute(): int
+    public function getReturnableQuantityAttribute(): float
     {
-        return max(0, $this->quantity - $this->returned_quantity);
+        return max(0.0, (float) $this->quantity - (float) $this->returned_quantity);
     }
 }

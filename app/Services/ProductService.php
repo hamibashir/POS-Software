@@ -162,9 +162,9 @@ class ProductService
             $isAdmin = !auth()->check() || auth()->user()->isAdmin();
             if (!$isAdmin) {
                 unset($data['stock_quantity']);
-            } elseif (isset($data['stock_quantity']) && (int)$data['stock_quantity'] !== (int)$product->stock_quantity) {
-                $stockBefore = (int)$product->stock_quantity;
-                $stockAfter  = (int)$data['stock_quantity'];
+            } elseif (isset($data['stock_quantity']) && abs((float)$data['stock_quantity'] - (float)$product->stock_quantity) > 0.0001) {
+                $stockBefore = (float)$product->stock_quantity;
+                $stockAfter  = (float)$data['stock_quantity'];
                 $diff        = $stockAfter - $stockBefore;
                 $type        = $diff > 0 ? 'adjustment_in' : 'adjustment_out';
 

@@ -152,8 +152,8 @@
                     <label class="form-label fw-semibold" style="font-size:13px;">
                         Opening Stock Quantity <span class="text-danger">*</span>
                     </label>
-                    <input type="number" name="stock_quantity" min="0"
-                        value="{{ old('stock_quantity', $product->stock_quantity ?? 0) }}"
+                    <input type="number" name="stock_quantity" min="0" step="any"
+                        value="{{ old('stock_quantity', isset($product) ? format_qty($product->stock_quantity) : 0) }}"
                         class="pos-input @error('stock_quantity') is-invalid @enderror"
                         placeholder="0"
                         {{ (!$isEdit || $isAdmin) ? 'required' : 'disabled title="Only administrators can edit stock directly"' }}>
@@ -178,8 +178,8 @@
                     <label class="form-label fw-semibold" style="font-size:13px;">
                         Low Stock Alert Threshold <span class="text-danger">*</span>
                     </label>
-                    <input type="number" name="low_stock_threshold" min="0"
-                        value="{{ old('low_stock_threshold', $product->low_stock_threshold ?? 1) }}"
+                    <input type="number" name="low_stock_threshold" min="0" step="any"
+                        value="{{ old('low_stock_threshold', isset($product) ? format_qty($product->low_stock_threshold) : 1) }}"
                         class="pos-input @error('low_stock_threshold') is-invalid @enderror"
                         placeholder="1" required>
                     <div style="font-size:12px; color:#9ca3af; margin-top:4px;">

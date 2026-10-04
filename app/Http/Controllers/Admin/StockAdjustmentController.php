@@ -62,7 +62,7 @@ class StockAdjustmentController extends Controller
         $data = $request->validate([
             'product_id' => ['required', 'integer', 'exists:products,id'],
             'type'       => ['required', 'in:adjustment_in,adjustment_out'],
-            'quantity'   => ['required', 'integer', 'min:1'],
+            'quantity'   => ['required', 'numeric', 'gt:0'],
             'notes'      => ['required', 'string', 'max:500'],
         ]);
 

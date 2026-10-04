@@ -463,7 +463,7 @@
                 <td class="col-item">
                     <div class="item-name-text">{{ $item->product_name }}</div>
                 </td>
-                <td class="col-qty">-{{ $item->quantity }}</td>
+                <td class="col-qty">-{{ format_qty($item->quantity) }}</td>
                 <td class="col-rate">{{ pkr($item->unit_price, 0) }}</td>
                 <td class="col-refund">-{{ pkr($item->total_price, 0) }}</td>
             </tr>

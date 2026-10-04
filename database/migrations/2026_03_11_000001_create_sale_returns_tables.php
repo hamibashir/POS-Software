@@ -41,7 +41,7 @@ return new class extends Migration
             $table->string('product_name', 150);
             $table->string('product_sku', 60);
             $table->string('product_unit', 30)->default('pcs');
-            $table->integer('quantity');
+            $table->decimal('quantity', 12, 3);
             $table->decimal('unit_price', 12, 2); // Exact sales rate item was sold at
             $table->decimal('total_price', 12, 2); // quantity * unit_price
             $table->string('reason', 150)->nullable();

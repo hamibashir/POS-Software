@@ -577,7 +577,7 @@ class ReportController extends Controller
             ")
             ->first();
 
-        $shopTotalUnits  = (int) ($shopStockStats->total_units ?? 0);
+        $shopTotalUnits  = (float) ($shopStockStats->total_units ?? 0);
         $shopCostValue   = (float) ($shopStockStats->total_cost_value ?? 0);
         $shopRetailValue = (float) ($shopStockStats->total_retail_value ?? 0);
 
@@ -645,11 +645,11 @@ class ReportController extends Controller
             ->get()
             ->map(function ($p) use ($returnedProducts) {
                 $ret = $returnedProducts[$p->product_id] ?? null;
-                $returnedQty = $ret ? (int)$ret->returned_qty : 0;
+                $returnedQty = $ret ? (float)$ret->returned_qty : 0.0;
                 $returnedRev = $ret ? (float)$ret->returned_revenue : 0.0;
 
-                $p->total_qty     = max(0, (int)$p->gross_qty - $returnedQty);
-                $p->total_revenue = max(0, (float)$p->gross_revenue - $returnedRev);
+                $p->total_qty     = max(0.0, (float)$p->gross_qty - $returnedQty);
+                $p->total_revenue = max(0.0, (float)$p->gross_revenue - $returnedRev);
                 $costPerUnit      = (float)$p->avg_cost;
                 $p->total_cost    = $p->total_qty * $costPerUnit;
                 $p->gross_profit  = $p->total_revenue - $p->total_cost;

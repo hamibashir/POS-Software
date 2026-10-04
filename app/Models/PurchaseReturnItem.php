@@ -23,7 +23,7 @@ class PurchaseReturnItem extends Model
     protected function casts(): array
     {
         return [
-            'quantity'   => 'integer',
+            'quantity'   => 'decimal:3',
             'unit_cost'  => 'decimal:2',
             'total_cost' => 'decimal:2',
         ];

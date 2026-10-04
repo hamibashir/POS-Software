@@ -134,14 +134,14 @@ class ProductController extends Controller
             ->get();
 
         // 5. Aggregated Financial & Quantity Stats
-        $totalSoldQty       = (int) $saleItems->sum('quantity');
+        $totalSoldQty       = (float) $saleItems->sum('quantity');
         $totalSalesRevenue  = (float) $saleItems->sum('total_price');
-        $totalReturnedQty   = (int) $returnItems->sum('quantity');
+        $totalReturnedQty   = (float) $returnItems->sum('quantity');
         $totalReturnAmount  = (float) $returnItems->sum('total_price');
-        $netSoldQty         = max(0, $totalSoldQty - $totalReturnedQty);
-        $netSalesRevenue    = max(0, $totalSalesRevenue - $totalReturnAmount);
+        $netSoldQty         = max(0.0, $totalSoldQty - $totalReturnedQty);
+        $netSalesRevenue    = max(0.0, $totalSalesRevenue - $totalReturnAmount);
 
-        $totalPurchasedQty  = (int) $purchaseItems->sum('quantity');
+        $totalPurchasedQty  = (float) $purchaseItems->sum('quantity');
         $totalPurchaseCost  = (float) $purchaseItems->sum('total_cost');
 
         $totalCogsSold      = $netSoldQty * (float) $product->cost_price;
@@ -175,8 +175,8 @@ class ProductController extends Controller
                     'supplier'            => $product->supplier?->name ?? ($product->supplier_name ?? '—'),
                     'cost_price'          => (float) $product->cost_price,
                     'sale_price'          => (float) $product->sale_price,
-                    'stock_quantity'      => (int) $product->stock_quantity,
-                    'low_stock_threshold' => (int) $product->low_stock_threshold,
+                    'stock_quantity'      => (float) $product->stock_quantity,
+                    'low_stock_threshold' => (float) $product->low_stock_threshold,
                     'stock_status'        => $product->stock_status,
                     'stock_status_label'  => $product->stock_status_label,
                     'image'               => $product->image ? Storage::url($product->image) : null,
@@ -188,10 +188,10 @@ class ProductController extends Controller
                     'created_at'   => $m->created_at->format('M d, Y h:i A'),
                     'type'         => strtoupper(str_replace('_', ' ', $m->type)),
                     'raw_type'     => $m->type,
-                    'quantity'     => ($m->quantity > 0 ? '+' : '') . $m->quantity,
-                    'raw_qty'      => $m->quantity,
-                    'stock_before' => $m->stock_before,
-                    'stock_after'  => $m->stock_after,
+                    'quantity'     => ($m->quantity > 0 ? '+' : '') . format_qty($m->quantity),
+                    'raw_qty'      => (float) $m->quantity,
+                    'stock_before' => format_qty($m->stock_before),
+                    'stock_after'  => format_qty($m->stock_after),
                     'user_name'    => $m->user?->name ?? 'System',
                     'notes'        => $m->notes ?: '—',
                 ]),
@@ -202,7 +202,7 @@ class ProductController extends Controller
                     'customer'       => $item->sale?->employee?->name ?? 'Walk-in Customer',
                     'cashier'        => $item->sale?->user?->name ?? 'System',
                     'payment_method' => ucfirst($item->sale?->payment_method ?? 'Cash'),
-                    'quantity'       => $item->quantity,
+                    'quantity'       => format_qty($item->quantity),
                     'unit_price'     => (float) $item->unit_price,
                     'total_price'    => (float) $item->total_price,
                 ]),
@@ -211,7 +211,7 @@ class ProductController extends Controller
                     'date'           => $ret->saleReturn?->returned_at ? \Carbon\Carbon::parse($ret->saleReturn->returned_at)->format('M d, Y h:i A') : '—',
                     'customer'       => $ret->saleReturn?->employee?->name ?? 'Walk-in Customer',
                     'refund_method'  => ucfirst(str_replace('_', ' ', $ret->saleReturn?->refund_method ?? 'cash')),
-                    'quantity'       => $ret->quantity,
+                    'quantity'       => format_qty($ret->quantity),
                     'unit_price'     => (float) $ret->unit_price,
                     'total_price'    => (float) $ret->total_price,
                     'reason'         => $ret->reason ?: ($ret->saleReturn?->reason ?: '—'),
@@ -222,7 +222,7 @@ class ProductController extends Controller
                     'purchase_id'      => $pu->purchase_id,
                     'date'             => $pu->purchase?->received_at ? \Carbon\Carbon::parse($pu->purchase->received_at)->format('M d, Y') : '—',
                     'supplier'         => $pu->purchase?->supplier?->name ?? ($pu->purchase?->supplier_name ?? '—'),
-                    'quantity'         => $pu->quantity,
+                    'quantity'         => format_qty($pu->quantity),
                     'unit_cost'        => (float) $pu->unit_cost,
                     'total_cost'       => (float) $pu->total_cost,
                     'user_name'        => $pu->purchase?->user?->name ?? 'Admin',
@@ -299,25 +299,25 @@ class ProductController extends Controller
     public function quickStockUpdate(Request $request, Product $product)
     {
         $request->validate([
-            'stock_quantity' => 'nullable|integer',
-            'add_quantity'   => 'nullable|integer',
+            'stock_quantity' => 'nullable|numeric',
+            'add_quantity'   => 'nullable|numeric',
             'notes'          => 'nullable|string|max:255',
         ]);
 
-        $stockBefore = (int) $product->stock_quantity;
+        $stockBefore = (float) $product->stock_quantity;
 
         if ($request->filled('add_quantity')) {
-            $add = (int) $request->input('add_quantity');
+            $add = (float) $request->input('add_quantity');
             $stockAfter = $stockBefore + $add;
         } elseif ($request->has('stock_quantity') && $request->input('stock_quantity') !== null && $request->input('stock_quantity') !== '') {
-            $stockAfter = (int) $request->input('stock_quantity');
+            $stockAfter = (float) $request->input('stock_quantity');
         } else {
             $stockAfter = $stockBefore;
         }
 
         $diff = $stockAfter - $stockBefore;
 
-        if ($diff !== 0) {
+        if (abs($diff) > 0.0001) {
             \App\Models\StockMovement::create([
                 'product_id'   => $product->id,
                 'type'         => $diff > 0 ? 'adjustment_in' : 'adjustment_out',
@@ -337,16 +337,17 @@ class ProductController extends Controller
             return response()->json([
                 'success'            => true,
                 'product_id'         => $product->id,
-                'stock_quantity'     => (int) $product->stock_quantity,
+                'stock_quantity'     => (float) $product->stock_quantity,
+                'formatted_stock'    => format_qty($product->stock_quantity),
                 'stock_status'       => $product->stock_status,
                 'stock_status_label' => $product->stock_status_label,
                 'badge_class'        => $product->stock_status === 'in_stock' ? 'stock-in' : ($product->stock_status === 'low_stock' ? 'stock-low' : 'stock-out'),
-                'message'            => "Stock for \"{$product->name}\" updated to {$product->stock_quantity}.",
+                'message'            => "Stock for \"{$product->name}\" updated to " . format_qty($product->stock_quantity) . ".",
             ]);
         }
 
         return redirect()->route('admin.products.index', $request->query())
-            ->with('success', "Stock for \"{$product->name}\" updated to {$product->stock_quantity}.");
+            ->with('success', "Stock for \"{$product->name}\" updated to " . format_qty($product->stock_quantity) . ".");
     }
 
     /**

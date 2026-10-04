@@ -51,7 +51,7 @@ class PurchaseService
 
                 $processedItems[] = [
                     'product'    => $product,
-                    'quantity'   => (int) $item['quantity'],
+                    'quantity'   => (float) $item['quantity'],
                     'unit_cost'  => (float) $item['unit_cost'],
                     'total_cost' => $lineCost,
                 ];

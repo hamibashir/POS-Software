@@ -24,7 +24,7 @@ return new class extends Migration
             $table->string('product_sku', 100);
 
             // Quantities and cost
-            $table->integer('quantity');
+            $table->decimal('quantity', 12, 3);
             $table->decimal('unit_cost', 12, 2);         // Cost per unit at time of purchase
             $table->decimal('total_cost', 12, 2);        // quantity * unit_cost
 

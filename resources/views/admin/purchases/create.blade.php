@@ -183,7 +183,7 @@ function addRow() {
         <div class="fg">
             <label style="font-size:11px;color:#6b7280;">Qty</label>
             <input type="number" id="qty_${idx}" name="items[${idx}][quantity]"
-                   class="pos-input" min="1" value="1" style="text-align:right;" required
+                   class="pos-input" min="0.001" step="any" value="1" style="text-align:right;" required
                    oninput="recalcRow(${idx})">
         </div>
         <div class="fg">

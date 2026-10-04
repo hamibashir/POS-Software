@@ -22,9 +22,9 @@ class StockMovement extends Model
     protected function casts(): array
     {
         return [
-            'quantity'     => 'integer',
-            'stock_before' => 'integer',
-            'stock_after'  => 'integer',
+            'quantity'     => 'decimal:3',
+            'stock_before' => 'decimal:3',
+            'stock_after'  => 'decimal:3',
         ];
     }
 

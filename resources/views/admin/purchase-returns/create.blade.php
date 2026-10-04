@@ -256,7 +256,7 @@
                     data-row="${idx}" value="${data.unit_cost !== undefined ? data.unit_cost : ''}" required placeholder="0.00">
             </td>
             <td>
-                <input type="number" min="1" max="${data.stock_quantity || 999999}" name="items[${idx}][quantity]" class="pos-input qty-input"
+                <input type="number" step="any" min="0.001" max="${data.stock_quantity || 999999}" name="items[${idx}][quantity]" class="pos-input qty-input"
                     data-row="${idx}" value="${data.quantity || 1}" required>
             </td>
             <td style="text-align:right; font-weight:700; color:#111827;" id="subtotal-${idx}">
@@ -326,7 +326,7 @@
         const row = document.getElementById(`row-${idx}`);
         if (!row) return;
         const cost = parseFloat(row.querySelector('.unit-cost-input').value) || 0;
-        const qty = parseInt(row.querySelector('.qty-input').value) || 0;
+        const qty = parseFloat(row.querySelector('.qty-input').value) || 0;
         const subtotal = cost * qty;
         document.getElementById(`subtotal-${idx}`).innerText = `PKR ${subtotal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}`;
         calculateTotals();
@@ -338,7 +338,7 @@
         let totalAmount = 0;
 
         document.querySelectorAll('#itemsContainer tr').forEach(tr => {
-            const qty = parseInt(tr.querySelector('.qty-input')?.value) || 0;
+            const qty = parseFloat(tr.querySelector('.qty-input')?.value) || 0;
             const cost = parseFloat(tr.querySelector('.unit-cost-input')?.value) || 0;
             if (qty > 0) {
                 totalItems++;
@@ -347,8 +347,9 @@
             }
         });
 
+        totalUnits = Math.round(totalUnits * 1000) / 1000;
         document.getElementById('summaryTotalItems').innerText = totalItems;
-        document.getElementById('summaryTotalUnits').innerText = `${totalUnits} pcs`;
+        document.getElementById('summaryTotalUnits').innerText = `${totalUnits} units`;
         document.getElementById('summaryTotalAmount').innerText = `PKR ${totalAmount.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2})}`;
 
         // Update refund amount input if not manually modified

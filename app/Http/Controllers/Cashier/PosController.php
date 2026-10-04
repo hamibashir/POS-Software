@@ -127,7 +127,7 @@ class PosController extends Controller
         $data = $request->validate([
             'cart'                    => ['required', 'array', 'min:1'],
             'cart.*.product_id'       => ['required', 'integer', 'exists:products,id'],
-            'cart.*.quantity'         => ['required', 'integer', 'min:1'],
+            'cart.*.quantity'         => ['required', 'numeric', 'gt:0'],
             'cart.*.unit_price'       => ['required', 'numeric', 'min:0'],
             'cart.*.discount_amount'  => ['nullable', 'numeric', 'min:0'],
             'payment_method'          => ['required', 'in:cash,card,credit'],
@@ -436,7 +436,7 @@ class PosController extends Controller
             'items'               => ['required', 'array', 'min:1'],
             'items.*.product_id'   => ['required', 'integer', 'exists:products,id'],
             'items.*.sale_item_id' => ['nullable', 'integer', 'exists:sale_items,id'],
-            'items.*.quantity'     => ['required', 'integer', 'min:1'],
+            'items.*.quantity'     => ['required', 'numeric', 'gt:0'],
             'items.*.unit_price'   => ['required', 'numeric', 'min:0'],
             'items.*.reason'       => ['nullable', 'string', 'max:150'],
         ]);

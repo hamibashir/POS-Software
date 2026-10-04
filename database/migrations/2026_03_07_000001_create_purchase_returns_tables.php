@@ -38,7 +38,7 @@ return new class extends Migration
             $table->string('product_name', 150);
             $table->string('product_sku', 60);
             $table->string('product_unit', 30)->default('pcs');
-            $table->integer('quantity');
+            $table->decimal('quantity', 12, 3);
             $table->decimal('unit_cost', 12, 2);
             $table->decimal('total_cost', 12, 2);
             $table->string('reason', 150)->nullable();

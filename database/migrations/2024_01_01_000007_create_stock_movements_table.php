@@ -27,9 +27,9 @@ return new class extends Migration
             ]);
 
             // Direction: positive = stock in, negative = stock out
-            $table->integer('quantity');            // Can be negative for outgoing stock
-            $table->integer('stock_before');        // Stock level before this movement
-            $table->integer('stock_after');         // Stock level after this movement
+            $table->decimal('quantity', 12, 3);            // Can be negative for outgoing stock
+            $table->decimal('stock_before', 12, 3);        // Stock level before this movement
+            $table->decimal('stock_after', 12, 3);         // Stock level after this movement
 
             // Source references (nullable — not always linked)
             $table->foreignId('sale_id')

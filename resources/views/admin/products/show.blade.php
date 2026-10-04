@@ -155,7 +155,7 @@
                     <h1 style="font-size:22px; font-weight:800; color:#0f172a; margin:0;">{{ $product->name }}</h1>
                     @if($product->stock_quantity < 0)
                         <span class="badge bg-danger text-white rounded-pill px-3 py-1">
-                            <i class="bi bi-exclamation-octagon-fill me-1"></i> Negative Stock ({{ $product->stock_quantity }} {{ strtoupper($product->unit) }})
+                            <i class="bi bi-exclamation-octagon-fill me-1"></i> Negative Stock ({{ format_qty($product->stock_quantity) }} {{ strtoupper($product->unit) }})
                         </span>
                     @elseif($product->stock_quantity == 0)
                         <span class="badge bg-danger text-white rounded-pill px-3 py-1">
@@ -163,11 +163,11 @@
                         </span>
                     @elseif($product->stock_quantity <= $product->low_stock_threshold)
                         <span class="badge rounded-pill px-3 py-1" style="background:#fef3c7; color:#b45309; border:1px solid #fde68a;">
-                            <i class="bi bi-exclamation-triangle-fill me-1"></i> Low Stock ({{ $product->stock_quantity }} {{ strtoupper($product->unit) }})
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i> Low Stock ({{ format_qty($product->stock_quantity) }} {{ strtoupper($product->unit) }})
                         </span>
                     @else
                         <span class="badge rounded-pill px-3 py-1" style="background:#f0fdf4; color:#166534; border:1px solid #bbf7d0;">
-                            <i class="bi bi-check-circle-fill me-1"></i> In Stock ({{ $product->stock_quantity }} {{ strtoupper($product->unit) }})
+                            <i class="bi bi-check-circle-fill me-1"></i> In Stock ({{ format_qty($product->stock_quantity) }} {{ strtoupper($product->unit) }})
                         </span>
                     @endif
                 </div>
@@ -204,10 +204,10 @@
     <div class="prod-stat-card" style="border-left: 4px solid {{ $product->stock_quantity <= 0 ? '#ef4444' : ($product->stock_quantity <= $product->low_stock_threshold ? '#f59e0b' : 'var(--pos-primary)') }};">
         <div class="prod-stat-label">Current Stock Balance</div>
         <div class="prod-stat-value" style="color: {{ $product->stock_quantity <= 0 ? '#dc2626' : ($product->stock_quantity <= $product->low_stock_threshold ? '#d97706' : 'var(--pos-primary)') }};">
-            {{ $product->stock_quantity }} <span style="font-size:13px; font-weight:600; color:#64748b;">{{ strtoupper($product->unit) }}</span>
+            {{ format_qty($product->stock_quantity) }} <span style="font-size:13px; font-weight:600; color:#64748b;">{{ strtoupper($product->unit) }}</span>
         </div>
         <div class="prod-stat-sub">
-            Alert Threshold: <strong>{{ $product->low_stock_threshold }} {{ $product->unit }}</strong>
+            Alert Threshold: <strong>{{ format_qty($product->low_stock_threshold) }} {{ $product->unit }}</strong>
         </div>
     </div>
 
@@ -215,10 +215,10 @@
     <div class="prod-stat-card" style="border-left: 4px solid #0284c7;">
         <div class="prod-stat-label" style="color:#0284c7;">Total Sold (Net)</div>
         <div class="prod-stat-value" style="color:#0369a1;">
-            {{ number_format($stats['net_sold_qty']) }} <span style="font-size:13px; font-weight:600; color:#64748b;">{{ strtoupper($product->unit) }}</span>
+            {{ format_qty($stats['net_sold_qty']) }} <span style="font-size:13px; font-weight:600; color:#64748b;">{{ strtoupper($product->unit) }}</span>
         </div>
         <div class="prod-stat-sub">
-            Gross: {{ $stats['total_sold_qty'] }} sold | {{ $stats['total_returned_qty'] }} returned
+            Gross: {{ format_qty($stats['total_sold_qty']) }} sold | {{ format_qty($stats['total_returned_qty']) }} returned
         </div>
     </div>
 
@@ -248,7 +248,7 @@
     <div class="prod-stat-card" style="border-left: 4px solid #ea580c;">
         <div class="prod-stat-label" style="color:#ea580c;">Recorded Purchases</div>
         <div class="prod-stat-value" style="color:#c2410c;">
-            {{ number_format($stats['total_purchased_qty']) }} <span style="font-size:13px; font-weight:600; color:#64748b;">{{ strtoupper($product->unit) }}</span>
+            {{ format_qty($stats['total_purchased_qty']) }} <span style="font-size:13px; font-weight:600; color:#64748b;">{{ strtoupper($product->unit) }}</span>
         </div>
         <div class="prod-stat-sub">
             Total Purchase Cost: {{ pkr($stats['total_purchase_cost'], 2) }}
@@ -277,7 +277,7 @@
     <div class="prod-panel">
         <div class="prod-panel-header">
             <span><i class="bi bi-receipt me-1 text-primary"></i> Detailed Sales History for {{ $product->name }}</span>
-            <span class="text-muted small">Total: <strong>{{ $saleItems->count() }} transactions</strong> &bull; <strong>{{ $stats['total_sold_qty'] }} units</strong></span>
+            <span class="text-muted small">Total: <strong>{{ $saleItems->count() }} transactions</strong> &bull; <strong>{{ format_qty($stats['total_sold_qty']) }} units</strong></span>
         </div>
         @if($saleItems->isEmpty())
             <div class="p-5 text-center text-muted">
@@ -337,7 +337,7 @@
                                 </span>
                             </td>
                             <td style="text-align:right; font-weight:800; color:#0f172a; font-size:14px;">
-                                {{ $item->quantity }} <span style="font-size:11px; font-weight:600; color:#64748b;">{{ strtoupper($item->product_unit ?? $product->unit) }}</span>
+                                {{ format_qty($item->quantity) }} <span style="font-size:11px; font-weight:600; color:#64748b;">{{ strtoupper($item->product_unit ?? $product->unit) }}</span>
                             </td>
                             <td style="text-align:right; font-weight:600; color:#475569;">
                                 {{ pkr($item->unit_price, 2) }}
@@ -401,7 +401,7 @@
                                 'purchase'       => 'background:#ecfdf5; color:#047857; border:1px solid #a7f3d0;',
                                 default          => 'background:#f1f5f9; color:#475569; border:1px solid #cbd5e1;',
                             };
-                            $qtyFormatted = ($m->quantity > 0 ? '+' : '') . $m->quantity;
+                            $qtyFormatted = ($m->quantity > 0 ? '+' : '') . format_qty($m->quantity);
                         @endphp
                         <tr>
                             <td class="font-monospace text-muted" style="font-size:11.5px;">
@@ -421,9 +421,9 @@
                             </td>
                             <td style="text-align:center;">
                                 <div class="d-inline-flex align-items-center gap-2 px-2 py-1 rounded" style="background:#f8fafc; border:1px solid #e2e8f0; font-family:monospace; font-size:12.5px;">
-                                    <span class="text-muted fw-bold">{{ $m->stock_before }}</span>
+                                    <span class="text-muted fw-bold">{{ format_qty($m->stock_before) }}</span>
                                     <i class="bi bi-arrow-right text-secondary" style="font-size:11px;"></i>
-                                    <span class="fw-extrabold {{ $m->stock_after < 0 ? 'text-danger' : 'text-dark' }}">{{ $m->stock_after }}</span>
+                                    <span class="fw-extrabold {{ $m->stock_after < 0 ? 'text-danger' : 'text-dark' }}">{{ format_qty($m->stock_after) }}</span>
                                 </div>
                             </td>
                             <td>
@@ -446,7 +446,7 @@
     <div class="prod-panel">
         <div class="prod-panel-header">
             <span><i class="bi bi-arrow-counterclockwise me-1 text-danger"></i> Customer Product Returns</span>
-            <span class="text-muted small">Total: <strong>{{ $returnItems->count() }} returns</strong> &bull; <strong>{{ $stats['total_returned_qty'] }} units returned</strong></span>
+            <span class="text-muted small">Total: <strong>{{ $returnItems->count() }} returns</strong> &bull; <strong>{{ format_qty($stats['total_returned_qty']) }} units returned</strong></span>
         </div>
         @if($returnItems->isEmpty())
             <div class="p-5 text-center text-muted">
@@ -497,7 +497,7 @@
                                 </span>
                             </td>
                             <td style="text-align:right; font-weight:800; color:#b91c1c; font-size:14px;">
-                                +{{ $ret->quantity }} <span style="font-size:11px; font-weight:600; color:#64748b;">{{ strtoupper($product->unit) }}</span>
+                                +{{ format_qty($ret->quantity) }} <span style="font-size:11px; font-weight:600; color:#64748b;">{{ strtoupper($product->unit) }}</span>
                             </td>
                             <td style="text-align:right; font-weight:600; color:#475569;">
                                 {{ pkr($ret->unit_price, 2) }}
@@ -525,7 +525,7 @@
     <div class="prod-panel">
         <div class="prod-panel-header">
             <span><i class="bi bi-truck me-1 text-primary"></i> Stock Purchase Invoices</span>
-            <span class="text-muted small">Total: <strong>{{ $purchaseItems->count() }} purchase entries</strong> &bull; <strong>{{ $stats['total_purchased_qty'] }} units purchased</strong></span>
+            <span class="text-muted small">Total: <strong>{{ $purchaseItems->count() }} purchase entries</strong> &bull; <strong>{{ format_qty($stats['total_purchased_qty']) }} units purchased</strong></span>
         </div>
         @if($purchaseItems->isEmpty())
             <div class="p-5 text-center text-muted">
@@ -571,7 +571,7 @@
                                 <div class="fw-bold text-dark">{{ $supName }}</div>
                             </td>
                             <td style="text-align:right; font-weight:800; color:#047857; font-size:14px;">
-                                +{{ $pu->quantity }} <span style="font-size:11px; font-weight:600; color:#64748b;">{{ strtoupper($product->unit) }}</span>
+                                +{{ format_qty($pu->quantity) }} <span style="font-size:11px; font-weight:600; color:#64748b;">{{ strtoupper($product->unit) }}</span>
                             </td>
                             <td style="text-align:right; font-weight:600; color:#475569;">
                                 {{ pkr($pu->unit_cost, 2) }}

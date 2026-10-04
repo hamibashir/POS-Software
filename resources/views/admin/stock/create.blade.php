@@ -53,12 +53,12 @@ function onProductChange() {
 function updatePreview() {
     const pid  = parseInt(document.getElementById('product_id').value);
     const p    = products.find(x => x.id === pid);
-    const qty  = parseInt(document.getElementById('quantity').value) || 0;
+    const qty  = parseFloat(document.getElementById('quantity').value) || 0;
     const type = document.querySelector('input[name="type"]:checked')?.value;
     if (!p) return;
 
-    const current = p.stock_quantity;
-    const result  = type === 'adjustment_in' ? current + qty : current - qty;
+    const current = parseFloat(p.stock_quantity) || 0;
+    const result  = Math.round((type === 'adjustment_in' ? current + qty : current - qty) * 1000) / 1000;
     const el      = document.getElementById('resultStock');
     el.textContent = result;
     el.style.color = result < 0 ? '#991b1b' : (type === 'adjustment_in' ? '#065f46' : '#b45309');
@@ -117,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <option value="">— Type to search product name or SKU —</option>
                     @foreach($products as $p)
                         <option value="{{ $p->id }}" {{ old('product_id') == $p->id ? 'selected' : '' }}>
-                            {{ $p->name }} — {{ $p->sku }} (Stock: {{ $p->stock_quantity }})
+                            {{ $p->name }} — {{ $p->sku }} (Stock: {{ format_qty($p->stock_quantity) }})
                         </option>
                     @endforeach
                 </select>
@@ -165,9 +165,9 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="fg">
                 <label for="quantity">Quantity <span class="req">*</span></label>
                 <input type="number" id="quantity" name="quantity" class="pos-input"
-                    min="1" value="{{ old('quantity', 1) }}" required
+                    min="0.001" step="any" value="{{ old('quantity', 1) }}" required
                     style="max-width:180px;">
-                <div class="hint">Enter the number of units to add or remove.</div>
+                <div class="hint">Enter the number of units to add or remove (e.g. 0.5, 1.25, 10).</div>
             </div>
 
             {{-- Reason --}}

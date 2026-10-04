@@ -2395,7 +2395,7 @@ function removeFromCart(id) {
 function updateQty(id, delta) {
     const item = cart.find(i => i.id === id);
     if (!item) return;
-    const newQty = item.qty + delta;
+    const newQty = Math.round((parseFloat(item.qty) + delta) * 1000) / 1000;
     if (newQty <= 0) {
         removeFromCart(id);
         return;
@@ -2407,12 +2407,12 @@ function updateQty(id, delta) {
 function setQty(id, val) {
     const item = cart.find(i => i.id === id);
     if (!item) return;
-    let qty = parseInt(val) || 1;
-    if (qty <= 0) {
+    let qty = parseFloat(val);
+    if (isNaN(qty) || qty <= 0) {
         removeFromCart(id);
         return;
     }
-    item.qty = qty;
+    item.qty = Math.round(qty * 1000) / 1000;
     renderCart();
 }
 
@@ -2439,7 +2439,7 @@ function renderCart() {
     cartEmptyState.style.display = 'none';
     completeSaleBtn.disabled = false;
 
-    const totalUnits = cart.reduce((acc, i) => acc + i.qty, 0);
+    const totalUnits = Math.round(cart.reduce((acc, i) => acc + (parseFloat(i.qty) || 0), 0) * 1000) / 1000;
     document.getElementById('metricItemsCount').textContent = `${cart.length} Item${cart.length > 1 ? 's' : ''}`;
     document.getElementById('metricUnitsCount').textContent = `${totalUnits} Unit${totalUnits > 1 ? 's' : ''}`;
 
@@ -2474,7 +2474,7 @@ function renderCart() {
             <td style="text-align:center;">
                 <div class="qty-box">
                     <button type="button" class="qty-btn" onclick="updateQty(${item.id}, -1)">−</button>
-                    <input type="number" class="qty-field" value="${item.qty}" min="1"
+                    <input type="number" class="qty-field" value="${item.qty}" min="0.001" step="any"
                            onchange="setQty(${item.id}, this.value)"
                            onclick="this.select()">
                     <button type="button" class="qty-btn" onclick="updateQty(${item.id}, 1)">+</button>
@@ -3576,7 +3576,7 @@ function renderReturnItemsTable() {
                 <td style="text-align:center;">
                     <div class="input-group input-group-sm" style="width:115px; margin:0 auto;">
                         <button type="button" class="btn btn-outline-secondary px-2" onclick="adjustReturnItemQty(${idx}, -1)">−</button>
-                        <input type="number" min="1" max="${item.max_qty}" value="${item.quantity}" 
+                        <input type="number" min="0.001" step="any" max="${item.max_qty}" value="${item.quantity}" 
                                class="form-control text-center fw-bold" 
                                onchange="onReturnItemQtyChange(${idx}, this.value)">
                         <button type="button" class="btn btn-outline-secondary px-2" onclick="adjustReturnItemQty(${idx}, 1)">+</button>
@@ -3601,8 +3601,8 @@ function renderReturnItemsTable() {
 function adjustReturnItemQty(idx, change) {
     if (!returnItemsList[idx]) return;
     const item = returnItemsList[idx];
-    item.quantity += change;
-    if (item.quantity < 1) item.quantity = 1;
+    const newQty = Math.round((parseFloat(item.quantity) + change) * 1000) / 1000;
+    item.quantity = Math.max(0.001, newQty);
     if (item.max_qty && item.quantity > item.max_qty) {
         toast(`Maximum returnable quantity is ${item.max_qty}!`, 'w');
         item.quantity = item.max_qty;
@@ -3613,13 +3613,13 @@ function adjustReturnItemQty(idx, change) {
 function onReturnItemQtyChange(idx, val) {
     if (!returnItemsList[idx]) return;
     const item = returnItemsList[idx];
-    let qty = parseInt(val) || 1;
-    if (qty < 1) qty = 1;
+    let qty = parseFloat(val);
+    if (isNaN(qty) || qty <= 0) qty = 1;
     if (item.max_qty && qty > item.max_qty) {
         toast(`Maximum returnable quantity is ${item.max_qty}!`, 'w');
         qty = item.max_qty;
     }
-    item.quantity = qty;
+    item.quantity = Math.round(qty * 1000) / 1000;
     renderReturnItemsTable();
 }
 

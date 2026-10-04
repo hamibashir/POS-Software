@@ -34,8 +34,8 @@ class Product extends Model
         return [
             'cost_price'          => 'decimal:2',
             'sale_price'          => 'decimal:2',
-            'stock_quantity'      => 'integer',
-            'low_stock_threshold' => 'integer',
+            'stock_quantity'      => 'decimal:3',
+            'low_stock_threshold' => 'decimal:3',
             'show_in_catalog'     => 'boolean',
             'is_active'           => 'boolean',
         ];

@@ -27,8 +27,8 @@ return new class extends Migration
             $table->decimal('sale_price', 12, 2)->default(0.00);
 
             // Stock
-            $table->integer('stock_quantity')->default(0);
-            $table->integer('low_stock_threshold')->default(1);
+            $table->decimal('stock_quantity', 12, 3)->default(0.000);
+            $table->decimal('low_stock_threshold', 12, 3)->default(1.000);
 
             // Catalog
             $table->string('image', 255)->nullable();

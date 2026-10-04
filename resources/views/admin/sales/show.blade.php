@@ -189,7 +189,7 @@
             </div>
             <div class="info-row">
                 <span class="lbl">Total Items</span>
-                <span class="val">{{ $sale->items->sum('quantity') }} pcs ({{ $sale->items->count() }} lines)</span>
+                <span class="val">{{ format_qty($sale->items->sum('quantity')) }} ({{ $sale->items->count() }} lines)</span>
             </div>
             <div class="info-row">
                 <span class="lbl">Paid Amount</span>
@@ -225,9 +225,9 @@
         <tbody>
             @foreach($sale->items as $item)
             @php
-                $returnedQty = (int) $item->returnItems->sum('quantity');
-                $netQty = max(0, $item->quantity - $returnedQty);
-                $cost   = $item->cost_price * $item->quantity;
+                $returnedQty = (float) $item->returnItems->sum('quantity');
+                $netQty = max(0, (float)$item->quantity - $returnedQty);
+                $cost   = (float)$item->cost_price * (float)$item->quantity;
                 $margin = $item->total_price > 0 ? (($item->total_price - $cost) / $item->total_price) * 100 : 0;
             @endphp
             <tr>
@@ -236,11 +236,11 @@
                     <div class="item-sku">{{ $item->product_sku }} · {{ strtoupper($item->product_unit) }}</div>
                 </td>
                 <td style="text-align:right;">{{ pkr($item->unit_price, 2) }}</td>
-                <td style="text-align:right; font-weight:600;">{{ $item->quantity }}</td>
+                <td style="text-align:right; font-weight:600;">{{ format_qty($item->quantity) }}</td>
                 <td style="text-align:center;">
                     @if($returnedQty > 0)
                         <span class="badge bg-danger" title="Returned back to inventory">
-                            -{{ $returnedQty }} {{ $item->product_unit }}
+                            -{{ format_qty($returnedQty) }} {{ $item->product_unit }}
                         </span>
                     @else
                         <span class="text-muted small">—</span>
@@ -265,7 +265,7 @@
     {{-- Totals footer --}}
     <div style="border-top:1.5px dashed #e5e7eb; padding: 16px 0 8px;">
         <div class="t-row-foot">
-            <span>Subtotal ({{ $sale->items->sum('quantity') }} items)</span>
+            <span>Subtotal ({{ format_qty($sale->items->sum('quantity')) }} items)</span>
             <span>{{ pkr($sale->subtotal, 2) }}</span>
         </div>
         @if($sale->discount_amount > 0)

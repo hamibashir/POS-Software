@@ -46,7 +46,7 @@ class PurchaseReturnService
 
             foreach ($items as $item) {
                 $product  = Product::lockForUpdate()->findOrFail($item['product_id']);
-                $qty      = (int) $item['quantity'];
+                $qty      = (float) $item['quantity'];
                 $unitCost = (float) $item['unit_cost'];
                 $lineCost = round($unitCost * $qty, 2);
 

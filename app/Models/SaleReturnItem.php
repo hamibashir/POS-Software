@@ -23,6 +23,7 @@ class SaleReturnItem extends Model
     protected function casts(): array
     {
         return [
+            'quantity'    => 'decimal:3',
             'unit_price'  => 'decimal:2',
             'total_price' => 'decimal:2',
         ];

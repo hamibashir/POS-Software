@@ -467,4 +467,54 @@ class PosSaleTest extends TestCase
         $this->assertEquals(2500.00, (float) $stats['total_revenue']);
         $this->assertEquals($stats['today_revenue'], $stats['total_revenue']);
     }
+
+    public function test_cashier_can_sell_decimal_product_quantity(): void
+    {
+        $payload = [
+            'cart' => [
+                [
+                    'product_id' => $this->productA->id,
+                    'name'       => $this->productA->name,
+                    'sku'        => $this->productA->sku,
+                    'unit'       => 'feet',
+                    'unit_price' => 500.00,
+                    'cost_price' => 300.00,
+                    'quantity'   => 0.5,
+                    'subtotal'   => 250.00,
+                    'discount'   => 0.00,
+                    'tax'        => 0.00,
+                    'total'      => 250.00,
+                ],
+            ],
+            'subtotal'        => 250.00,
+            'discount_amount' => 0.00,
+            'tax_amount'      => 0.00,
+            'total_amount'    => 250.00,
+            'paid_amount'     => 250.00,
+            'payment_method'  => 'cash',
+        ];
+
+        $response = $this->actingAs($this->cashier)
+            ->postJson(route('cashier.pos.complete-sale'), $payload);
+
+        $response->assertOk()
+            ->assertJson(['success' => true]);
+
+        $this->assertDatabaseHas('sale_items', [
+            'product_id' => $this->productA->id,
+            'quantity'   => 0.5,
+            'total_price' => 250.00,
+        ]);
+
+        $this->productA->refresh();
+        $this->assertEquals(49.5, (float) $this->productA->stock_quantity);
+
+        $this->assertDatabaseHas('stock_movements', [
+            'product_id'   => $this->productA->id,
+            'type'         => 'sale',
+            'quantity'     => -0.5,
+            'stock_before' => 50.0,
+            'stock_after'  => 49.5,
+        ]);
+    }
 }

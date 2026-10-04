@@ -348,7 +348,7 @@
                                   data-product-name="{{ $product->name }}">
                                 @csrf @method('PATCH')
                                 <div class="input-group input-group-sm" style="width: 104px;">
-                                    <input type="number" name="stock_quantity" value="{{ $product->stock_quantity }}"
+                                    <input type="number" step="any" name="stock_quantity" value="{{ format_qty($product->stock_quantity) }}"
                                            class="form-control form-control-sm quick-stock-input"
                                            id="stock-input-{{ $product->id }}"
                                            title="Type stock and press Enter or Save">

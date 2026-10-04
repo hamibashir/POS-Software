@@ -25,7 +25,7 @@ return new class extends Migration
             $table->string('product_unit', 30)->default('pc');
 
             // Quantities and pricing
-            $table->integer('quantity');
+            $table->decimal('quantity', 12, 3);
             $table->decimal('unit_price', 12, 2);        // Sale price at time of sale
             $table->decimal('cost_price', 12, 2);        // Cost at time of sale (for profit)
             $table->decimal('discount_amount', 12, 2)->default(0.00);

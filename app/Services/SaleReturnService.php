@@ -51,7 +51,7 @@ class SaleReturnService
 
             foreach ($items as $item) {
                 $product = Product::lockForUpdate()->findOrFail($item['product_id']);
-                $qty     = (int) $item['quantity'];
+                $qty     = (float) $item['quantity'];
 
                 if ($qty <= 0) {
                     continue;

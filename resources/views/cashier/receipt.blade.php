@@ -591,7 +591,7 @@
                         <div class="item-disc-text">(Disc: -{{ pkr($item->discount_amount, 0) }})</div>
                     @endif
                 </td>
-                <td class="col-qty">{{ $item->quantity }}</td>
+                <td class="col-qty">{{ format_qty($item->quantity) }}</td>
                 <td class="col-rate">{{ pkr($item->unit_price, 0) }}</td>
                 <td class="col-total">{{ pkr($item->total_price, 0) }}</td>
             </tr>
@@ -602,7 +602,7 @@
     {{-- Totals Summary (Whole integers, no points, balanced margins) --}}
     <div class="totals-section">
         <div class="calc-row">
-            <span>Subtotal ({{ $sale->items->sum('quantity') }} items):</span>
+            <span>Subtotal ({{ format_qty($sale->items->sum('quantity')) }} items):</span>
             <span>{{ pkr($sale->subtotal, 0) }}</span>
         </div>
 
