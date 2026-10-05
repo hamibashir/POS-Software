@@ -884,9 +884,14 @@
                             </div>
                         </div>
 
-                        <button type="button" class="btn-quick-order" onclick="openPhoneOrderModal('{{ addslashes($product->name) }}', '{{ addslashes($product->sku ?? '') }}', '{{ pkr($product->sale_price, 2) }}')">
-                            <i class="bi bi-telephone-fill"></i> Order
-                        </button>
+                        <div style="display:flex; gap:6px; align-items:center;">
+                            <button type="button" class="btn-quick-order whatsapp-mini" onclick="openWhatsAppStore('{{ addslashes($product->name) }}', '{{ addslashes($product->sku ?? '') }}', '{{ pkr($product->sale_price, 2) }}')" title="Order on WhatsApp">
+                                <i class="bi bi-whatsapp"></i>
+                            </button>
+                            <button type="button" class="btn-quick-order" onclick="openPhoneOrderModal('{{ addslashes($product->name) }}', '{{ addslashes($product->sku ?? '') }}', '{{ pkr($product->sale_price, 2) }}')" title="Order by Phone">
+                                <i class="bi bi-telephone-fill"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
 

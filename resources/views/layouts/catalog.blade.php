@@ -556,11 +556,288 @@
         .btn-copy-number:hover {
             background: rgba(255, 255, 255, 0.28); color: #fff;
         }
-        .phone-modal-footer-info {
-            display: flex; flex-direction: column; gap: 8px; font-size: 12px; color: #64748b;
+        /* ═══════════════════════════════════════════════════════════
+           ── MOBILE MODERN EXPERIENCE & BOTTOM NAVIGATION BAR ────────
+           ═══════════════════════════════════════════════════════════ */
+
+        /* Bottom padding on mobile to account for fixed bottom nav */
+        @media (max-width: 768px) {
+            body {
+                padding-bottom: 70px;
+            }
+            .cat-page {
+                padding: 14px 12px 60px !important;
+            }
         }
-        .phone-modal-footer-info .info-point {
-            display: flex; align-items: center; gap: 8px;
+
+        /* ── Mobile Bottom Navigation Bar ──────────────────────── */
+        .mobile-bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 62px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-top: 1px solid rgba(226, 232, 240, 0.85);
+            z-index: 9999;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
+            padding: 0 6px;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-bottom-nav {
+                display: flex;
+                align-items: center;
+                justify-content: space-around;
+            }
+        }
+
+        .mob-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            color: #64748b;
+            text-decoration: none;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 6px 10px;
+            border-radius: 10px;
+            transition: all 0.15s ease;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            flex: 1;
+            max-width: 75px;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .mob-nav-item i {
+            font-size: 20px;
+            transition: transform 0.15s ease;
+        }
+
+        .mob-nav-item.active, .mob-nav-item:hover {
+            color: var(--primary);
+        }
+
+        .mob-nav-item.active i {
+            transform: scale(1.12);
+        }
+
+        .mob-nav-item.whatsapp-item {
+            color: #16a34a;
+        }
+        .mob-nav-item.whatsapp-item:hover {
+            color: #15803d;
+        }
+
+        /* ── Mobile Category Slide-Up Drawer ─────────────────── */
+        .mob-drawer-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            z-index: 10000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.25s ease, visibility 0.25s ease;
+        }
+
+        .mob-drawer-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .mob-drawer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            max-height: 82vh;
+            background: #ffffff;
+            border-top-left-radius: 24px;
+            border-top-right-radius: 24px;
+            z-index: 10001;
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.25);
+        }
+
+        .mob-drawer-overlay.active .mob-drawer {
+            transform: translateY(0);
+        }
+
+        .mob-drawer-handle {
+            width: 44px;
+            height: 5px;
+            background: #cbd5e1;
+            border-radius: 4px;
+            margin: 10px auto 4px;
+        }
+
+        .mob-drawer-header {
+            padding: 12px 20px 14px;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .mob-drawer-title {
+            font-size: 16px;
+            font-weight: 800;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .mob-drawer-close {
+            background: #f1f5f9;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            color: #64748b;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .mob-drawer-body {
+            padding: 14px 16px 30px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .mob-category-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 14px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            text-decoration: none;
+            color: #0f172a;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.15s ease;
+        }
+
+        .mob-category-row:hover, .mob-category-row:active {
+            background: #e0f2fe;
+            border-color: #7dd3fc;
+            color: var(--primary);
+        }
+
+        .mob-cat-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .mob-cat-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-size: 18px;
+        }
+
+        .mob-cat-count {
+            font-size: 12px;
+            font-weight: 700;
+            color: #64748b;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        /* ── Mobile Floating WhatsApp Button ────────────────── */
+        .floating-whatsapp-btn {
+            position: fixed;
+            right: 18px;
+            bottom: 78px;
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+            color: #ffffff !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            box-shadow: 0 8px 24px rgba(37, 211, 102, 0.45);
+            z-index: 9990;
+            text-decoration: none !important;
+            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
+            animation: pulse-green 2.5s infinite;
+        }
+
+        @keyframes pulse-green {
+            0% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.6); }
+            70% { box-shadow: 0 0 0 14px rgba(37, 211, 102, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); }
+        }
+
+        .floating-whatsapp-btn:hover {
+            transform: scale(1.08) translateY(-2px);
+            box-shadow: 0 12px 30px rgba(37, 211, 102, 0.6);
+        }
+
+        @media (min-width: 769px) {
+            .floating-whatsapp-btn {
+                bottom: 24px;
+                right: 24px;
+                width: 56px;
+                height: 56px;
+                font-size: 28px;
+            }
+        }
+
+        /* ── 2-Column Mobile Product Card Polishing ─────────── */
+        @media (max-width: 640px) {
+            .prod-card {
+                border-radius: 12px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+            }
+            .prod-img-wrap, .prod-card .img-wrap {
+                height: 155px !important;
+                background: #ffffff;
+            }
+            .prod-img-bg {
+                padding: 6px !important;
+            }
+            .prod-title, .prod-card .prod-name {
+                font-size: 13px !important;
+                line-height: 1.3 !important;
+                height: 2.6em !important;
+            }
+            .prod-price, .prod-card .prod-price {
+                font-size: 14px !important;
+                font-weight: 800 !important;
+                color: #0f766e !important;
+            }
         }
     </style>
 
@@ -607,6 +884,82 @@
 <main style="flex:1;">
     @yield('content')
 </main>
+
+{{-- ── Mobile Floating WhatsApp Button ───────────── --}}
+<a href="javascript:void(0)" onclick="openWhatsAppStore()" class="floating-whatsapp-btn" title="Chat on WhatsApp" aria-label="Chat with Hassan Corporation on WhatsApp">
+    <i class="bi bi-whatsapp"></i>
+</a>
+
+{{-- ── App-Style Mobile Bottom Navigation Bar ────── --}}
+<nav class="mobile-bottom-nav">
+    <a href="{{ route('catalog.home') }}" class="mob-nav-item {{ request()->routeIs('catalog.home') ? 'active' : '' }}">
+        <i class="bi bi-house-door-fill"></i>
+        <span>Home</span>
+    </a>
+    <button type="button" class="mob-nav-item {{ request()->routeIs('catalog.category') ? 'active' : '' }}" onclick="openMobileCategoryDrawer()">
+        <i class="bi bi-grid-fill"></i>
+        <span>Categories</span>
+    </button>
+    <a href="{{ route('catalog.search') }}" class="mob-nav-item {{ request()->routeIs('catalog.search') ? 'active' : '' }}">
+        <i class="bi bi-search"></i>
+        <span>Search</span>
+    </a>
+    <a href="javascript:void(0)" onclick="openWhatsAppStore()" class="mob-nav-item whatsapp-item">
+        <i class="bi bi-whatsapp"></i>
+        <span>WhatsApp</span>
+    </a>
+    <button type="button" class="mob-nav-item" onclick="openPhoneOrderModal()">
+        <i class="bi bi-telephone-fill"></i>
+        <span>Call</span>
+    </button>
+</nav>
+
+{{-- ── Mobile Category Slide-Up Drawer ───────────── --}}
+<div id="mobileCategoryDrawer" class="mob-drawer-overlay" onclick="if(event.target===this) closeMobileCategoryDrawer()">
+    <div class="mob-drawer">
+        <div class="mob-drawer-handle"></div>
+        <div class="mob-drawer-header">
+            <div class="mob-drawer-title">
+                <i class="bi bi-grid-fill text-primary"></i> Browse Categories
+            </div>
+            <button type="button" class="mob-drawer-close" onclick="closeMobileCategoryDrawer()">&times;</button>
+        </div>
+        <div class="mob-drawer-body">
+            @foreach(\App\Models\Category::where('is_active', true)->withCount(['products' => function($q) { $q->where('is_active', true); }])->orderBy('name')->get() as $dCat)
+            @php
+                $catIcons = [
+                    'sanitary' => 'bi-droplet-half',
+                    'hardware' => 'bi-tools',
+                    'tools'    => 'bi-wrench-adjustable',
+                    'plumbing' => 'bi-water',
+                    'pipe'     => 'bi-water',
+                    'fan'      => 'bi-wind',
+                    'motor'    => 'bi-cpu',
+                    'pump'     => 'bi-tsunami',
+                    'electric' => 'bi-lightning-charge-fill',
+                    'paint'    => 'bi-paint-bucket',
+                ];
+                $matchedIcon = 'bi-box-seam';
+                foreach ($catIcons as $k => $ico) {
+                    if (stripos($dCat->name, $k) !== false) {
+                        $matchedIcon = $ico;
+                        break;
+                    }
+                }
+            @endphp
+            <a href="{{ route('catalog.category', $dCat->slug) }}" class="mob-category-row" onclick="closeMobileCategoryDrawer()">
+                <div class="mob-cat-left">
+                    <div class="mob-cat-icon">
+                        <i class="bi {{ $matchedIcon }}"></i>
+                    </div>
+                    <span>{{ $dCat->name }}</span>
+                </div>
+                <span class="mob-cat-count">{{ $dCat->products_count }}</span>
+            </a>
+            @endforeach
+        </div>
+    </div>
+</div>
 
 {{-- ── Footer ───────────────────────────────────── --}}
 <footer class="cat-footer">
@@ -888,11 +1241,43 @@
         }, 2200);
     }
 
+    // Mobile Category Drawer
+    function openMobileCategoryDrawer() {
+        const drawer = document.getElementById('mobileCategoryDrawer');
+        if (drawer) {
+            drawer.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    function closeMobileCategoryDrawer() {
+        const drawer = document.getElementById('mobileCategoryDrawer');
+        if (drawer) {
+            drawer.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+    }
+
+    // Direct WhatsApp Ordering Helper
+    function openWhatsAppStore(productName = '', productSku = '', productPrice = '') {
+        const whatsappNumber = "923005086055"; // Store WhatsApp
+        let message = "Assalam o Alaikum Hassan Corporation!\nI am visiting your website (hassanandsonscorp.com)";
+        if (productName) {
+            message += "\n\nI want to order / check details for this product:\n- Product: " + productName;
+            if (productSku) message += "\n- SKU: " + productSku;
+            if (productPrice) message += "\n- Price: " + productPrice;
+        } else {
+            message += "\n\nI would like to inquire about your sanitary and hardware products catalogue.";
+        }
+        window.open("https://wa.me/" + whatsappNumber + "?text=" + encodeURIComponent(message), "_blank");
+    }
+
     // Close on Escape key
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             closePhoneOrderModal();
             closeQrModal();
+            closeMobileCategoryDrawer();
         }
     });
 </script>

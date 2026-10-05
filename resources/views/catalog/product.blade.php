@@ -264,6 +264,95 @@
     }
 
     .sec-title { font-size: 20px; font-weight: 700; color: #0f172a; }
+
+    /* ── Mobile Fixed Action Bar on Product Page ───────── */
+    .pd-mobile-bottom-bar {
+        display: none;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 72px;
+        background: rgba(255, 255, 255, 0.96);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border-top: 1px solid rgba(226, 232, 240, 0.9);
+        z-index: 9999;
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+        padding: 10px 16px;
+    }
+
+    @media (max-width: 768px) {
+        .pd-mobile-bottom-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        .mobile-bottom-nav {
+            display: none !important; /* On single product page, replace default bottom nav with product buy action bar */
+        }
+        body {
+            padding-bottom: 80px !important;
+        }
+    }
+
+    .pd-mob-price {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .pd-mob-price .label {
+        font-size: 10px;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: .5px;
+    }
+
+    .pd-mob-price .val {
+        font-size: 17px;
+        font-weight: 800;
+        color: #0f766e;
+        line-height: 1.2;
+    }
+
+    .pd-mob-btns {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex: 1;
+        justify-content: flex-end;
+    }
+
+    .btn-mob-order-whatsapp {
+        background: #25D366;
+        color: #ffffff !important;
+        border: none;
+        border-radius: 12px;
+        padding: 11px 16px;
+        font-size: 13px;
+        font-weight: 700;
+        text-decoration: none !important;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        box-shadow: 0 4px 12px rgba(37, 211, 102, 0.35);
+    }
+
+    .btn-mob-order-call {
+        background: #f1f5f9;
+        color: #0f172a !important;
+        border: 1px solid #cbd5e1;
+        border-radius: 12px;
+        width: 42px;
+        height: 42px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        text-decoration: none !important;
+    }
 </style>
 @endpush
 
@@ -446,6 +535,25 @@
         </div>
     </div>
     @endif
+
+    {{-- ── Fixed Mobile Action Bar for Single Product ────────────────────────────── --}}
+    <div class="pd-mobile-bottom-bar">
+        <div class="pd-mob-price">
+            <span class="label">Price</span>
+            <span class="val">Rs. {{ number_format($product->sale_price, 0) }}</span>
+        </div>
+        <div class="pd-mob-btns">
+            <a href="tel:0518891930" class="btn-mob-order-call" title="Call Store Helpline">
+                <span class="material-symbols-outlined" style="font-size:20px;">call</span>
+            </a>
+            <a href="https://wa.me/923005086055?text={{ urlencode('Hello Hassan Corporation, I want to order/inquire about: ' . $product->name . ' (Code: ' . ($product->barcode ?? $product->sku ?? 'N/A') . ', Price: Rs. ' . number_format($product->sale_price, 0) . '). Link: ' . url()->current()) }}"
+               target="_blank"
+               class="btn-mob-order-whatsapp">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.007c.106.005.249-.04.39.299.144.35.49 1.196.533 1.284.043.088.072.19.014.305-.058.115-.087.19-.174.289l-.26.3c-.087.101-.177.211-.077.382.1.172.443.731.951 1.183.654.582 1.205.763 1.378.85.173.086.274.072.375-.043.101-.116.433-.505.549-.679.116-.173.231-.144.39-.086s1.011.477 1.184.564.289.13.332.203c.043.072.043.419-.101.824z"/></svg>
+                <span>Order via WhatsApp</span>
+            </a>
+        </div>
+    </div>
 
 </div>
 @endsection

@@ -297,9 +297,55 @@
         text-decoration: none; background: #fff;
         transition: all .15s;
     }
-    .pg-wrap .page-link:hover   { border-color: var(--primary); color: var(--primary); background: var(--primary-lt); }
-    .pg-wrap .page-link.active  { background: var(--primary); color: #fff; border-color: var(--primary); }
-    .pg-wrap .page-link.disabled{ color: #cbd5e1; pointer-events: none; }
+    /* ── Mobile Category Pills ─────────────────────────── */
+    .mobile-cat-pills-wrap {
+        overflow-x: auto;
+        scrollbar-width: none;
+        margin: 0 0 16px;
+        padding-bottom: 4px;
+        display: none;
+    }
+    @media (max-width: 860px) {
+        .mobile-cat-pills-wrap {
+            display: block;
+        }
+    }
+    .mobile-cat-pills-wrap::-webkit-scrollbar { display: none; }
+    .mobile-cat-pills {
+        display: flex;
+        gap: 8px;
+        white-space: nowrap;
+    }
+    .mob-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 14px;
+        border-radius: 20px;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        color: #334155;
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.15s ease;
+    }
+    .mob-pill.active, .mob-pill:hover {
+        background: var(--primary);
+        color: #ffffff;
+        border-color: var(--primary);
+        box-shadow: 0 2px 8px rgba(30, 109, 138, 0.25);
+    }
+
+    @media (max-width: 640px) {
+        .inline-search {
+            width: 100%;
+        }
+        .inline-search input {
+            width: 100%;
+            flex: 1;
+        }
+    }
 </style>
 @endpush
 
@@ -314,6 +360,20 @@
         </a>
         <span class="sep">/</span>
         <span style="color:#0f172a;font-weight:600;">{{ $category->name }}</span>
+    </div>
+
+    {{-- Mobile Category Pills Bar --}}
+    <div class="mobile-cat-pills-wrap">
+        <div class="mobile-cat-pills">
+            <a href="{{ route('catalog.search', ['q' => '']) }}" class="mob-pill">
+                <i class="bi bi-grid-fill me-1"></i> All Products
+            </a>
+            @foreach($categories as $c)
+            <a href="{{ route('catalog.category', $c->slug) }}" class="mob-pill {{ $c->id === $category->id ? 'active' : '' }}">
+                {{ $c->name }}
+            </a>
+            @endforeach
+        </div>
     </div>
 
     <div class="cat-page-grid">
@@ -382,9 +442,9 @@
             @if($products->count())
             <div class="cat-prod-grid">
                 @foreach($products as $product)
-                <a href="{{ route('catalog.product', $product->slug) }}" class="prod-card">
+                <div class="prod-card">
 
-                    <div class="prod-img-wrap">
+                    <a href="{{ route('catalog.product', $product->slug) }}" class="prod-img-wrap" style="text-decoration:none;">
                         {{-- Stock badge --}}
                         @if($product->stock_status === 'in_stock')
                             <span class="stock-badge badge-instock"><span class="dot"></span> In Stock</span>
@@ -396,27 +456,28 @@
 
                         <div class="prod-img-bg {{ $product->stock_status === 'out_of_stock' ? 'out-of-stock' : '' }}"
                              style="background-image: url('{{ $product->image_url }}');"></div>
-
-                        <div class="prod-img-overlay">
-                            <button class="prod-overlay-btn" tabindex="-1">
-                                @if($product->stock_status === 'out_of_stock') Notify Me @else Quick View @endif
-                            </button>
-                        </div>
-                    </div>
+                    </a>
 
                     <div class="prod-card-body">
                         <div class="prod-cat-label">{{ $product->category?->name }}</div>
-                        <div class="prod-title" title="{{ $product->name }}">{{ $product->name }}</div>
+                        <a href="{{ route('catalog.product', $product->slug) }}" style="text-decoration:none;">
+                            <div class="prod-title" title="{{ $product->name }}">{{ $product->name }}</div>
+                        </a>
                         <div class="prod-card-footer">
                             <div class="prod-price {{ $product->stock_status === 'out_of_stock' ? 'strike' : '' }}">
-                                Rs.&nbsp;{{ number_format($product->sale_price, 0) }}
+                                {{ pkr($product->sale_price, 2) }}
                             </div>
-                            <button class="wish-btn" onclick="return false;" title="Wishlist">
-                                <span class="material-symbols-outlined" style="font-size:18px;">favorite</span>
-                            </button>
+                            <div style="display:flex; gap:6px; align-items:center;">
+                                <button type="button" class="btn-quick-order whatsapp-mini" onclick="openWhatsAppStore('{{ addslashes($product->name) }}', '{{ addslashes($product->sku ?? '') }}', '{{ pkr($product->sale_price, 2) }}')" title="Order on WhatsApp">
+                                    <i class="bi bi-whatsapp"></i>
+                                </button>
+                                <button type="button" class="btn-quick-order" onclick="openPhoneOrderModal('{{ addslashes($product->name) }}', '{{ addslashes($product->sku ?? '') }}', '{{ pkr($product->sale_price, 2) }}')" title="Order by Phone">
+                                    <i class="bi bi-telephone-fill"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </a>
+                </div>
                 @endforeach
             </div>
 
