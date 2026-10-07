@@ -185,6 +185,7 @@
                 <tr>
                     <th>Supplier / Company</th>
                     <th>Contact Info</th>
+                    <th class="text-end">Opening Balance</th>
                     <th class="text-end">Total Purchases</th>
                     <th class="text-end">Paid Amount</th>
                     <th class="text-end">Pending Balance</th>
@@ -217,6 +218,9 @@
                         @if(!$supplier->phone && !$supplier->email)
                             <span class="text-muted">—</span>
                         @endif
+                    </td>
+                    <td class="text-end fw-bold" style="color: #4f46e5;">
+                        {{ pkr($supplier->opening_balance ?? 0, 2) }}
                     </td>
                     <td class="text-end fw-semibold text-dark">
                         {{ pkr($supplier->total_purchases + (float)$supplier->opening_balance, 2) }}
@@ -262,7 +266,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="7" class="text-center py-5 text-muted">
+                    <td colspan="8" class="text-center py-5 text-muted">
                         <i class="bi bi-truck fs-1 d-block mb-2 text-secondary"></i>
                         No suppliers found matching your criteria.
                     </td>
