@@ -1713,18 +1713,6 @@
                 <ul class="nav nav-pills mb-3 gap-2" id="posReturnTab" role="tablist" style="background:#f8fafc; padding:6px; border-radius:12px; border:1px solid #e2e8f0;">
                     <li class="nav-item flex-fill" role="presentation">
                         <button class="nav-link active w-100 fw-bold d-flex align-items-center justify-content-center gap-2 py-2" 
-                                id="posReturnInvoiceTabBtn" 
-                                data-bs-toggle="pill" 
-                                data-bs-target="#posReturnInvoiceTab" 
-                                type="button" 
-                                role="tab"
-                                style="border-radius:8px; font-size:13.5px;">
-                            <span class="material-symbols-outlined" style="font-size:18px;">receipt_long</span>
-                            1. Search by Invoice # (Recommended)
-                        </button>
-                    </li>
-                    <li class="nav-item flex-fill" role="presentation">
-                        <button class="nav-link w-100 fw-bold d-flex align-items-center justify-content-center gap-2 py-2" 
                                 id="posReturnDirectTabBtn" 
                                 data-bs-toggle="pill" 
                                 data-bs-target="#posReturnDirectTab" 
@@ -1732,14 +1720,49 @@
                                 role="tab"
                                 style="border-radius:8px; font-size:13.5px;">
                             <span class="material-symbols-outlined" style="font-size:18px;">barcode_scanner</span>
-                            2. Direct Product / Barcode Scan
+                            1. Direct Product / Barcode Scan
+                        </button>
+                    </li>
+                    <li class="nav-item flex-fill" role="presentation">
+                        <button class="nav-link w-100 fw-bold d-flex align-items-center justify-content-center gap-2 py-2" 
+                                id="posReturnInvoiceTabBtn" 
+                                data-bs-toggle="pill" 
+                                data-bs-target="#posReturnInvoiceTab" 
+                                type="button" 
+                                role="tab"
+                                style="border-radius:8px; font-size:13.5px;">
+                            <span class="material-symbols-outlined" style="font-size:18px;">receipt_long</span>
+                            2. Search by Invoice #
                         </button>
                     </li>
                 </ul>
 
                 <div class="tab-content mb-4" id="posReturnTabContent">
-                    {{-- TAB 1: Invoice Lookup --}}
-                    <div class="tab-pane fade show active" id="posReturnInvoiceTab" role="tabpanel">
+                    {{-- TAB 1: Direct Product Scan --}}
+                    <div class="tab-pane fade show active" id="posReturnDirectTab" role="tabpanel">
+                        <div class="position-relative mb-2">
+                            <label class="form-label fw-bold small text-secondary">Search Product Catalog / Scan Barcode</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0">
+                                    <span class="material-symbols-outlined" style="font-size:20px; color:#b91c1c;">barcode_scanner</span>
+                                </span>
+                                <input type="text" id="posReturnProductSearchInput" class="form-control form-control-lg fs-6 border-start-0" 
+                                       placeholder="Scan barcode, or type product name / SKU..." 
+                                       autocomplete="off"
+                                       oninput="onReturnProductSearch(this.value)"
+                                       onkeydown="onReturnProductSearchKeydown(event)">
+                                <button type="button" class="btn btn-outline-secondary" onclick="clearReturnProductSearch()" title="Clear">
+                                    <span class="material-symbols-outlined" style="font-size:18px;">close</span>
+                                </button>
+                            </div>
+
+                            {{-- Floating live search dropdown --}}
+                            <div id="posReturnProductDropdown" class="search-dropdown" style="display:none; position:absolute; top:100%; left:0; right:0; z-index:1060; background:#fff; border:1.5px solid #e2e8f0; border-radius:12px; max-height:260px; overflow-y:auto; box-shadow:0 12px 30px rgba(0,0,0,0.15); margin-top:4px;"></div>
+                        </div>
+                    </div>
+
+                    {{-- TAB 2: Invoice Lookup --}}
+                    <div class="tab-pane fade" id="posReturnInvoiceTab" role="tabpanel">
                         <div class="p-3 rounded-3 mb-3" style="background:#f0fdf4; border:1.5px solid #bbf7d0;">
                             <div class="row g-2 align-items-end">
                                 <div class="col-md-8">
@@ -1802,29 +1825,6 @@
                                     </tbody>
                                 </table>
                             </div>
-                        </div>
-                    </div>
-
-                    {{-- TAB 2: Direct Product Scan --}}
-                    <div class="tab-pane fade" id="posReturnDirectTab" role="tabpanel">
-                        <div class="position-relative mb-2">
-                            <label class="form-label fw-bold small text-secondary">Search Product Catalog / Scan Barcode</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-white border-end-0">
-                                    <span class="material-symbols-outlined" style="font-size:20px; color:#b91c1c;">barcode_scanner</span>
-                                </span>
-                                <input type="text" id="posReturnProductSearchInput" class="form-control form-control-lg fs-6 border-start-0" 
-                                       placeholder="Scan barcode, or type product name / SKU..." 
-                                       autocomplete="off"
-                                       oninput="onReturnProductSearch(this.value)"
-                                       onkeydown="onReturnProductSearchKeydown(event)">
-                                <button type="button" class="btn btn-outline-secondary" onclick="clearReturnProductSearch()" title="Clear">
-                                    <span class="material-symbols-outlined" style="font-size:18px;">close</span>
-                                </button>
-                            </div>
-
-                            {{-- Floating live search dropdown --}}
-                            <div id="posReturnProductDropdown" class="search-dropdown" style="display:none; position:absolute; top:100%; left:0; right:0; z-index:1060; background:#fff; border:1.5px solid #e2e8f0; border-radius:12px; max-height:260px; overflow-y:auto; box-shadow:0 12px 30px rgba(0,0,0,0.15); margin-top:4px;"></div>
                         </div>
                     </div>
                 </div>
@@ -3260,10 +3260,10 @@ let currentReturnSearchResults = [];
 function openCustomerReturnModal() {
     posCustomerReturnModal.show();
     setTimeout(() => {
-        const invInput = document.getElementById('posReturnInvoiceInput');
-        if (invInput) {
-            invInput.focus();
-            invInput.select();
+        const directInput = document.getElementById('posReturnProductSearchInput');
+        if (directInput) {
+            directInput.focus();
+            directInput.select();
         }
     }, 200);
 }
