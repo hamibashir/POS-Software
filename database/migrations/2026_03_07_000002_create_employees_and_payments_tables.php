@@ -14,6 +14,7 @@ return new class extends Migration
             $table->string('name', 150);
             $table->string('phone', 30);
             $table->text('address');
+            $table->decimal('opening_balance', 12, 2)->default(0.00);
             $table->boolean('is_active')->default(true);
             $table->text('notes')->nullable();
             $table->timestamps();
