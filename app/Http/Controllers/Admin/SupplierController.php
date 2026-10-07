@@ -176,6 +176,61 @@ class SupplierController extends Controller
     }
 
     /**
+     * Update an existing supplier payment record.
+     */
+    public function updatePayment(Request $request, SupplierPayment $payment)
+    {
+        $this->authorizeAdmin();
+
+        $data = $request->validate([
+            'amount'           => ['required', 'numeric', 'min:0.01'],
+            'payment_method'   => ['required', 'in:cash,bank,cheque,online'],
+            'payment_date'     => ['required', 'date'],
+            'reference_number' => ['nullable', 'string', 'max:60'],
+            'notes'            => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $payment->update([
+            'amount'           => $data['amount'],
+            'payment_method'   => $data['payment_method'],
+            'payment_date'     => $data['payment_date'],
+            'reference_number' => $data['reference_number'] ?? null,
+            'notes'            => $data['notes'] ?? null,
+        ]);
+
+        // If attached to a purchase, sync purchase's paid_amount
+        if ($payment->purchase_id && $payment->purchase) {
+            $payment->purchase->update([
+                'paid_amount' => $payment->purchase->payments()->sum('amount'),
+            ]);
+        }
+
+        return back()->with('success', "Payment record updated successfully.");
+    }
+
+    /**
+     * Delete / void a supplier payment.
+     */
+    public function destroyPayment(SupplierPayment $payment)
+    {
+        $this->authorizeAdmin();
+
+        $purchase = $payment->purchase;
+        $supplierName = $payment->supplier?->name ?? 'Supplier';
+        $amount = number_format($payment->amount, 2);
+
+        $payment->delete();
+
+        if ($purchase) {
+            $purchase->update([
+                'paid_amount' => $purchase->payments()->sum('amount'),
+            ]);
+        }
+
+        return back()->with('success', "Payment of PKR {$amount} for {$supplierName} has been deleted.");
+    }
+
+    /**
      * Detailed supplier financial ledger statement.
      */
     public function ledger(Supplier $supplier)
@@ -190,6 +245,7 @@ class SupplierController extends Controller
         // 1. Opening balance
         if ((float) $supplier->opening_balance > 0) {
             $entries->push([
+                'id'          => null,
                 'date'        => $supplier->created_at,
                 'type'        => 'opening_balance',
                 'ref'         => 'OB-' . $supplier->id,
@@ -198,12 +254,14 @@ class SupplierController extends Controller
                 'credit'      => 0.0,
                 'method'      => '—',
                 'user'        => 'System',
+                'model'       => null,
             ]);
         }
 
         // 2. Purchases (Debit: increases store liability / money owed to supplier)
         foreach ($supplier->purchases as $purchase) {
             $entries->push([
+                'id'          => $purchase->id,
                 'date'        => $purchase->received_at ?? $purchase->created_at,
                 'type'        => 'purchase',
                 'ref'         => $purchase->reference_number,
@@ -213,12 +271,14 @@ class SupplierController extends Controller
                 'method'      => ucfirst($purchase->payment_method ?? 'cash'),
                 'user'        => $purchase->user?->name ?? 'Admin',
                 'link'        => route('admin.purchases.show', $purchase),
+                'model'       => $purchase,
             ]);
         }
 
         // 3. Purchase Returns (Credit: decreases money owed to supplier)
         foreach ($supplier->returns as $ret) {
             $entries->push([
+                'id'          => $ret->id,
                 'date'        => $ret->returned_at ?? $ret->created_at,
                 'type'        => 'return',
                 'ref'         => $ret->reference_number,
@@ -228,12 +288,14 @@ class SupplierController extends Controller
                 'method'      => ucfirst($ret->refund_method ?? 'credit'),
                 'user'        => $ret->user?->name ?? 'Admin',
                 'link'        => route('admin.purchase-returns.show', $ret),
+                'model'       => $ret,
             ]);
         }
 
         // 4. Payments (Credit: payments made decrease money owed to supplier)
         foreach ($supplier->payments as $pay) {
             $entries->push([
+                'id'          => $pay->id,
                 'date'        => $pay->payment_date ? \Carbon\Carbon::parse($pay->payment_date) : $pay->created_at,
                 'type'        => 'payment',
                 'ref'         => $pay->reference_number ?? ('PAY-' . $pay->id),
@@ -243,6 +305,7 @@ class SupplierController extends Controller
                 'method'      => ucfirst($pay->payment_method ?? 'cash'),
                 'user'        => $pay->user?->name ?? 'Staff',
                 'link'        => null,
+                'model'       => $pay,
             ]);
         }
 

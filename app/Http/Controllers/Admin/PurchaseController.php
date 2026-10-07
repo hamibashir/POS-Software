@@ -48,7 +48,7 @@ class PurchaseController extends Controller
     /**
      * Create form — pass all active products and registered suppliers.
      */
-    public function create()
+    public function create(Request $request)
     {
         $products = Product::where('is_active', true)
             ->orderBy('name')
@@ -70,7 +70,9 @@ class PurchaseController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'phone', 'company_name', 'address']);
 
-        return view('admin.purchases.create', compact('products', 'suppliers'));
+        $selectedSupplierId = $request->get('supplier_id');
+
+        return view('admin.purchases.create', compact('products', 'suppliers', 'selectedSupplierId'));
     }
 
     /**
@@ -126,5 +128,103 @@ class PurchaseController extends Controller
     {
         $purchase->load(['items', 'user:id,name', 'returns.items']);
         return view('admin.purchases.show', compact('purchase'));
+    }
+
+    /**
+     * Edit purchase form.
+     */
+    public function edit(Purchase $purchase)
+    {
+        $purchase->load(['items.product', 'supplier']);
+
+        $products = Product::where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name', 'sku', 'unit', 'cost_price', 'sale_price', 'stock_quantity', 'image'])
+            ->map(function ($p) {
+                return [
+                    'id'             => $p->id,
+                    'name'           => $p->name,
+                    'sku'            => $p->sku,
+                    'unit'           => $p->unit ?? 'Pcs',
+                    'cost_price'     => (float) $p->cost_price,
+                    'sale_price'     => (float) $p->sale_price,
+                    'stock_quantity' => (float) $p->stock_quantity,
+                    'image_url'      => $p->image ? asset('storage/' . $p->image) : null,
+                ];
+            });
+
+        $suppliers = Supplier::where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name', 'phone', 'company_name', 'address']);
+
+        return view('admin.purchases.edit', compact('purchase', 'products', 'suppliers'));
+    }
+
+    /**
+     * Update purchase.
+     */
+    public function update(Request $request, Purchase $purchase)
+    {
+        $data = $request->validate([
+            'supplier_id'           => ['nullable', 'integer', 'exists:suppliers,id'],
+            'supplier_name'         => ['required', 'string', 'max:150'],
+            'supplier_phone'        => ['nullable', 'string', 'max:30'],
+            'payment_method'        => ['required', 'in:cash,card,credit'],
+            'paid_amount'           => ['nullable', 'numeric', 'min:0'],
+            'received_at'           => ['nullable', 'date'],
+            'notes'                 => ['nullable', 'string', 'max:1000'],
+            'items'                 => ['required', 'array', 'min:1'],
+            'items.*.product_id'    => ['required', 'integer', 'exists:products,id'],
+            'items.*.quantity'      => ['required', 'numeric', 'gt:0'],
+            'items.*.unit_cost'     => ['required', 'numeric', 'min:0'],
+        ]);
+
+        try {
+            $this->purchaseService->update(
+                purchase:     $purchase,
+                purchaseData: [
+                    'supplier_id'    => $data['supplier_id'] ?? null,
+                    'supplier_name'  => $data['supplier_name'],
+                    'supplier_phone' => $data['supplier_phone'] ?? null,
+                    'payment_method' => $data['payment_method'],
+                    'paid_amount'    => $data['paid_amount'] ?? null,
+                    'received_at'    => $data['received_at'] ?? null,
+                    'notes'          => $data['notes'] ?? null,
+                ],
+                items:        $data['items'],
+                userId:       auth()->id()
+            );
+
+            return redirect()
+                ->route('admin.purchases.show', $purchase)
+                ->with('success', "Purchase {$purchase->reference_number} updated successfully.");
+
+        } catch (\Throwable $e) {
+            report($e);
+            return back()
+                ->withInput()
+                ->withErrors(['error' => 'Failed to update purchase: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Delete purchase and revert stock.
+     */
+    public function destroy(Purchase $purchase)
+    {
+        if ($purchase->returns()->exists()) {
+            return back()->with('error', "Cannot delete purchase {$purchase->reference_number} because it has return transactions linked to it.");
+        }
+
+        try {
+            $ref = $purchase->reference_number;
+            $this->purchaseService->delete($purchase, auth()->id());
+            return redirect()
+                ->route('admin.purchases.index')
+                ->with('success', "Purchase {$ref} deleted and inventory stock restored.");
+        } catch (\Throwable $e) {
+            report($e);
+            return back()->with('error', 'Failed to delete purchase: ' . $e->getMessage());
+        }
     }
 }

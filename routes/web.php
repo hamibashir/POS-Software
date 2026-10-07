@@ -69,10 +69,13 @@ Route::middleware(['auth', 'admin'])
         Route::get('sale-returns/{saleReturn}',  [App\Http\Controllers\Admin\SaleReturnController::class, 'show'])->name('sale-returns.show');
 
         // Purchases
-        Route::get('purchases',              [PurchaseController::class, 'index'])->name('purchases.index');
-        Route::get('purchases/create',       [PurchaseController::class, 'create'])->name('purchases.create');
-        Route::post('purchases',             [PurchaseController::class, 'store'])->name('purchases.store');
-        Route::get('purchases/{purchase}',   [PurchaseController::class, 'show'])->name('purchases.show');
+        Route::get('purchases',                  [PurchaseController::class, 'index'])->name('purchases.index');
+        Route::get('purchases/create',           [PurchaseController::class, 'create'])->name('purchases.create');
+        Route::post('purchases',                 [PurchaseController::class, 'store'])->name('purchases.store');
+        Route::get('purchases/{purchase}',       [PurchaseController::class, 'show'])->name('purchases.show');
+        Route::get('purchases/{purchase}/edit',  [PurchaseController::class, 'edit'])->name('purchases.edit');
+        Route::put('purchases/{purchase}',       [PurchaseController::class, 'update'])->name('purchases.update');
+        Route::delete('purchases/{purchase}',    [PurchaseController::class, 'destroy'])->name('purchases.destroy');
 
         // Stock Returns
         Route::get('purchase-returns',                   [PurchaseReturnController::class, 'index'])->name('purchase-returns.index');
@@ -97,6 +100,8 @@ Route::middleware(['auth', 'admin'])
         Route::put('suppliers/{supplier}',               [SupplierController::class, 'update'])->name('suppliers.update');
         Route::delete('suppliers/{supplier}',            [SupplierController::class, 'destroy'])->name('suppliers.destroy');
         Route::post('suppliers/{supplier}/payments',     [SupplierController::class, 'recordPayment'])->name('suppliers.payments');
+        Route::put('suppliers/payments/{payment}',       [SupplierController::class, 'updatePayment'])->name('suppliers.payments.update');
+        Route::delete('suppliers/payments/{payment}',    [SupplierController::class, 'destroyPayment'])->name('suppliers.payments.destroy');
         Route::get('suppliers/{supplier}/ledger',        [SupplierController::class, 'ledger'])->name('suppliers.ledger');
 
         // Staff Management (Employees, Cashiers & Administrators) - Admin only

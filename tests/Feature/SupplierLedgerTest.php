@@ -229,4 +229,165 @@ class SupplierLedgerTest extends TestCase
             ->assertJsonPath('success', true)
             ->assertJsonPath('count', 2);
     }
+
+    public function test_admin_can_edit_supplier_payment(): void
+    {
+        $payment = SupplierPayment::create([
+            'supplier_id'      => $this->supplier->id,
+            'user_id'          => $this->admin->id,
+            'amount'           => 1000.00,
+            'payment_method'   => 'cash',
+            'payment_date'     => today(),
+            'reference_number' => 'PAY-1',
+            'notes'            => 'Initial partial payment',
+        ]);
+
+        $this->assertEquals(4000.00, (float)$this->supplier->fresh()->pending_balance);
+
+        $response = $this->actingAs($this->admin)
+            ->put(route('admin.suppliers.payments.update', $payment), [
+                'amount'           => 2500.00,
+                'payment_method'   => 'bank',
+                'payment_date'     => today()->format('Y-m-d'),
+                'reference_number' => 'BANK-TRX-999',
+                'notes'            => 'Updated payment amount',
+            ]);
+
+        $response->assertRedirect();
+        $this->assertEquals(2500.00, (float)$this->supplier->fresh()->pending_balance);
+
+        $payment->refresh();
+        $this->assertEquals(2500.00, (float)$payment->amount);
+        $this->assertEquals('bank', $payment->payment_method);
+        $this->assertEquals('BANK-TRX-999', $payment->reference_number);
+    }
+
+    public function test_admin_can_delete_supplier_payment(): void
+    {
+        $payment = SupplierPayment::create([
+            'supplier_id'      => $this->supplier->id,
+            'user_id'          => $this->admin->id,
+            'amount'           => 2000.00,
+            'payment_method'   => 'cash',
+            'payment_date'     => today(),
+        ]);
+
+        $this->assertEquals(3000.00, (float)$this->supplier->fresh()->pending_balance);
+
+        $response = $this->actingAs($this->admin)
+            ->delete(route('admin.suppliers.payments.destroy', $payment));
+
+        $response->assertRedirect();
+        $this->assertDatabaseMissing('supplier_payments', ['id' => $payment->id]);
+        $this->assertEquals(5000.00, (float)$this->supplier->fresh()->pending_balance);
+    }
+
+    public function test_admin_can_edit_purchase_and_inventory_stock_reconciles(): void
+    {
+        // Initial stock = 20
+        // Purchase 10 units => stock = 30
+        $purchase = Purchase::create([
+            'reference_number' => 'PO-20261007-0001',
+            'user_id'          => $this->admin->id,
+            'supplier_id'      => $this->supplier->id,
+            'supplier_name'    => $this->supplier->name,
+            'total_amount'     => 10000.00,
+            'paid_amount'      => 0.00,
+            'payment_method'   => 'credit',
+            'status'           => 'received',
+            'received_at'      => now(),
+        ]);
+
+        PurchaseItem::create([
+            'purchase_id'    => $purchase->id,
+            'product_id'     => $this->product->id,
+            'product_name'   => $this->product->name,
+            'product_sku'    => $this->product->sku,
+            'product_unit'   => $this->product->unit,
+            'quantity'       => 10,
+            'unit_cost'      => 1000.00,
+            'total_cost'     => 10000.00,
+        ]);
+        $this->product->increment('stock_quantity', 10);
+        $this->assertEquals(30, $this->product->fresh()->stock_quantity);
+
+        // Edit purchase to 15 units instead of 10
+        $response = $this->actingAs($this->admin)
+            ->put(route('admin.purchases.update', $purchase), [
+                'supplier_id'    => $this->supplier->id,
+                'supplier_name'  => $this->supplier->name,
+                'payment_method' => 'credit',
+                'items'          => [
+                    [
+                        'product_id' => $this->product->id,
+                        'quantity'   => 15,
+                        'unit_cost'  => 1000.00,
+                    ],
+                ],
+            ]);
+
+        $response->assertRedirect(route('admin.purchases.show', $purchase));
+
+        // Stock should now be 20 + 15 = 35
+        $this->assertEquals(35, $this->product->fresh()->stock_quantity);
+        $this->assertEquals(15000.00, (float)$purchase->fresh()->total_amount);
+    }
+
+    public function test_admin_can_delete_purchase_and_inventory_stock_reverts(): void
+    {
+        // Initial stock = 20
+        $purchase = Purchase::create([
+            'reference_number' => 'PO-20261007-0002',
+            'user_id'          => $this->admin->id,
+            'supplier_id'      => $this->supplier->id,
+            'supplier_name'    => $this->supplier->name,
+            'total_amount'     => 5000.00,
+            'paid_amount'      => 5000.00,
+            'payment_method'   => 'cash',
+            'status'           => 'received',
+            'received_at'      => now(),
+        ]);
+
+        PurchaseItem::create([
+            'purchase_id'    => $purchase->id,
+            'product_id'     => $this->product->id,
+            'product_name'   => $this->product->name,
+            'product_sku'    => $this->product->sku,
+            'product_unit'   => $this->product->unit,
+            'quantity'       => 5,
+            'unit_cost'      => 1000.00,
+            'total_cost'     => 5000.00,
+        ]);
+        $this->product->increment('stock_quantity', 5);
+        $this->assertEquals(25, $this->product->fresh()->stock_quantity);
+
+        SupplierPayment::create([
+            'supplier_id'      => $this->supplier->id,
+            'purchase_id'      => $purchase->id,
+            'user_id'          => $this->admin->id,
+            'amount'           => 5000.00,
+            'payment_method'   => 'cash',
+            'payment_date'     => today(),
+        ]);
+
+        $response = $this->actingAs($this->admin)
+            ->delete(route('admin.purchases.destroy', $purchase));
+
+        $response->assertRedirect(route('admin.purchases.index'));
+
+        // Stock should revert back to 20
+        $this->assertEquals(20, $this->product->fresh()->stock_quantity);
+        $this->assertDatabaseMissing('purchases', ['id' => $purchase->id]);
+        $this->assertDatabaseMissing('supplier_payments', ['purchase_id' => $purchase->id]);
+    }
+
+    public function test_purchase_create_preselects_supplier_from_query_parameter(): void
+    {
+        $response = $this->actingAs($this->admin)
+            ->get(route('admin.purchases.create', ['supplier_id' => $this->supplier->id]));
+
+        $response->assertOk()
+            ->assertSee('Apex Hardware Importers')
+            ->assertSee('value="' . $this->supplier->id . '"', false);
+    }
 }

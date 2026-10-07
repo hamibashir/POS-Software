@@ -253,6 +253,10 @@
                                 </button>
                             @endif
 
+                            <a href="{{ route('admin.purchases.create', ['supplier_id' => $supplier->id]) }}" class="btn-pos-outline px-2 py-1" title="Add Bill / Purchase Order">
+                                <i class="bi bi-plus-circle text-primary"></i> Bill
+                            </a>
+
                             <a href="{{ route('admin.suppliers.ledger', $supplier) }}" class="btn-pos-outline px-2 py-1" title="View Full Ledger Statement">
                                 <i class="bi bi-journal-text"></i> Ledger
                             </a>

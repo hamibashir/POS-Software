@@ -174,10 +174,24 @@
                     <span class="status-badge status-received">{{ ucfirst($purchase->status) }}</span>
                 </td>
                 <td>
-                    <a href="{{ route('admin.purchases.show', $purchase) }}"
-                       class="btn-pos-outline text-decoration-none" style="padding:5px 10px;font-size:12px;" title="View">
-                        <i class="bi bi-eye"></i>
-                    </a>
+                    <div class="d-inline-flex gap-1">
+                        <a href="{{ route('admin.purchases.show', $purchase) }}"
+                           class="btn-pos-outline text-decoration-none" style="padding:4px 8px;font-size:12px;" title="View Details">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        <a href="{{ route('admin.purchases.edit', $purchase) }}"
+                           class="btn-pos-outline text-decoration-none" style="padding:4px 8px;font-size:12px;color:var(--pos-primary);" title="Edit Purchase">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <form method="POST" action="{{ route('admin.purchases.destroy', $purchase) }}"
+                              onsubmit="return confirm('Are you sure you want to delete purchase {{ $purchase->reference_number }}? Inventory stock will be automatically reverted.');" class="d-inline">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn-pos-outline text-danger" style="padding:4px 8px;font-size:12px;" title="Delete Purchase">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </div>
                 </td>
             </tr>
             @endforeach

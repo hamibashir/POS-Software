@@ -71,9 +71,20 @@
         @endif
     </div>
     <div class="d-flex gap-2">
-        <a href="{{ route('admin.purchase-returns.create', ['purchase_id' => $purchase->id]) }}" class="btn-pos-outline" style="border-color:#b91c1c; color:#b91c1c; text-decoration:none;">
-            <i class="bi bi-arrow-return-left"></i> Return Items to Supplier
+        <a href="{{ route('admin.purchases.edit', $purchase) }}" class="btn-pos-outline text-decoration-none">
+            <i class="bi bi-pencil me-1"></i> Edit Purchase
         </a>
+        <a href="{{ route('admin.purchase-returns.create', ['purchase_id' => $purchase->id]) }}" class="btn-pos-outline" style="border-color:#b91c1c; color:#b91c1c; text-decoration:none;">
+            <i class="bi bi-arrow-return-left me-1"></i> Return Items
+        </a>
+        <form method="POST" action="{{ route('admin.purchases.destroy', $purchase) }}"
+              onsubmit="return confirm('Are you sure you want to delete purchase {{ $purchase->reference_number }}? Inventory stock will be automatically reverted.');" class="d-inline">
+            @csrf
+            @method('DELETE')
+            <button type="submit" class="btn-pos-outline text-danger" title="Delete Purchase">
+                <i class="bi bi-trash me-1"></i> Delete
+            </button>
+        </form>
     </div>
 </div>
 

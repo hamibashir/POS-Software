@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'New Purchase')
+@section('title', 'Edit Purchase ' . $purchase->reference_number)
 
 @push('styles')
 <style>
@@ -211,15 +211,13 @@
         text-align: right; height: 46px;
         display: flex; align-items: center; justify-content: flex-end;
     }
-
-    /* error styles */
-    .error-msg { font-size: 12px; color: #ef4444; margin-top: 4px; }
 </style>
 @endpush
 
 @push('scripts')
 <script>
 const PRODUCTS = @json($products);
+const INITIAL_ITEMS = @json($purchase->items);
 
 let rowIndex = 0;
 
@@ -260,44 +258,53 @@ function removeRow(idx) {
     if (prodEl && prodEl.tomselect) {
         prodEl.tomselect.destroy();
     }
-    const row = document.querySelector(`.product-row[data-idx="${idx}"]`);
-    if (row) { row.remove(); recalcGrand(); }
+    const el = document.getElementById(`row_${idx}`);
+    if (el) el.remove();
+    recalcGrand();
 }
 
-function onProductChange(idx, selectedId) {
-    const pid = parseInt(selectedId || document.getElementById(`prod_${idx}`)?.value);
-    const product = PRODUCTS.find(p => p.id === pid);
-    if (product) {
-        const costInput = document.getElementById(`cost_${idx}`);
-        if (costInput) {
-            costInput.value = parseFloat(product.cost_price || 0).toFixed(2);
-        }
-        recalcRow(idx);
+function onProductChange(idx, productId) {
+    const prod = PRODUCTS.find(p => String(p.id) === String(productId));
+    if (!prod) return;
+
+    const unitEl = document.getElementById(`unit_${idx}`);
+    if (unitEl) unitEl.textContent = prod.unit || 'Pcs';
+
+    const costEl = document.getElementById(`cost_${idx}`);
+    if (costEl && (!costEl.value || parseFloat(costEl.value) === 0)) {
+        costEl.value = parseFloat(prod.cost_price || 0).toFixed(2);
     }
+
+    recalcRow(idx);
 }
 
-function addRow() {
-    const idx       = rowIndex++;
+function addRow(initialData = null) {
+    const idx = rowIndex++;
     const container = document.getElementById('productRows');
 
+    const defaultQty = initialData ? initialData.quantity : 1;
+    const defaultCost = initialData ? parseFloat(initialData.unit_cost).toFixed(2) : '0.00';
+    const defaultUnit = initialData ? (initialData.product_unit || 'Pcs') : 'Pcs';
+    const initialProductId = initialData ? initialData.product_id : '';
+
     const html = `
-    <div class="product-row" data-idx="${idx}">
-        <div class="fg product-select-wrap">
-            <label style="font-size:11px;color:#6b7280;">Product (Search Name or SKU)</label>
-            <select id="prod_${idx}" name="items[${idx}][product_id]" required>
-                <option value="">&mdash; Type to search product name or SKU &mdash;</option>
-            </select>
+    <div class="product-row" id="row_${idx}" data-idx="${idx}">
+        <div class="fg">
+            <label style="font-size:11px;color:#6b7280;">Product <span class="text-danger">*</span></label>
+            <div class="product-select-wrap">
+                <select name="items[${idx}][product_id]" id="prod_${idx}" required></select>
+            </div>
         </div>
         <div class="fg">
-            <label style="font-size:11px;color:#6b7280;">Qty</label>
-            <input type="number" id="qty_${idx}" name="items[${idx}][quantity]"
-                   class="pos-input pos-input-tall" min="0.001" step="any" value="1" style="text-align:right; margin-top:0;" required
+            <label style="font-size:11px;color:#6b7280;text-align:right;">Quantity (<span id="unit_${idx}">${defaultUnit}</span>) <span class="text-danger">*</span></label>
+            <input type="number" name="items[${idx}][quantity]" id="qty_${idx}"
+                   class="pos-input pos-input-tall" min="0.01" step="any" value="${defaultQty}" style="text-align:right; margin-top:0;" required
                    oninput="recalcRow(${idx})">
         </div>
         <div class="fg">
-            <label style="font-size:11px;color:#6b7280;">Unit Cost (PKR)</label>
-            <input type="number" id="cost_${idx}" name="items[${idx}][unit_cost]"
-                   class="pos-input pos-input-tall" min="0" step="0.01" value="0.00" style="text-align:right; margin-top:0;" required
+            <label style="font-size:11px;color:#6b7280;text-align:right;">Unit Cost (Rs.) <span class="text-danger">*</span></label>
+            <input type="number" name="items[${idx}][unit_cost]" id="cost_${idx}"
+                   class="pos-input pos-input-tall" min="0" step="0.01" value="${defaultCost}" style="text-align:right; margin-top:0;" required
                    oninput="recalcRow(${idx})">
         </div>
         <div class="fg">
@@ -310,15 +317,15 @@ function addRow() {
     </div>`;
 
     container.insertAdjacentHTML('beforeend', html);
-    
+
     const newSelect = document.getElementById(`prod_${idx}`);
     if (newSelect) {
-        new TomSelect(newSelect, {
+        const ts = new TomSelect(newSelect, {
             options: PRODUCTS,
             valueField: 'id',
             labelField: 'name',
             searchField: ['name', 'sku'],
-            placeholder: '🔍 Type product name or SKU (e.g. PRD-1403, Fan, Pipe)...',
+            placeholder: '🔍 Type product name or SKU...',
             maxOptions: 500,
             plugins: ['dropdown_input', 'clear_button'],
             render: {
@@ -367,9 +374,13 @@ function addRow() {
                 onProductChange(idx, value);
             }
         });
+
+        if (initialProductId) {
+            ts.setValue(initialProductId);
+        }
     }
 
-    recalcGrand();
+    recalcRow(idx);
 }
 
 function onSupplierSelected(select) {
@@ -393,42 +404,16 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    if (supSelect && supSelect.value) {
-        onSupplierSelected(supSelect);
-    }
 
-    // Prevent ENTER key from submitting/completing the purchase
-    const purchaseForm = document.getElementById('purchaseForm');
-    if (purchaseForm) {
-        purchaseForm.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter' || e.keyCode === 13) {
-                if (e.target.tagName !== 'TEXTAREA' && e.target.type !== 'submit') {
-                    e.preventDefault();
-                    
-                    // If on unit_cost input, add new product row and focus it
-                    if (e.target.name && e.target.name.includes('[unit_cost]')) {
-                        addRow();
-                        setTimeout(() => {
-                            const allRows = document.querySelectorAll('.product-row[data-idx]');
-                            if (allRows.length > 0) {
-                                const lastRow = allRows[allRows.length - 1];
-                                const lastIdx = lastRow.dataset.idx;
-                                const prodSelect = document.getElementById(`prod_${lastIdx}`);
-                                if (prodSelect && prodSelect.tomselect) {
-                                    prodSelect.tomselect.focus();
-                                }
-                            }
-                        }, 50);
-                    }
-                    return false;
-                }
-            }
-        });
+    // Populate existing items
+    if (INITIAL_ITEMS && INITIAL_ITEMS.length > 0) {
+        INITIAL_ITEMS.forEach(item => addRow(item));
+    } else {
+        addRow();
     }
 });
 
-document.getElementById('addRowBtn').addEventListener('click', addRow);
-addRow(); // Start with one row
+document.getElementById('addRowBtn').addEventListener('click', () => addRow());
 </script>
 @endpush
 
@@ -440,7 +425,11 @@ addRow(); // Start with one row
             <i class="bi bi-arrow-left"></i> Purchases
         </a>
         <span class="mx-2">·</span>
-        <span style="color:#374151;font-weight:600;">New Purchase Order</span>
+        <a href="{{ route('admin.purchases.show', $purchase) }}" style="color:var(--pos-primary);text-decoration:none;font-weight:600;">
+            {{ $purchase->reference_number }}
+        </a>
+        <span class="mx-2">·</span>
+        <span style="color:#374151;font-weight:600;">Edit</span>
     </nav>
 </div>
 
@@ -458,8 +447,9 @@ addRow(); // Start with one row
 </div>
 @endif
 
-<form method="POST" action="{{ route('admin.purchases.store') }}" id="purchaseForm">
+<form method="POST" action="{{ route('admin.purchases.update', $purchase) }}" id="purchaseForm">
     @csrf
+    @method('PUT')
 
     {{-- ── Supplier Info ─────────────────────────────────── --}}
     <div class="form-section">
@@ -474,8 +464,7 @@ addRow(); // Start with one row
                         @foreach($suppliers as $s)
                             @php
                                 $compName = !empty($s->company_name) && strcasecmp(trim($s->company_name), trim($s->name)) !== 0 ? ' (' . $s->company_name . ')' : '';
-                                $activeSupplierId = old('supplier_id', $selectedSupplierId ?? request('supplier_id'));
-                                $isSelected = $activeSupplierId == $s->id;
+                                $isSelected = old('supplier_id', $purchase->supplier_id) == $s->id;
                             @endphp
                             <option value="{{ $s->id }}"
                                 {{ $isSelected ? 'selected' : '' }}
@@ -488,31 +477,35 @@ addRow(); // Start with one row
                     </select>
                 </div>
                 @endif
-                <input type="hidden" name="supplier_id" id="supplierIdInput" value="{{ old('supplier_id', $selectedSupplierId ?? request('supplier_id')) }}">
+                <input type="hidden" name="supplier_id" id="supplierIdInput" value="{{ old('supplier_id', $purchase->supplier_id) }}">
 
                 <div class="fg">
                     <label class="required">Supplier Name</label>
                     <input type="text" name="supplier_name" id="supplierNameInput" class="pos-input"
-                        value="{{ old('supplier_name') }}"
+                        value="{{ old('supplier_name', $purchase->supplier_name) }}"
                         placeholder="e.g. Master Steel & Hardware" required>
                 </div>
                 <div class="fg">
                     <label>Supplier Phone</label>
                     <input type="text" name="supplier_phone" id="supplierPhoneInput" class="pos-input"
-                        value="{{ old('supplier_phone') }}" placeholder="03001234567">
+                        value="{{ old('supplier_phone', $purchase->supplier_phone) }}" placeholder="03001234567">
                 </div>
                 <div class="fg">
                     <label class="required">Payment Method</label>
                     <select name="payment_method" class="pos-input" required>
-                        <option value="cash"   {{ old('payment_method') === 'cash'   ? 'selected' : '' }}>💵 Cash (Paid now)</option>
-                        <option value="card"   {{ old('payment_method') === 'card'   ? 'selected' : '' }}>💳 Card / Bank (Paid now)</option>
-                        <option value="credit" {{ old('payment_method') === 'credit' ? 'selected' : '' }}>📋 Credit / Add to Supplier Due</option>
+                        <option value="cash"   {{ old('payment_method', $purchase->payment_method) === 'cash'   ? 'selected' : '' }}>💵 Cash (Paid)</option>
+                        <option value="card"   {{ old('payment_method', $purchase->payment_method) === 'card'   ? 'selected' : '' }}>💳 Card / Bank (Paid)</option>
+                        <option value="credit" {{ old('payment_method', $purchase->payment_method) === 'credit' ? 'selected' : '' }}>📋 Credit / Add to Supplier Due</option>
                     </select>
                 </div>
                 <div class="fg">
                     <label>Received Date</label>
                     <input type="date" name="received_at" class="pos-input"
-                        value="{{ old('received_at', date('Y-m-d')) }}">
+                        value="{{ old('received_at', $purchase->received_at ? \Carbon\Carbon::parse($purchase->received_at)->format('Y-m-d') : date('Y-m-d')) }}">
+                </div>
+                <div class="fg" style="grid-column: span 2;">
+                    <label>Notes / Reference</label>
+                    <input type="text" name="notes" class="pos-input" value="{{ old('notes', $purchase->notes) }}" placeholder="Optional order notes...">
                 </div>
             </div>
         </div>
@@ -548,12 +541,11 @@ addRow(); // Start with one row
             <div class="items-count"><span id="rowCount">0</span> product line(s)</div>
             <div class="total-display">Total Cost: <span id="grandTotal">Rs. 0.00</span></div>
         </div>
-        <button type="submit" class="btn-submit" id="submitBtn" disabled>
-            <i class="bi bi-arrow-down-circle"></i> Record Purchase & Update Stock
+        <button type="submit" class="btn-submit" id="submitBtn">
+            <i class="bi bi-check2-circle"></i> Update Purchase & Sync Stock
         </button>
     </div>
 
 </form>
 
 @endsection
-

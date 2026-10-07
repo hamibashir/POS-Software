@@ -25,6 +25,35 @@
     .badge-type-payment  { background: #d1fae5; color: #065f46; }
     .badge-type-ob       { background: #e0f2fe; color: #0369a1; }
 
+    .btn-action-icon {
+        width: 30px;
+        height: 30px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        font-size: 13px;
+        border: 1px solid #e2e8f0;
+        background: #fff;
+        color: #475569;
+        transition: all 0.15s;
+    }
+    .btn-action-icon:hover {
+        background: #f1f5f9;
+        color: #0f172a;
+    }
+    .btn-action-icon.text-danger:hover {
+        background: #fee2e2;
+        color: #b91c1c !important;
+        border-color: #fecaca;
+    }
+    .btn-action-icon.text-primary:hover {
+        background: #e0f2fe;
+        color: #0369a1 !important;
+        border-color: #bae6fd;
+    }
+
     @media print {
         .pos-topbar, .btn-no-print, .filter-bar { display: none !important; }
         .pos-page { margin-top: 0 !important; padding: 0 !important; }
@@ -43,6 +72,12 @@
         <span>{{ session('success') }}</span>
     </div>
 @endif
+@if(session('error'))
+    <div class="pos-alert pos-alert-error mb-4 btn-no-print">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <span>{{ session('error') }}</span>
+    </div>
+@endif
 
 {{-- ── Header & Action Bar ─────────────────────────── --}}
 <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
@@ -54,10 +89,13 @@
             <i class="bi bi-journal-text text-primary me-2"></i>Supplier Ledger: {{ $supplier->name }}
         </h1>
     </div>
-    <div class="d-flex gap-2 btn-no-print">
+    <div class="d-flex gap-2 btn-no-print flex-wrap">
         <button type="button" class="btn-pos-outline" onclick="window.print()">
             <i class="bi bi-printer me-1"></i> Print Statement
         </button>
+        <a href="{{ route('admin.purchases.create', ['supplier_id' => $supplier->id]) }}" class="btn-pos-outline text-decoration-none">
+            <i class="bi bi-plus-circle text-primary me-1"></i> Add Bill / Purchase
+        </a>
         <button type="button" class="btn-pos" onclick="openPayModal()">
             <i class="bi bi-cash-stack me-1"></i> Make Payment
         </button>
@@ -135,14 +173,15 @@
         <table class="pos-table w-100 align-middle mb-0">
             <thead>
                 <tr>
-                    <th style="width:120px;">Date</th>
-                    <th style="width:110px;">Type</th>
+                    <th style="width:110px;">Date</th>
+                    <th style="width:100px;">Type</th>
                     <th>Reference</th>
                     <th>Description</th>
-                    <th class="text-end" style="width:130px;">Debit (+) <br><small class="fw-normal text-muted" style="font-size:10px;">Store Owes</small></th>
-                    <th class="text-end" style="width:130px;">Credit (-) <br><small class="fw-normal text-muted" style="font-size:10px;">Paid / Returned</small></th>
-                    <th class="text-end" style="width:140px;">Balance (PKR)</th>
+                    <th class="text-end" style="width:120px;">Debit (+) <br><small class="fw-normal text-muted" style="font-size:10px;">Store Owes</small></th>
+                    <th class="text-end" style="width:120px;">Credit (-) <br><small class="fw-normal text-muted" style="font-size:10px;">Paid / Returned</small></th>
+                    <th class="text-end" style="width:130px;">Balance (PKR)</th>
                     <th>Recorded By</th>
+                    <th class="text-end btn-no-print" style="width:110px;">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -189,10 +228,50 @@
                     <td class="text-muted small">
                         <i class="bi bi-person me-1"></i>{{ $row['user'] }}
                     </td>
+                    <td class="text-end btn-no-print">
+                        <div class="d-inline-flex gap-1">
+                            @if($row['type'] === 'payment')
+                                <button type="button" class="btn-action-icon text-primary"
+                                        onclick="openEditPaymentModal({{ json_encode($row['model']) }})"
+                                        title="Edit Payment">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <form method="POST" action="{{ route('admin.suppliers.payments.destroy', $row['id']) }}"
+                                      onsubmit="return confirm('Are you sure you want to delete/void this payment of PKR {{ number_format($row['credit'], 2) }}?');" class="d-inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn-action-icon text-danger" title="Delete Payment">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            @elseif($row['type'] === 'purchase')
+                                <a href="{{ route('admin.purchases.show', $row['id']) }}" class="btn-action-icon text-dark" title="View Purchase">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{{ route('admin.purchases.edit', $row['id']) }}" class="btn-action-icon text-primary" title="Edit Purchase / Bill">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form method="POST" action="{{ route('admin.purchases.destroy', $row['id']) }}"
+                                      onsubmit="return confirm('Are you sure you want to delete purchase {{ $row['ref'] }}? Inventory stock will be reverted automatically.');" class="d-inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn-action-icon text-danger" title="Cancel / Delete Purchase">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            @elseif($row['type'] === 'return')
+                                <a href="{{ route('admin.purchase-returns.show', $row['id']) }}" class="btn-action-icon text-dark" title="View Return Slip">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                            @else
+                                <span class="text-muted small">—</span>
+                            @endif
+                        </div>
+                    </td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="8" class="text-center py-5 text-muted">
+                    <td colspan="9" class="text-center py-5 text-muted">
                         No transactions recorded yet for this supplier.
                     </td>
                 </tr>
@@ -208,6 +287,7 @@
                         {{ pkr($supplier->pending_balance, 2) }}
                     </td>
                     <td></td>
+                    <td class="btn-no-print"></td>
                 </tr>
             </tfoot>
             @endif
@@ -215,7 +295,7 @@
     </div>
 </div>
 
-{{-- ══════════════ PAYMENT MODAL ══════════════ --}}
+{{-- ══════════════ 1. RECORD PAYMENT MODAL ══════════════ --}}
 <div class="modal fade" id="payModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -282,12 +362,81 @@
     </div>
 </div>
 
+{{-- ══════════════ 2. EDIT PAYMENT MODAL ══════════════ --}}
+<div class="modal fade" id="editPaymentModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form id="editPaymentForm" method="POST">
+                @csrf
+                @method('PUT')
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-pencil-square text-primary me-2"></i>Edit Supplier Payment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Payment Amount (PKR) <span class="text-danger">*</span></label>
+                        <input type="number" step="0.01" min="0.01" name="amount" id="edit_pay_amount" class="pos-input fs-5 fw-bold text-success" required>
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Payment Method <span class="text-danger">*</span></label>
+                            <select name="payment_method" id="edit_pay_method" class="pos-input" required>
+                                <option value="cash">💵 Cash</option>
+                                <option value="bank">🏦 Bank Transfer</option>
+                                <option value="cheque">📝 Cheque</option>
+                                <option value="online">📱 Online / Card</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Payment Date <span class="text-danger">*</span></label>
+                            <input type="date" name="payment_date" id="edit_pay_date" class="pos-input" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Cheque # / Reference</label>
+                        <input type="text" name="reference_number" id="edit_pay_ref" class="pos-input" placeholder="e.g. CHQ-10499">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Notes / Remarks</label>
+                        <input type="text" name="notes" id="edit_pay_notes" class="pos-input" placeholder="e.g. Cleared via office cash">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-pos-outline" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn-pos"><i class="bi bi-check2-circle me-1"></i>Update Payment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 @endsection
 
 @push('scripts')
 <script>
     function openPayModal() {
         new bootstrap.Modal(document.getElementById('payModal')).show();
+    }
+
+    function openEditPaymentModal(pay) {
+        if (!pay) return;
+        document.getElementById('edit_pay_amount').value = parseFloat(pay.amount || 0).toFixed(2);
+        document.getElementById('edit_pay_method').value = pay.payment_method || 'cash';
+        
+        let payDate = pay.payment_date;
+        if (payDate && payDate.includes('T')) {
+            payDate = payDate.split('T')[0];
+        }
+        document.getElementById('edit_pay_date').value = payDate || '';
+        document.getElementById('edit_pay_ref').value = pay.reference_number || '';
+        document.getElementById('edit_pay_notes').value = pay.notes || '';
+        
+        document.getElementById('editPaymentForm').action = `/admin/suppliers/payments/${pay.id}`;
+        new bootstrap.Modal(document.getElementById('editPaymentModal')).show();
     }
 </script>
 @endpush
