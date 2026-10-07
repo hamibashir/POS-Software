@@ -1847,7 +1847,10 @@
                             <thead style="background:#f8fafc; position:sticky; top:0; z-index:1;">
                                 <tr>
                                     <th style="font-weight:700; color:#4b5563;">Product</th>
-                                    <th style="font-weight:700; color:#4b5563; text-align:center;">Current Stock</th>
+                                    @if(auth()->check() && auth()->user()->isAdmin())
+                                        <th style="font-weight:700; color:#4b5563; text-align:center;">Current Stock</th>
+                                    @endif
+                                    <th style="font-weight:700; color:#0f766e; text-align:center;">Purchase Rate</th>
                                     <th style="font-weight:700; color:#0f766e; text-align:center; width:150px;">Sales Rate (PKR)</th>
                                     <th style="font-weight:700; color:#b91c1c; text-align:center; width:140px;">Return Qty</th>
                                     <th style="font-weight:700; color:#4b5563; text-align:right;">Line Total</th>
@@ -1856,7 +1859,7 @@
                             </thead>
                             <tbody id="posReturnItemsTbody">
                                 <tr>
-                                    <td colspan="6" class="text-center py-4 text-muted" id="posReturnEmptyPrompt">
+                                    <td colspan="{{ auth()->check() && auth()->user()->isAdmin() ? '7' : '6' }}" class="text-center py-4 text-muted" id="posReturnEmptyPrompt">
                                         <span class="material-symbols-outlined d-block mb-1" style="font-size:32px; opacity:0.4;">qr_code_scanner</span>
                                         <div class="fw-semibold">No return items added yet.</div>
                                         <div style="font-size:11.5px;">Search an invoice above or scan a barcode to add products to this return.</div>
@@ -1942,6 +1945,7 @@
 
 @push('scripts')
 <script>
+const IS_ADMIN        = {{ (auth()->check() && auth()->user()->isAdmin()) ? 'true' : 'false' }};
 let cart              = [];
 let paymentMethod     = 'cash';
 let searchTimeout     = null;
@@ -2276,6 +2280,17 @@ function renderSearchDropdown(list) {
 
     searchDropdown.innerHTML = list.map((p, idx) => {
         const isOos = p.stock_quantity <= 0;
+        const stockSnippet = IS_ADMIN ? `
+            <span style="color:${isOos ? '#ef4444' : '#059669'}; font-weight:700;">
+                Stock: ${p.stock_quantity} ${p.unit ? p.unit : ''} ${isOos ? '(Backorder)' : ''}
+            </span>
+            <span>•</span>
+        ` : '';
+        const costSnippet = `
+            <span style="color:#0f766e; font-weight:700;">
+                Purchase Rate: ${formatRs(p.cost_price)}
+            </span>
+        `;
         return `
         <div class="search-item ${idx === 0 ? 'active' : ''}" data-idx="${idx}" onclick="selectSearchDropdownItem(${idx})">
             <div class="search-item-thumb" style="background-image:url('${p.image_url}');"></div>
@@ -2284,9 +2299,8 @@ function renderSearchDropdown(list) {
                 <div class="search-item-meta">
                     <span>SKU: ${p.sku || '—'}</span>
                     <span>•</span>
-                    <span style="color:${isOos ? '#ef4444' : '#059669'}; font-weight:700;">
-                        Stock: ${p.stock_quantity} ${p.unit ? p.unit : ''} ${isOos ? '(Backorder)' : ''}
-                    </span>
+                    ${stockSnippet}
+                    ${costSnippet}
                     ${p.category ? `<span>•</span><span>${escapeHtml(p.category)}</span>` : ''}
                 </div>
             </div>
@@ -2359,13 +2373,20 @@ function renderDrawerCatalog(list) {
         grid.innerHTML = '<div style="grid-column:1/-1; padding:30px; text-align:center; color:#94a3b8;">No products in this category.</div>';
         return;
     }
-    grid.innerHTML = list.map(p => `
+    grid.innerHTML = list.map(p => {
+        const stockSnippet = IS_ADMIN ? `<div style="font-size:11px; color:#64748b; font-weight:600;">Stock: ${p.stock_quantity} ${escapeHtml(p.unit || '')}</div>` : '';
+        const costSnippet = `<div style="font-size:11px; color:#0f766e; font-weight:700;">Purchase: ${formatRs(p.cost_price)}</div>`;
+        return `
         <div class="cat-product-card" onclick="addToCartFromDrawer(${JSON.stringify(p).replace(/"/g, '&quot;')})">
             <div class="cat-prod-img" style="background-image:url('${p.image_url}');"></div>
             <div class="cat-prod-name">${escapeHtml(p.name)}</div>
-            <div class="cat-prod-price">Rs. ${parseFloat(p.sale_price).toFixed(0)}</div>
-        </div>
-    `).join('');
+            <div class="cat-prod-price">${formatRs(p.sale_price)}</div>
+            <div style="margin-top:3px; display:flex; flex-direction:column; gap:1px; align-items:center;">
+                ${stockSnippet}
+                ${costSnippet}
+            </div>
+        </div>`;
+    }).join('');
 }
 
 function addToCartFromDrawer(p) {
@@ -2447,6 +2468,16 @@ function renderCart() {
         const lineTotal = parseCleanNumber(item.sale_price) * item.qty;
         const isLow = item.stock_quantity <= (item.low_stock_threshold || 1);
         const isNegOrZero = item.stock_quantity <= 0;
+        const stockSnippet = IS_ADMIN ? `
+            <span class="stock-hint ${isLow ? 'low' : ''}" style="${isNegOrZero ? 'color:#ef4444; background:#fef2f2; border-color:#fecaca;' : ''}">
+                Stock: ${item.stock_quantity} ${item.unit || 'pcs'}
+            </span>
+        ` : '';
+        const costSnippet = `
+            <span class="stock-hint" style="color:#0f766e; background:#f0fdfa; border-color:#ccfbf1; font-weight:600; padding:1px 6px; border-radius:4px; border:1px solid #ccfbf1;">
+                Purchase Rate: ${formatRs(item.cost_price)}
+            </span>
+        `;
         return `
         <tr>
             <td class="td-num">${index + 1}</td>
@@ -2457,9 +2488,8 @@ function renderCart() {
                         <div class="prod-title">${escapeHtml(item.name)}</div>
                         <div class="prod-submeta">
                             ${item.category ? `<span class="cat-chip">${escapeHtml(item.category)}</span>` : ''}
-                            <span class="stock-hint ${isLow ? 'low' : ''}" style="${isNegOrZero ? 'color:#ef4444; background:#fef2f2; border-color:#fecaca;' : ''}">
-                                Stock: ${item.stock_quantity} ${item.unit || 'pcs'}
-                            </span>
+                            ${stockSnippet}
+                            ${costSnippet}
                         </div>
                     </div>
                 </div>
@@ -2953,15 +2983,18 @@ async function loadSupplierLowStock(supplierId) {
                     badge.className = 'badge bg-danger text-white';
                     badge.textContent = `${count} Short Item${count > 1 ? 's' : ''}`;
                 }
+                const stockHeader = IS_ADMIN ? `
+                                <th style="text-align:center; padding:6px 8px;">Current Stock</th>
+                                <th style="text-align:center; padding:6px 8px;">Min Alert</th>
+                ` : '';
                 let tableHtml = `
                     <table class="table table-sm table-bordered mb-0 bg-white" style="font-size:12px; border-radius:8px; overflow:hidden;">
                         <thead style="background:#fef3c7; color:#78350f;">
                             <tr>
                                 <th style="padding:6px 8px;">Product / Item</th>
                                 <th style="padding:6px 8px;">SKU</th>
-                                <th style="text-align:center; padding:6px 8px;">Current Stock</th>
-                                <th style="text-align:center; padding:6px 8px;">Min Alert</th>
-                                <th style="text-align:right; padding:6px 8px;">Cost Price</th>
+                                ${stockHeader}
+                                <th style="text-align:right; padding:6px 8px;">Purchase Rate</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -2970,6 +3003,10 @@ async function loadSupplierLowStock(supplierId) {
                     const stockBadge = item.is_out_of_stock
                         ? '<span class="badge bg-danger" style="font-size:10px;">0 (Out of Stock)</span>'
                         : `<span class="badge" style="background:#fee2e2; color:#b91c1c; font-weight:700; font-size:10px;">${item.stock_quantity} ${item.unit}</span>`;
+                    const stockCells = IS_ADMIN ? `
+                        <td style="text-align:center; padding:6px 8px;">${stockBadge}</td>
+                        <td style="text-align:center; color:#6b7280; padding:6px 8px;">${item.low_stock_threshold} ${item.unit}</td>
+                    ` : '';
 
                     tableHtml += `
                         <tr>
@@ -2978,8 +3015,7 @@ async function loadSupplierLowStock(supplierId) {
                                 <div class="text-muted" style="font-size:10px;">${escapeHtml(item.category)}</div>
                             </td>
                             <td class="text-muted font-monospace" style="padding:6px 8px; font-size:11px;">${escapeHtml(item.sku || '—')}</td>
-                            <td style="text-align:center; padding:6px 8px;">${stockBadge}</td>
-                            <td style="text-align:center; color:#6b7280; padding:6px 8px;">${item.low_stock_threshold} ${item.unit}</td>
+                            ${stockCells}
                             <td style="text-align:right; font-weight:600; padding:6px 8px;">PKR ${item.cost_price.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</td>
                         </tr>
                     `;
@@ -3350,7 +3386,7 @@ function renderReturnSaleDetails(sale) {
             <tr class="${isExhausted ? 'text-muted bg-light' : ''}">
                 <td>
                     <div class="fw-bold ${isExhausted ? 'text-muted' : 'text-dark'}">${escapeHtml(item.product_name)}</div>
-                    <div class="text-muted small" style="font-family:monospace;">${escapeHtml(item.product_sku || '')} · Stock: ${item.current_stock}</div>
+                    <div class="text-muted small" style="font-family:monospace;">${escapeHtml(item.product_sku || '')}${IS_ADMIN ? ` · Stock: ${item.current_stock}` : ''} · Purchase Rate: ${formatRs(item.cost_price || 0)}</div>
                 </td>
                 <td class="text-center fw-bold">${item.quantity_sold} ${escapeHtml(item.product_unit)}</td>
                 <td class="text-center text-danger fw-semibold">${item.quantity_returned} ${escapeHtml(item.product_unit)}</td>
@@ -3413,6 +3449,7 @@ function addSaleItemToReturn(idx) {
             product_sku:         saleItem.product_sku || '',
             product_unit:        saleItem.product_unit || 'pcs',
             current_stock:       saleItem.current_stock,
+            cost_price:          parseFloat(saleItem.cost_price) || 0,
             unit_price:          parseFloat(saleItem.unit_price) || 0,
             quantity:            qtyToAdd,
             max_qty:             saleItem.quantity_returnable,
@@ -3464,6 +3501,8 @@ function renderReturnSearchDropdown(products, query) {
 
     let html = '';
     products.forEach((p) => {
+        const stockText = IS_ADMIN ? ` · Stock: ${p.stock_quantity} ${escapeHtml(p.unit || 'pcs')}` : '';
+        const costText = ` · Purchase Rate: ${formatRs(p.cost_price || 0)}`;
         html += `
             <div class="p-2 border-bottom d-flex justify-content-between align-items-center" 
                  style="cursor:pointer; transition:background .15s;" 
@@ -3472,7 +3511,7 @@ function renderReturnSearchDropdown(products, query) {
                  onclick="addProductToReturn(${JSON.stringify(p).replace(/"/g, '&quot;')}); clearReturnProductSearch();">
                 <div>
                     <div class="fw-bold text-dark fs-6">${escapeHtml(p.name)}</div>
-                    <div class="text-muted small" style="font-family:monospace;">${escapeHtml(p.sku || '')} ${p.barcode ? '· 🏷️ ' + escapeHtml(p.barcode) : ''} · Stock: ${p.stock_quantity} ${escapeHtml(p.unit || 'pcs')}</div>
+                    <div class="text-muted small" style="font-family:monospace;">${escapeHtml(p.sku || '')} ${p.barcode ? '· 🏷️ ' + escapeHtml(p.barcode) : ''}${stockText}${costText}</div>
                 </div>
                 <div class="text-end">
                     <div class="fw-bold text-success fs-6">PKR ${p.sale_price.toLocaleString(undefined, {minimumFractionDigits: 2})}</div>
@@ -3512,6 +3551,7 @@ function addProductToReturn(product) {
             product_sku:     product.sku || '',
             product_unit:    product.unit || 'pcs',
             current_stock:   product.stock_quantity,
+            cost_price:      parseFloat(product.cost_price) || 0,
             unit_price:      parseFloat(product.sale_price) || 0,
             quantity:        1,
             max_qty:         9999,
@@ -3524,11 +3564,12 @@ function addProductToReturn(product) {
 function renderReturnItemsTable() {
     const tbody = document.getElementById('posReturnItemsTbody');
     const clearBtn = document.getElementById('posReturnClearAllBtn');
+    const colCount = IS_ADMIN ? 7 : 6;
 
     if (returnItemsList.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="6" class="text-center py-4 text-muted" id="posReturnEmptyPrompt">
+                <td colspan="${colCount}" class="text-center py-4 text-muted" id="posReturnEmptyPrompt">
                     <span class="material-symbols-outlined d-block mb-1" style="font-size:32px; opacity:0.4;">qr_code_scanner</span>
                     <div class="fw-semibold">No return items added yet.</div>
                     <div style="font-size:11.5px;">Search an invoice above or scan a barcode to add products to this return.</div>
@@ -3545,6 +3586,17 @@ function renderReturnItemsTable() {
     let html = '';
     returnItemsList.forEach((item, idx) => {
         const lineTotal = item.quantity * item.unit_price;
+        const stockTd = IS_ADMIN ? `
+            <td style="text-align:center; font-weight:600; color:#64748b;">
+                ${item.current_stock} ${escapeHtml(item.product_unit)}
+            </td>
+        ` : '';
+        const purchaseTd = `
+            <td style="text-align:center; font-weight:600; color:#0f766e; font-size:12.5px;">
+                ${formatRs(item.cost_price || 0)}
+            </td>
+        `;
+
         html += `
             <tr>
                 <td>
@@ -3554,9 +3606,8 @@ function renderReturnItemsTable() {
                         ${item.is_from_invoice ? `<span class="badge bg-primary" style="font-size:9.5px;">${escapeHtml(item.invoice_number)}</span>` : '<span class="badge bg-secondary" style="font-size:9.5px;">Direct Scan</span>'}
                     </div>
                 </td>
-                <td style="text-align:center; font-weight:600; color:#64748b;">
-                    ${item.current_stock} ${escapeHtml(item.product_unit)}
-                </td>
+                ${stockTd}
+                ${purchaseTd}
                 <td style="text-align:center;">
                     ${item.is_from_invoice ? `
                         <span class="fw-bold text-teal" style="font-size:13.5px; color:#0f766e;">

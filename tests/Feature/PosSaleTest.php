@@ -517,4 +517,34 @@ class PosSaleTest extends TestCase
             'stock_after'  => 49.5,
         ]);
     }
+
+    public function test_pos_window_shows_purchase_rate_and_hides_stock_for_cashier_while_admin_sees_both(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin', 'is_active' => true]);
+
+        // Cashier POS window: IS_ADMIN is false
+        $cashierResponse = $this->actingAs($this->cashier)->get(route('cashier.pos'));
+        $cashierResponse->assertOk()
+            ->assertSee('const IS_ADMIN        = false;', false)
+            ->assertSee('Purchase Rate')
+            ->assertDontSee('<th style="font-weight:700; color:#4b5563; text-align:center;">Current Stock</th>', false);
+
+        // Admin POS window: IS_ADMIN is true and Current Stock column is rendered in header
+        $adminResponse = $this->actingAs($admin)->get(route('cashier.pos'));
+        $adminResponse->assertOk()
+            ->assertSee('const IS_ADMIN        = true;', false)
+            ->assertSee('Purchase Rate')
+            ->assertSee('<th style="font-weight:700; color:#4b5563; text-align:center;">Current Stock</th>', false);
+
+        // Product search endpoint provides cost_price and stock_quantity
+        $searchResponse = $this->actingAs($this->cashier)
+            ->getJson(route('cashier.pos.search', ['q' => $this->productA->sku]));
+        $searchResponse->assertOk()
+            ->assertJsonFragment([
+                'id'         => $this->productA->id,
+                'cost_price' => (float) $this->productA->cost_price,
+                'stock_quantity' => $this->productA->stock_quantity,
+            ]);
+    }
 }
+
