@@ -22,7 +22,7 @@ class PurchaseItem extends Model
     {
         return [
             'quantity'   => 'decimal:3',
-            'unit_cost'  => 'decimal:2',
+            'unit_cost'  => 'decimal:4',
             'total_cost' => 'decimal:2',
         ];
     }

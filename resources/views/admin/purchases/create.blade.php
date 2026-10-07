@@ -270,7 +270,7 @@ function onProductChange(idx, selectedId) {
     if (product) {
         const costInput = document.getElementById(`cost_${idx}`);
         if (costInput) {
-            costInput.value = parseFloat(product.cost_price || 0).toFixed(2);
+            costInput.value = parseFloat(product.cost_price || 0);
         }
         recalcRow(idx);
     }
@@ -297,7 +297,7 @@ function addRow() {
         <div class="fg">
             <label style="font-size:11px;color:#6b7280;">Unit Cost (PKR)</label>
             <input type="number" id="cost_${idx}" name="items[${idx}][unit_cost]"
-                   class="pos-input pos-input-tall" min="0" step="0.01" value="0.00" style="text-align:right; margin-top:0;" required
+                   class="pos-input pos-input-tall" min="0" step="any" value="0" style="text-align:right; margin-top:0;" required
                    oninput="recalcRow(${idx})">
         </div>
         <div class="fg">
@@ -504,6 +504,7 @@ addRow(); // Start with one row
                 <div class="fg">
                     <label class="required">Payment Method</label>
                     <select name="payment_method" class="pos-input" required>
+                        <option value="" disabled {{ old('payment_method') ? '' : 'selected' }}>-- Select Payment Method --</option>
                         <option value="cash"   {{ old('payment_method') === 'cash'   ? 'selected' : '' }}>💵 Cash (Paid now)</option>
                         <option value="card"   {{ old('payment_method') === 'card'   ? 'selected' : '' }}>💳 Card / Bank (Paid now)</option>
                         <option value="credit" {{ old('payment_method') === 'credit' ? 'selected' : '' }}>📋 Credit / Add to Supplier Due</option>

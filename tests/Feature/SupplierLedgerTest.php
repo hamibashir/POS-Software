@@ -100,6 +100,54 @@ class SupplierLedgerTest extends TestCase
         $this->assertEquals(11000.00, (float)$this->supplier->pending_balance);
     }
 
+    public function test_purchase_creation_fails_without_payment_method(): void
+    {
+        $payload = [
+            'supplier_id'     => $this->supplier->id,
+            'supplier_name'   => $this->supplier->name,
+            'payment_method'  => '', // Missing payment method
+            'items'           => [
+                [
+                    'product_id' => $this->product->id,
+                    'quantity'   => 5,
+                    'unit_cost'  => 100.00,
+                ],
+            ],
+        ];
+
+        $response = $this->actingAs($this->admin)
+            ->post(route('admin.purchases.store'), $payload);
+
+        $response->assertSessionHasErrors('payment_method');
+    }
+
+    public function test_purchase_allows_unlimited_decimal_precision_in_unit_cost(): void
+    {
+        $payload = [
+            'supplier_id'     => $this->supplier->id,
+            'supplier_name'   => $this->supplier->name,
+            'payment_method'  => 'credit',
+            'items'           => [
+                [
+                    'product_id' => $this->product->id,
+                    'quantity'   => 10,
+                    'unit_cost'  => 12.3456, // 4 decimal places
+                ],
+            ],
+        ];
+
+        $response = $this->actingAs($this->admin)
+            ->post(route('admin.purchases.store'), $payload);
+
+        $purchase = Purchase::latest('id')->first();
+        $this->assertNotNull($purchase);
+        $response->assertRedirect(route('admin.purchases.show', $purchase));
+
+        $item = $purchase->items->first();
+        $this->assertEquals(12.3456, (float)$item->unit_cost);
+        $this->assertEquals(123.46, (float)$purchase->total_amount); // 10 * 12.3456 = 123.456 rounded to 123.46
+    }
+
     public function test_cashier_can_record_supplier_payment_at_pos_counter(): void
     {
         // Initial pending balance = 5000

@@ -272,7 +272,7 @@ function onProductChange(idx, productId) {
 
     const costEl = document.getElementById(`cost_${idx}`);
     if (costEl && (!costEl.value || parseFloat(costEl.value) === 0)) {
-        costEl.value = parseFloat(prod.cost_price || 0).toFixed(2);
+        costEl.value = parseFloat(prod.cost_price || 0);
     }
 
     recalcRow(idx);
@@ -283,7 +283,7 @@ function addRow(initialData = null) {
     const container = document.getElementById('productRows');
 
     const defaultQty = initialData ? initialData.quantity : 1;
-    const defaultCost = initialData ? parseFloat(initialData.unit_cost).toFixed(2) : '0.00';
+    const defaultCost = initialData ? initialData.unit_cost : '0';
     const defaultUnit = initialData ? (initialData.product_unit || 'Pcs') : 'Pcs';
     const initialProductId = initialData ? initialData.product_id : '';
 
@@ -298,13 +298,13 @@ function addRow(initialData = null) {
         <div class="fg">
             <label style="font-size:11px;color:#6b7280;text-align:right;">Quantity (<span id="unit_${idx}">${defaultUnit}</span>) <span class="text-danger">*</span></label>
             <input type="number" name="items[${idx}][quantity]" id="qty_${idx}"
-                   class="pos-input pos-input-tall" min="0.01" step="any" value="${defaultQty}" style="text-align:right; margin-top:0;" required
+                   class="pos-input pos-input-tall" min="0.001" step="any" value="${defaultQty}" style="text-align:right; margin-top:0;" required
                    oninput="recalcRow(${idx})">
         </div>
         <div class="fg">
             <label style="font-size:11px;color:#6b7280;text-align:right;">Unit Cost (Rs.) <span class="text-danger">*</span></label>
             <input type="number" name="items[${idx}][unit_cost]" id="cost_${idx}"
-                   class="pos-input pos-input-tall" min="0" step="0.01" value="${defaultCost}" style="text-align:right; margin-top:0;" required
+                   class="pos-input pos-input-tall" min="0" step="any" value="${defaultCost}" style="text-align:right; margin-top:0;" required
                    oninput="recalcRow(${idx})">
         </div>
         <div class="fg">
@@ -493,6 +493,7 @@ document.getElementById('addRowBtn').addEventListener('click', () => addRow());
                 <div class="fg">
                     <label class="required">Payment Method</label>
                     <select name="payment_method" class="pos-input" required>
+                        <option value="" disabled {{ !old('payment_method', $purchase->payment_method) ? 'selected' : '' }}>-- Select Payment Method --</option>
                         <option value="cash"   {{ old('payment_method', $purchase->payment_method) === 'cash'   ? 'selected' : '' }}>💵 Cash (Paid)</option>
                         <option value="card"   {{ old('payment_method', $purchase->payment_method) === 'card'   ? 'selected' : '' }}>💳 Card / Bank (Paid)</option>
                         <option value="credit" {{ old('payment_method', $purchase->payment_method) === 'credit' ? 'selected' : '' }}>📋 Credit / Add to Supplier Due</option>
