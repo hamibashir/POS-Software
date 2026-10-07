@@ -84,18 +84,20 @@ class StaffController extends Controller
         $this->authorizeAdmin();
 
         $data = $request->validate([
-            'name'    => ['required', 'string', 'max:150'],
-            'phone'   => ['required', 'string', 'max:30'],
-            'address' => ['required', 'string', 'max:255'],
-            'notes'   => ['nullable', 'string', 'max:500'],
+            'name'            => ['required', 'string', 'max:150'],
+            'phone'           => ['required', 'string', 'max:30'],
+            'address'         => ['required', 'string', 'max:255'],
+            'opening_balance' => ['nullable', 'numeric', 'min:0'],
+            'notes'           => ['nullable', 'string', 'max:500'],
         ]);
 
         $employee = Employee::create([
-            'name'      => $data['name'],
-            'phone'     => $data['phone'],
-            'address'   => $data['address'],
-            'is_active' => true,
-            'notes'     => $data['notes'] ?? null,
+            'name'            => $data['name'],
+            'phone'           => $data['phone'],
+            'address'         => $data['address'],
+            'opening_balance' => $data['opening_balance'] ?? 0.00,
+            'is_active'       => true,
+            'notes'           => $data['notes'] ?? null,
         ]);
 
         return back()->with('success', "Customer {$employee->name} added successfully.");
@@ -109,11 +111,12 @@ class StaffController extends Controller
         $this->authorizeAdmin();
 
         $data = $request->validate([
-            'name'      => ['required', 'string', 'max:150'],
-            'phone'     => ['required', 'string', 'max:30'],
-            'address'   => ['required', 'string', 'max:255'],
-            'is_active' => ['required', 'boolean'],
-            'notes'     => ['nullable', 'string', 'max:500'],
+            'name'            => ['required', 'string', 'max:150'],
+            'phone'           => ['required', 'string', 'max:30'],
+            'address'         => ['required', 'string', 'max:255'],
+            'opening_balance' => ['nullable', 'numeric', 'min:0'],
+            'is_active'       => ['required', 'boolean'],
+            'notes'           => ['nullable', 'string', 'max:500'],
         ]);
 
         $employee->update($data);

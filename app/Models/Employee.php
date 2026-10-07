@@ -11,6 +11,7 @@ class Employee extends Model
         'name',
         'phone',
         'address',
+        'opening_balance',
         'is_active',
         'notes',
     ];
@@ -18,7 +19,8 @@ class Employee extends Model
     protected function casts(): array
     {
         return [
-            'is_active' => 'boolean',
+            'opening_balance' => 'decimal:2',
+            'is_active'       => 'boolean',
         ];
     }
 
@@ -46,11 +48,11 @@ class Employee extends Model
     }
 
     /**
-     * Total amount of items taken on credit (net of returns).
+     * Total amount of credit taken (Opening Balance + Credit Sales - Returns).
      */
     public function getTotalCreditAttribute(): float
     {
-        $grossCredit = (float) $this->sales()
+        $grossCredit = (float) $this->opening_balance + (float) $this->sales()
             ->where('payment_method', 'credit')
             ->where('status', '!=', 'voided')
             ->sum('total_amount');
@@ -59,7 +61,7 @@ class Employee extends Model
     }
 
     /**
-     * Total payments cleared by the employee.
+     * Total payments cleared by the employee / customer.
      */
     public function getTotalPaidAttribute(): float
     {
@@ -71,7 +73,7 @@ class Employee extends Model
      */
     public function getPendingPaymentAttribute(): float
     {
-        return max(0, $this->total_credit - $this->total_paid);
+        return max(0, round($this->total_credit - $this->total_paid, 2));
     }
 
     /**

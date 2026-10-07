@@ -171,6 +171,7 @@
                     <th>Customer Name</th>
                     <th>Phone</th>
                     <th>Address</th>
+                    <th style="text-align:right;">Opening Balance</th>
                     <th style="text-align:right;">Total Credit</th>
                     <th style="text-align:right;">Total Paid</th>
                     <th style="text-align:right;">Pending to Clear</th>
@@ -192,6 +193,9 @@
                     </td>
                     <td style="max-width:220px; font-size:13px; color:#4b5563;">
                         <i class="bi bi-geo-alt me-1 text-muted"></i>{{ $emp->address }}
+                    </td>
+                    <td style="text-align:right; font-weight:700; color:#4f46e5;">
+                        {{ pkr($emp->opening_balance ?? 0, 2) }}
                     </td>
                     <td style="text-align:right; font-weight:600; color:#4b5563;">
                         {{ pkr($emp->total_credit, 2) }}
@@ -229,7 +233,7 @@
                             </a>
 
                             <button class="btn-pos-outline" style="padding:4px 8px; font-size:12px;"
-                                onclick="openEditEmployeeModal({{ $emp->id }}, '{{ addslashes($emp->name) }}', '{{ addslashes($emp->phone) }}', '{{ addslashes($emp->address) }}', {{ $emp->is_active ? 1 : 0 }}, '{{ addslashes($emp->notes ?? '') }}')"
+                                onclick="openEditEmployeeModal({{ $emp->id }}, '{{ addslashes($emp->name) }}', '{{ addslashes($emp->phone) }}', '{{ addslashes($emp->address) }}', {{ (float)($emp->opening_balance ?? 0) }}, {{ $emp->is_active ? 1 : 0 }}, '{{ addslashes($emp->notes ?? '') }}')"
                                 title="Edit Customer">
                                 <i class="bi bi-pencil"></i>
                             </button>
@@ -457,6 +461,10 @@
                     <textarea name="address" class="pos-input" rows="2" required placeholder="Customer address or location"></textarea>
                 </div>
                 <div>
+                    <label class="form-label" style="font-size:13px; font-weight:600;">Opening Balance (PKR)</label>
+                    <input type="number" step="0.01" min="0" name="opening_balance" class="pos-input" placeholder="0.00" value="0.00">
+                </div>
+                <div>
                     <label class="form-label" style="font-size:13px; font-weight:600;">Notes (Optional)</label>
                     <input type="text" name="notes" class="pos-input" placeholder="e.g. Plumber, Electrician, Contractor">
                 </div>
@@ -491,6 +499,10 @@
                 <div>
                     <label class="form-label" style="font-size:13px; font-weight:600;">Address <span class="text-danger">*</span></label>
                     <textarea name="address" id="editEmpAddress" class="pos-input" rows="2" required></textarea>
+                </div>
+                <div>
+                    <label class="form-label" style="font-size:13px; font-weight:600;">Opening Balance (PKR)</label>
+                    <input type="number" step="0.01" min="0" name="opening_balance" id="editEmpOpeningBalance" class="pos-input" placeholder="0.00">
                 </div>
                 <div>
                     <label class="form-label" style="font-size:13px; font-weight:600;">Credit Allowed (Active) <span class="text-danger">*</span></label>

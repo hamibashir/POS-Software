@@ -67,7 +67,7 @@
             <div class="badge-clear"><i class="bi bi-check-circle me-1"></i> Cleared (PKR 0.00)</div>
             @endif
             <div style="font-size:12px; color:#6b7280; margin-top:6px;">
-                Total Credit Taken: <strong>{{ pkr($employee->total_credit, 2) }}</strong> &nbsp;|&nbsp;
+                Opening Balance: <strong style="color:#4f46e5;">{{ pkr($employee->opening_balance ?? 0, 2) }}</strong> &nbsp;|&nbsp; Total Credit: <strong>{{ pkr($employee->total_credit, 2) }}</strong> &nbsp;|&nbsp;
                 Total Paid: <strong style="color:#047857;">{{ pkr($employee->total_paid, 2) }}</strong>
             </div>
         </div>
