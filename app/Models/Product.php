@@ -84,7 +84,9 @@ class Product extends Model
 
     public function scopeInCatalog($query)
     {
-        return $query->where('is_active', true)->where('show_in_catalog', true);
+        return $query->where('is_active', true)
+                     ->where('show_in_catalog', true)
+                     ->where('stock_quantity', '>', 0);
     }
 
     public function scopeLowStock($query)

@@ -14,13 +14,11 @@ class CatalogController extends Controller
 
     public function home()
     {
-        $categories = Cache::remember('catalog.categories', 300, function () {
-            return Category::active()
-                ->whereHas('products', fn($q) => $q->inCatalog())
-                ->withCount(['products' => fn($q) => $q->inCatalog()])
-                ->orderBy('name')
-                ->get();
-        });
+        $categories = Category::active()
+            ->whereHas('products', fn($q) => $q->inCatalog())
+            ->withCount(['products' => fn($q) => $q->inCatalog()])
+            ->orderBy('name')
+            ->get();
 
         $featured = Product::inCatalog()
             ->with('category')
