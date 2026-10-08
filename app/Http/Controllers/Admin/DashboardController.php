@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\Expense;
+use App\Models\CashRegister;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
@@ -14,6 +16,10 @@ class DashboardController extends Controller
     public function index()
     {
         $today = Carbon::today();
+
+        // ── Morning Cash Drawer Float ─────────────────────────────
+        $todayRegister    = CashRegister::whereDate('date', $today)->first();
+        $todayOpeningCash = $todayRegister ? (float) $todayRegister->opening_cash : 0.0;
 
         // ── KPI Cards: Today ──────────────────────────────────────
         $todayDirectSales = (float) Sale::whereDate('created_at', $today)
@@ -92,7 +98,7 @@ class DashboardController extends Controller
 
         $todayCashOutflow = $todayCashRefunds + $todayCashExpenses + $todaySupplierCashPaid;
 
-        $todayDrawerCash = $todayCashInflow - $todayCashOutflow;
+        $todayDrawerCash = $todayOpeningCash + $todayCashInflow - $todayCashOutflow;
 
         $todayCardSales = (float) Sale::whereDate('created_at', $today)
             ->where('status', 'completed')
@@ -311,7 +317,7 @@ class DashboardController extends Controller
         return view('admin.dashboard', compact(
             'todaySales', 'todayVsYesterday',
             'todayExpenses', 'todayCogs', 'todayGrossProfit', 'todayNetProfit', 'todayMargin', 'todayNetMargin', 'profitVsYesterday',
-            'todayDrawerCash', 'todayCashInflow', 'todayCashOutflow',
+            'todayOpeningCash', 'todayRegister', 'todayDrawerCash', 'todayCashInflow', 'todayCashOutflow',
             'todayCashSales', 'todayCreditUpfrontCash', 'todayCustomerCashCleared',
             'todayCashRefunds', 'todayCashExpenses', 'todaySupplierCashPaid',
             'todayCardSales', 'todayCreditUnpaid',
@@ -322,5 +328,34 @@ class DashboardController extends Controller
             'chartLabels', 'chartData', 'weekTotal', 'weekVsPrev',
             'lowStockProducts'
         ));
+    }
+
+    public function updateOpeningCash(Request $request)
+    {
+        $validated = $request->validate([
+            'opening_cash' => 'required|numeric|min:0',
+            'notes'        => 'nullable|string|max:255',
+        ]);
+
+        $today = Carbon::today()->toDateString();
+
+        $register = CashRegister::updateOrCreate(
+            ['date' => $today],
+            [
+                'opening_cash' => $validated['opening_cash'],
+                'notes'        => $validated['notes'] ?? null,
+                'user_id'      => auth()->id(),
+            ]
+        );
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success'      => true,
+                'message'      => 'Morning opening cash updated successfully!',
+                'opening_cash' => (float) $register->opening_cash,
+            ]);
+        }
+
+        return redirect()->route('admin.dashboard')->with('success', 'Morning opening cash drawer float saved successfully!');
     }
 }

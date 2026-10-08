@@ -135,7 +135,13 @@
             <div class="d-flex align-items-baseline gap-2 flex-wrap">
                 <p class="value" style="color:#047857;">Rs. {{ number_format($todayDrawerCash, 0) }}</p>
             </div>
-            <div style="font-size:11px; color:#64748b; margin-top:6px; display:flex; justify-content:space-between; align-items:center;">
+            <div style="font-size:11px; color:#64748b; margin-top:4px; display:flex; justify-content:space-between; align-items:center;">
+                <span>Opening Float: <strong class="text-dark">Rs. {{ number_format($todayOpeningCash, 0) }}</strong></span>
+                <a href="#" data-bs-toggle="modal" data-bs-target="#cashDrawerModal" class="badge bg-light text-primary border text-decoration-none" style="font-size:10px;">
+                    <i class="bi bi-pencil-square"></i> Set Float
+                </a>
+            </div>
+            <div style="font-size:11px; color:#64748b; margin-top:4px; display:flex; justify-content:space-between; align-items:center; border-top:1px dashed #e2e8f0; padding-top:4px;">
                 <div>
                     <span class="text-success fw-bold">+{{ number_format($todayCashInflow, 0) }}</span> / 
                     <span class="text-danger fw-bold">-{{ number_format($todayCashOutflow, 0) }}</span>
@@ -443,16 +449,42 @@
             </div>
             <div class="modal-body p-4" style="background:#f8fafc;">
                 
+                {{-- Morning Opening Cash Float Setting Form --}}
+                <div class="p-3 mb-4 rounded-3 bg-white border" style="border-left: 4px solid #0f766e; box-shadow:0 2px 6px rgba(0,0,0,0.03);">
+                    <form action="{{ route('admin.cash-drawer.opening') }}" method="POST" class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3">
+                        @csrf
+                        <div>
+                            <div class="fw-bold text-dark" style="font-size:13.5px; display:flex; align-items:center; gap:6px;">
+                                <i class="bi bi-sunrise-fill text-warning fs-5"></i> Morning Opening Float (Starting Cash)
+                            </div>
+                            <div style="font-size:11.5px; color:#64748b;">
+                                Enter the cash amount that was already inside the drawer at the start of today.
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 w-100 w-md-auto">
+                            <div class="input-group input-group-sm" style="max-width: 220px;">
+                                <span class="input-group-text fw-bold bg-light">Rs.</span>
+                                <input type="number" step="0.01" min="0" name="opening_cash" class="form-control fw-bold text-end" value="{{ $todayOpeningCash > 0 ? $todayOpeningCash : '' }}" placeholder="0.00" required>
+                            </div>
+                            <button type="submit" class="btn btn-sm text-white fw-bold px-3" style="background:#0f766e; white-space:nowrap; border-radius:6px;">
+                                <i class="bi bi-check2 me-1"></i> Save Float
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
                 {{-- Big Balance Highlight Card --}}
                 <div class="p-3 mb-4 rounded-3 text-center" style="background:#ffffff; border:2px solid #059669; box-shadow:0 4px 12px rgba(5,150,105,0.08);">
                     <div style="font-size:12px; font-weight:800; color:#065f46; text-transform:uppercase; letter-spacing:0.5px;">
-                        Expected Cash in Physical Drawer
+                        Expected Total Cash in Drawer Right Now
                     </div>
                     <div class="fs-1 fw-bold my-1" style="color:#047857;">
                         Rs. {{ number_format($todayDrawerCash, 2) }}
                     </div>
-                    <div style="font-size:11.5px; color:#64748b;">
-                        Formula: <strong>(Total Cash Inflow) &minus; (Total Cash Outflow)</strong>
+                    <div style="font-size:12px; color:#475569; margin-top:4px;">
+                        Formula: <span class="fw-bold text-dark">Rs. {{ number_format($todayOpeningCash, 0) }}</span> (Opening) 
+                        + <span class="fw-bold text-success">Rs. {{ number_format($todayCashInflow, 0) }}</span> (Inflow) 
+                        &minus; <span class="fw-bold text-danger">Rs. {{ number_format($todayCashOutflow, 0) }}</span> (Outflow)
                     </div>
                 </div>
 

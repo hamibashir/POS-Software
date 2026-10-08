@@ -195,9 +195,33 @@ class ReportsCalculationTest extends TestCase
         $response->assertOk()
             ->assertSee("Cash in Drawer", false)
             ->assertSee("Till Balance", false)
+            ->assertSee("Opening Float", false)
             ->assertSee("Today's Net Profit", false)
             ->assertSee("Monthly Net Profit", false)
             ->assertSee('5,500');
+    }
+
+    public function test_admin_can_set_morning_opening_cash_float(): void
+    {
+        $response = $this->actingAs($this->admin)
+            ->post(route('admin.cash-drawer.opening'), [
+                'opening_cash' => 5000.00,
+                'notes'        => 'Morning till starting cash',
+            ]);
+
+        $response->assertRedirect(route('admin.dashboard'))
+            ->assertSessionHas('success');
+
+        $register = \App\Models\CashRegister::whereDate('date', today())->first();
+        $this->assertNotNull($register);
+        $this->assertEquals(5000.00, (float) $register->opening_cash);
+
+        $dashResponse = $this->actingAs($this->admin)
+            ->get(route('admin.dashboard'));
+
+        $dashResponse->assertOk()
+            ->assertSee('5,000') // Opening Float
+            ->assertSee('17,000.00'); // 5000 opening + 12000 cash sales (excluding 3500 card sale) = 17000 drawer cash
     }
 
     public function test_cleared_credit_payment_counted_on_clearance_day_not_purchase_day(): void

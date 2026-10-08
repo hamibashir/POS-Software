@@ -43,6 +43,7 @@ Route::middleware(['auth', 'admin'])
     ->name('admin.')
     ->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+        Route::post('/cash-drawer/opening', [DashboardController::class, 'updateOpeningCash'])->name('cash-drawer.opening');
 
         // Categories
         Route::resource('categories', CategoryController::class)->except(['create', 'edit']);
