@@ -50,6 +50,60 @@ class DashboardController extends Controller
         $todayMargin      = $todaySales > 0 ? round(($todayGrossProfit / $todaySales) * 100, 1) : 0;
         $todayNetMargin   = $todaySales > 0 ? round(($todayNetProfit / $todaySales) * 100, 1) : 0;
 
+        // ── Cash Drawer Today Calculation (Physical Cash In Hand) ────
+        $todayCashSales = (float) Sale::whereDate('created_at', $today)
+            ->where('status', 'completed')
+            ->where('payment_method', 'cash')
+            ->sum('total_amount');
+
+        $todayCreditUpfrontCash = (float) Sale::whereDate('created_at', $today)
+            ->where('status', 'completed')
+            ->where('payment_method', 'credit')
+            ->sum('paid_amount');
+
+        $todayCustomerCashCleared = (float) DB::table('employee_payments')
+            ->whereDate(DB::raw('COALESCE(payment_date, created_at)'), $today)
+            ->where(function ($q) {
+                $q->where('payment_method', 'cash')
+                  ->orWhereNull('payment_method');
+            })
+            ->sum('amount');
+
+        $todayCashInflow = $todayCashSales + $todayCreditUpfrontCash + $todayCustomerCashCleared;
+
+        $todayCashRefunds = (float) DB::table('sale_returns')
+            ->whereDate(DB::raw('COALESCE(returned_at, created_at)'), $today)
+            ->where('refund_method', 'cash')
+            ->where('refund_status', 'completed')
+            ->sum('refund_amount');
+
+        $todayCashExpenses = (float) DB::table('expenses')
+            ->whereDate('expense_date', $today)
+            ->where(function ($q) {
+                $q->where('payment_method', 'cash')
+                  ->orWhereNull('payment_method');
+            })
+            ->sum('amount');
+
+        $todaySupplierCashPaid = (float) DB::table('supplier_payments')
+            ->whereDate(DB::raw('COALESCE(payment_date, created_at)'), $today)
+            ->where('payment_method', 'cash')
+            ->sum('amount');
+
+        $todayCashOutflow = $todayCashRefunds + $todayCashExpenses + $todaySupplierCashPaid;
+
+        $todayDrawerCash = $todayCashInflow - $todayCashOutflow;
+
+        $todayCardSales = (float) Sale::whereDate('created_at', $today)
+            ->where('status', 'completed')
+            ->where('payment_method', 'card')
+            ->sum('total_amount');
+
+        $todayCreditUnpaid = (float) Sale::whereDate('created_at', $today)
+            ->where('status', 'completed')
+            ->where('payment_method', 'credit')
+            ->sum(DB::raw('total_amount - paid_amount'));
+
         $thisMonthExpenses = (float) Expense::whereMonth('expense_date', $today->month)
             ->whereYear('expense_date', $today->year)
             ->sum('amount');
@@ -257,6 +311,10 @@ class DashboardController extends Controller
         return view('admin.dashboard', compact(
             'todaySales', 'todayVsYesterday',
             'todayExpenses', 'todayCogs', 'todayGrossProfit', 'todayNetProfit', 'todayMargin', 'todayNetMargin', 'profitVsYesterday',
+            'todayDrawerCash', 'todayCashInflow', 'todayCashOutflow',
+            'todayCashSales', 'todayCreditUpfrontCash', 'todayCustomerCashCleared',
+            'todayCashRefunds', 'todayCashExpenses', 'todaySupplierCashPaid',
+            'todayCardSales', 'todayCreditUnpaid',
             'thisMonthExpenses', 'thisMonthCogs', 'thisMonthGrossProfit', 'thisMonthNetProfit', 'thisMonthMargin', 'thisMonthNetMargin', 'monthProfitVsLast',
             'totalProducts',
             'lowStockCount',

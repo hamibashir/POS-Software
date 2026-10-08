@@ -193,6 +193,8 @@ class ReportsCalculationTest extends TestCase
             ->get(route('admin.dashboard'));
 
         $response->assertOk()
+            ->assertSee("Cash in Drawer", false)
+            ->assertSee("Till Balance", false)
             ->assertSee("Today's Net Profit", false)
             ->assertSee("Monthly Net Profit", false)
             ->assertSee('5,500');

@@ -124,8 +124,31 @@
 {{-- ── KPI Cards ────────────────────────────────────────── --}}
 <div class="row g-3 mb-3">
 
+    {{-- Today's Cash in Drawer (Physical Till) --}}
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="dash-card" style="border-left: 4px solid #059669;">
+            <div class="card-bg-icon text-success" style="color:#059669;"><i class="bi bi-safe2"></i></div>
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <p class="label mb-0" style="color:#0f766e; font-weight:700;">Cash in Drawer</p>
+                <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size:10px; font-weight:700;">Till Balance</span>
+            </div>
+            <div class="d-flex align-items-baseline gap-2 flex-wrap">
+                <p class="value" style="color:#047857;">Rs. {{ number_format($todayDrawerCash, 0) }}</p>
+            </div>
+            <div style="font-size:11px; color:#64748b; margin-top:6px; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <span class="text-success fw-bold">+{{ number_format($todayCashInflow, 0) }}</span> / 
+                    <span class="text-danger fw-bold">-{{ number_format($todayCashOutflow, 0) }}</span>
+                </div>
+                <a href="#" data-bs-toggle="modal" data-bs-target="#cashDrawerModal" style="font-size:11px; text-decoration:none; font-weight:700; color:var(--pos-primary);">
+                    Reconcile <i class="bi bi-chevron-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
     {{-- Today's Sales --}}
-    <div class="col-12 col-sm-6 col-lg-4">
+    <div class="col-12 col-sm-6 col-xl-3">
         <div class="dash-card">
             <div class="card-bg-icon text-primary"><i class="bi bi-cash-stack"></i></div>
             <p class="label">Today's Sales</p>
@@ -145,7 +168,7 @@
     </div>
 
     {{-- Today's Expenses --}}
-    <div class="col-12 col-sm-6 col-lg-4">
+    <div class="col-12 col-sm-6 col-xl-3">
         <div class="dash-card">
             <div class="card-bg-icon text-danger" style="color:#ef4444;"><i class="bi bi-wallet2"></i></div>
             <p class="label">Today's Expenses</p>
@@ -160,7 +183,7 @@
     </div>
 
     {{-- Today's Profit --}}
-    <div class="col-12 col-sm-6 col-lg-4">
+    <div class="col-12 col-sm-6 col-xl-3">
         <div class="dash-card" style="border-left: 4px solid {{ $todayNetProfit >= 0 ? '#10b981' : '#ef4444' }};">
             <div class="card-bg-icon text-success" style="color:{{ $todayNetProfit >= 0 ? '#10b981' : '#ef4444' }};"><i class="bi bi-cash-coin"></i></div>
             <p class="label">Today's Net Profit</p>
@@ -400,6 +423,129 @@
         </div>
     </div>
 
+</div>
+
+{{-- ══════════ CASH DRAWER RECONCILIATION MODAL ══════════ --}}
+<div class="modal fade" id="cashDrawerModal" tabindex="-1" aria-labelledby="cashDrawerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content" style="border-radius:18px; border:none; box-shadow:0 20px 60px rgba(0,0,0,0.2); overflow:hidden;">
+            <div class="modal-header px-4 py-3" style="background:#0f766e; color:#fff;">
+                <div>
+                    <h5 class="modal-title fw-bold" id="cashDrawerModalLabel" style="color:#fff; display:flex; align-items:center; gap:8px; margin:0;">
+                        <i class="bi bi-safe2 fs-5"></i>
+                        Cash Drawer Reconciliation (Today)
+                    </h5>
+                    <div style="font-size:12px; color:rgba(255,255,255,0.85); margin-top:2px;">
+                        Date: {{ now()->format('l, d M Y') }} &bull; Physical Register Cash In Hand
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4" style="background:#f8fafc;">
+                
+                {{-- Big Balance Highlight Card --}}
+                <div class="p-3 mb-4 rounded-3 text-center" style="background:#ffffff; border:2px solid #059669; box-shadow:0 4px 12px rgba(5,150,105,0.08);">
+                    <div style="font-size:12px; font-weight:800; color:#065f46; text-transform:uppercase; letter-spacing:0.5px;">
+                        Expected Cash in Physical Drawer
+                    </div>
+                    <div class="fs-1 fw-bold my-1" style="color:#047857;">
+                        Rs. {{ number_format($todayDrawerCash, 2) }}
+                    </div>
+                    <div style="font-size:11.5px; color:#64748b;">
+                        Formula: <strong>(Total Cash Inflow) &minus; (Total Cash Outflow)</strong>
+                    </div>
+                </div>
+
+                {{-- Inflows vs Outflows Grid --}}
+                <div class="row g-3 mb-4">
+                    
+                    {{-- Cash Inflows Column --}}
+                    <div class="col-md-6">
+                        <div class="p-3 rounded-3 h-100 bg-white border" style="border-color:#bbf7d0 !important;">
+                            <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                                <span class="fw-bold text-success" style="font-size:13.5px;">
+                                    <i class="bi bi-arrow-down-left-circle me-1"></i> Cash Inflows (Received)
+                                </span>
+                                <span class="badge bg-success text-white" style="font-size:11px;">+Rs. {{ number_format($todayCashInflow, 2) }}</span>
+                            </div>
+                            <div class="d-flex flex-column gap-2" style="font-size:12.5px;">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="text-secondary">Direct Cash Sales:</span>
+                                    <span class="fw-bold text-dark">Rs. {{ number_format($todayCashSales, 2) }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="text-secondary">Credit Sales Upfront Cash:</span>
+                                    <span class="fw-bold text-dark">Rs. {{ number_format($todayCreditUpfrontCash, 2) }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="text-secondary">Customer Dues Cleared (Cash):</span>
+                                    <span class="fw-bold text-dark">Rs. {{ number_format($todayCustomerCashCleared, 2) }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Cash Outflows Column --}}
+                    <div class="col-md-6">
+                        <div class="p-3 rounded-3 h-100 bg-white border" style="border-color:#fecaca !important;">
+                            <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                                <span class="fw-bold text-danger" style="font-size:13.5px;">
+                                    <i class="bi bi-arrow-up-right-circle me-1"></i> Cash Outflows (Paid Out)
+                                </span>
+                                <span class="badge bg-danger text-white" style="font-size:11px;">-Rs. {{ number_format($todayCashOutflow, 2) }}</span>
+                            </div>
+                            <div class="d-flex flex-column gap-2" style="font-size:12.5px;">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="text-secondary">Customer Cash Refunds:</span>
+                                    <span class="fw-bold text-danger">-Rs. {{ number_format($todayCashRefunds, 2) }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="text-secondary">Shop Expenses (from Till):</span>
+                                    <span class="fw-bold text-danger">-Rs. {{ number_format($todayCashExpenses, 2) }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="text-secondary">Supplier Payments (from Till):</span>
+                                    <span class="fw-bold text-danger">-Rs. {{ number_format($todaySupplierCashPaid, 2) }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                {{-- Non-Drawer Channels Info Card --}}
+                <div class="p-3 rounded-3 bg-white border" style="border-color:#e2e8f0;">
+                    <div class="fw-bold text-dark mb-2" style="font-size:12.5px;">
+                        <i class="bi bi-info-circle me-1 text-primary"></i> Other Payment Channels (Not in Physical Cash Drawer)
+                    </div>
+                    <div class="row g-2 text-muted" style="font-size:12px;">
+                        <div class="col-sm-6">
+                            <div class="p-2 rounded bg-light d-flex justify-content-between">
+                                <span><i class="bi bi-credit-card me-1"></i> Card / Bank Swipes:</span>
+                                <strong class="text-dark">Rs. {{ number_format($todayCardSales, 2) }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="p-2 rounded bg-light d-flex justify-content-between">
+                                <span><i class="bi bi-person-badge me-1"></i> Unpaid Credit Sales:</span>
+                                <strong class="text-dark">Rs. {{ number_format($todayCreditUnpaid, 2) }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="font-size:11px; color:#94a3b8; margin-top:8px;">
+                        Note: Card/Bank payments deposit directly into bank accounts, and unpaid credit sales remain in customer ledger accounts until cleared.
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer px-4 py-3 bg-white border-top">
+                <button type="button" class="btn btn-secondary px-4 fw-bold" data-bs-dismiss="modal" style="border-radius:10px;">Close</button>
+                <a href="{{ route('admin.reports.index', ['tab' => 'range', 'from' => now()->toDateString(), 'to' => now()->toDateString()]) }}" class="btn text-white px-4 fw-bold" style="background:#0f766e; border-radius:10px;">
+                    <i class="bi bi-file-earmark-text me-1"></i> View Full Daily Report
+                </a>
+            </div>
+        </div>
+    </div>
 </div>
 
 @endsection
