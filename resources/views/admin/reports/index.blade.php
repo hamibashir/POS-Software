@@ -1170,8 +1170,78 @@
     </div>
     @endif
 
-    {{-- Supplier-Wise Breakdown Table --}}
+    {{-- Detailed Payment Transactions Log --}}
     <div class="report-card" style="margin-bottom:24px;">
+        <div class="report-card-header">
+            <span><i class="bi bi-receipt me-1 text-success"></i> Supplier Payment Transactions Log</span>
+            <span style="color:#9ca3af;">{{ $from }} &mdash; {{ $to }} ({{ $paymentLogs->count() }} records)</span>
+        </div>
+        @if($paymentLogs->isEmpty())
+            <div style="padding:40px;text-align:center;color:#9ca3af;">No payment transactions recorded in this period.</div>
+        @else
+        <div style="overflow-x:auto;">
+            <table class="rpt-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Supplier</th>
+                        <th>Voucher / Ref #</th>
+                        <th>Method</th>
+                        <th style="text-align:right">Paid Amount</th>
+                        <th>Recorded By</th>
+                        <th>Notes / Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($paymentLogs as $log)
+                    <tr>
+                        <td style="font-size:12px; font-weight:600; color:#1e293b; white-space:nowrap;">
+                            {{ \Carbon\Carbon::parse($log->payment_date ?: $log->created_at)->format('M d, Y') }}
+                            <div style="font-size:10px; color:#94a3b8;">{{ \Carbon\Carbon::parse($log->created_at)->format('h:i A') }}</div>
+                        </td>
+                        <td>
+                            <div style="font-weight:700; color:#1e293b;">{{ $log->supplier?->name ?: '—' }}</div>
+                            @if($log->supplier?->company_name)
+                                <div style="font-size:11px; color:#64748b;">{{ $log->supplier->company_name }}</div>
+                            @endif
+                        </td>
+                        <td style="font-family:monospace; font-size:12px; font-weight:600; color:#475569;">
+                            {{ $log->reference_number ?: ('VCH-' . str_pad($log->id, 5, '0', STR_PAD_LEFT)) }}
+                        </td>
+                        <td>
+                            @php
+                                $m = strtolower($log->payment_method ?? 'cash');
+                                $badgeCls = match($m) {
+                                    'cash' => 'bg-success-subtle text-success',
+                                    'bank' => 'bg-info-subtle text-info',
+                                    'cheque' => 'bg-warning-subtle text-warning',
+                                    'online' => 'bg-primary-subtle text-primary',
+                                    default => 'bg-secondary-subtle text-secondary',
+                                };
+                            @endphp
+                            <span class="badge {{ $badgeCls }} border" style="font-size:11px; text-transform:uppercase; font-weight:700;">
+                                {{ $log->payment_method ?: 'Cash' }}
+                            </span>
+                        </td>
+                        <td style="text-align:right; font-weight:800; font-size:13px; color:#059669; background:#f0fdf4;">
+                            {{ pkr($log->amount, 2) }}
+                        </td>
+                        <td style="font-size:12px; color:#475569;">
+                            <i class="bi bi-person-circle me-1 text-muted"></i>{{ $log->user?->name ?: 'Admin / System' }}
+                        </td>
+                        <td style="font-size:11px; color:#64748b; max-width:250px;">
+                            {{ $log->notes ?: '—' }}
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+        @endif
+    </div>
+
+    {{-- Supplier-Wise Breakdown Table --}}
+    <div class="report-card" style="margin-bottom:20px;">
         <div class="report-card-header">
             <span><i class="bi bi-buildings me-1 text-primary"></i> Supplier Summary Breakdown & Balances</span>
             <span style="color:#9ca3af;">{{ $from }} &mdash; {{ $to }}</span>
@@ -1233,76 +1303,6 @@
                             <a href="{{ route('admin.suppliers.ledger', $sb->id) }}" class="btn btn-sm btn-outline-primary" style="font-size:11px; padding:2px 8px; border-radius:6px;" title="View Supplier Ledger">
                                 <i class="bi bi-journal-text me-1"></i>Ledger
                             </a>
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-        @endif
-    </div>
-
-    {{-- Detailed Payment Transactions Log --}}
-    <div class="report-card" style="margin-bottom:20px;">
-        <div class="report-card-header">
-            <span><i class="bi bi-receipt me-1 text-success"></i> Supplier Payment Transactions Log</span>
-            <span style="color:#9ca3af;">{{ $from }} &mdash; {{ $to }} ({{ $paymentLogs->count() }} records)</span>
-        </div>
-        @if($paymentLogs->isEmpty())
-            <div style="padding:40px;text-align:center;color:#9ca3af;">No payment transactions recorded in this period.</div>
-        @else
-        <div style="overflow-x:auto;">
-            <table class="rpt-table">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Supplier</th>
-                        <th>Voucher / Ref #</th>
-                        <th>Method</th>
-                        <th style="text-align:right">Paid Amount</th>
-                        <th>Recorded By</th>
-                        <th>Notes / Details</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($paymentLogs as $log)
-                    <tr>
-                        <td style="font-size:12px; font-weight:600; color:#1e293b; white-space:nowrap;">
-                            {{ \Carbon\Carbon::parse($log->payment_date ?: $log->created_at)->format('M d, Y') }}
-                            <div style="font-size:10px; color:#94a3b8;">{{ \Carbon\Carbon::parse($log->created_at)->format('h:i A') }}</div>
-                        </td>
-                        <td>
-                            <div style="font-weight:700; color:#1e293b;">{{ $log->supplier?->name ?: '—' }}</div>
-                            @if($log->supplier?->company_name)
-                                <div style="font-size:11px; color:#64748b;">{{ $log->supplier->company_name }}</div>
-                            @endif
-                        </td>
-                        <td style="font-family:monospace; font-size:12px; font-weight:600; color:#475569;">
-                            {{ $log->reference_number ?: ('VCH-' . str_pad($log->id, 5, '0', STR_PAD_LEFT)) }}
-                        </td>
-                        <td>
-                            @php
-                                $m = strtolower($log->payment_method ?? 'cash');
-                                $badgeCls = match($m) {
-                                    'cash' => 'bg-success-subtle text-success',
-                                    'bank' => 'bg-info-subtle text-info',
-                                    'cheque' => 'bg-warning-subtle text-warning',
-                                    'online' => 'bg-primary-subtle text-primary',
-                                    default => 'bg-secondary-subtle text-secondary',
-                                };
-                            @endphp
-                            <span class="badge {{ $badgeCls }} border" style="font-size:11px; text-transform:uppercase; font-weight:700;">
-                                {{ $log->payment_method ?: 'Cash' }}
-                            </span>
-                        </td>
-                        <td style="text-align:right; font-weight:800; font-size:13px; color:#059669; background:#f0fdf4;">
-                            {{ pkr($log->amount, 2) }}
-                        </td>
-                        <td style="font-size:12px; color:#475569;">
-                            <i class="bi bi-person-circle me-1 text-muted"></i>{{ $log->user?->name ?: 'Admin / System' }}
-                        </td>
-                        <td style="font-size:11px; color:#64748b; max-width:250px;">
-                            {{ $log->notes ?: '—' }}
                         </td>
                     </tr>
                     @endforeach
