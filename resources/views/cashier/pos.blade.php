@@ -3432,8 +3432,9 @@ function addSaleItemToReturn(idx) {
     }
 
     // Check if already in returnItemsList
-    const existing = returnItemsList.find(i => i.sale_item_id === saleItem.sale_item_id);
-    if (existing) {
+    const existingIndex = returnItemsList.findIndex(i => i.sale_item_id === saleItem.sale_item_id);
+    if (existingIndex !== -1) {
+        const existing = returnItemsList.splice(existingIndex, 1)[0];
         const newQty = existing.quantity + qtyToAdd;
         if (newQty > saleItem.quantity_returnable) {
             toast(`Maximum returnable quantity for this item is ${saleItem.quantity_returnable}!`, 'w');
@@ -3441,8 +3442,9 @@ function addSaleItemToReturn(idx) {
         } else {
             existing.quantity = newQty;
         }
+        returnItemsList.unshift(existing);
     } else {
-        returnItemsList.push({
+        returnItemsList.unshift({
             product_id:          saleItem.product_id,
             sale_item_id:        saleItem.sale_item_id,
             product_name:        saleItem.product_name,
@@ -3540,11 +3542,13 @@ function onReturnProductSearchKeydown(e) {
 }
 
 function addProductToReturn(product) {
-    const existing = returnItemsList.find(item => item.product_id === product.id && !item.sale_item_id);
-    if (existing) {
+    const existingIndex = returnItemsList.findIndex(item => item.product_id === product.id && !item.sale_item_id);
+    if (existingIndex !== -1) {
+        const existing = returnItemsList.splice(existingIndex, 1)[0];
         existing.quantity += 1;
+        returnItemsList.unshift(existing);
     } else {
-        returnItemsList.push({
+        returnItemsList.unshift({
             product_id:      product.id,
             sale_item_id:    null,
             product_name:    product.name,
