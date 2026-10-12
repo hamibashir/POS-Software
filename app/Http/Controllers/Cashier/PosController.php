@@ -450,7 +450,7 @@ class PosController extends Controller
             'customer_name'       => ['nullable', 'string', 'max:150'],
             'customer_phone'      => ['nullable', 'string', 'max:30'],
             'employee_id'         => ['nullable', 'integer', 'exists:employees,id'],
-            'refund_method'       => ['required', 'in:cash,card,credit_adjustment'],
+            'refund_method'       => ['required', 'string', 'in:cash,card,credit_adjustment'],
             'refund_amount'       => ['nullable', 'numeric', 'min:0'],
             'reason'              => ['nullable', 'string', 'max:150'],
             'notes'               => ['nullable', 'string', 'max:500'],
@@ -460,6 +460,9 @@ class PosController extends Controller
             'items.*.quantity'     => ['required', 'numeric', 'gt:0'],
             'items.*.unit_price'   => ['required', 'numeric', 'min:0'],
             'items.*.reason'       => ['nullable', 'string', 'max:150'],
+        ], [
+            'refund_method.required' => 'Please select the refund method manually to proceed with this return.',
+            'refund_method.in'       => 'Invalid refund method selected. Must be Cash, Card, or Adjust Credit.',
         ]);
 
         try {

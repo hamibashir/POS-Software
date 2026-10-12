@@ -1090,6 +1090,15 @@
         font-weight: 900;
         color: #059669;
     }
+
+    @keyframes returnShakeAnim {
+        0%, 100% { transform: translateX(0); }
+        20%, 60% { transform: translateX(-6px); }
+        40%, 80% { transform: translateX(6px); }
+    }
+    .shake-alert {
+        animation: returnShakeAnim 0.4s ease-in-out;
+    }
 </style>
 @endpush
 
@@ -1919,16 +1928,51 @@
                         </div>
                     </div>
 
-                    {{-- Refund Method & Reason --}}
-                    <div class="row g-2 mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label fw-bold small text-secondary">Refund Method <span class="text-danger">*</span></label>
-                            <select id="posReturnRefundMethod" class="form-select" style="height:42px; border-radius:10px;" required>
-                                <option value="cash" selected>💵 Cash Refund (Counter Drawer)</option>
-                                <option value="card">💳 Card / Bank Transfer</option>
-                                <option value="credit_adjustment" id="posReturnOptionCreditAdj" style="display:none;">💼 Adjust Customer Credit Due</option>
-                            </select>
+                    {{-- Refund Method Selection (Mandatory Manual Selection Every Time) --}}
+                    <div class="mb-3 p-3 rounded-3" id="posReturnRefundMethodContainer" style="background:#fef2f2; border:1.5px solid #fecaca; transition:all 0.2s;">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="form-label fw-bold small mb-0 text-danger d-flex align-items-center gap-1">
+                                <span class="material-symbols-outlined" style="font-size:18px;">payments</span>
+                                Refund Method <span class="badge bg-danger text-white ms-1" style="font-size:10px; font-weight:700;">REQUIRED MANUALLY</span>
+                            </label>
+                            <span class="badge bg-white text-secondary border px-2 py-1" style="font-size:11px;" id="posReturnSelectedMethodBadge">
+                                ⚠️ Not Selected
+                            </span>
                         </div>
+
+                        {{-- Quick 1-Click Method Selection Buttons --}}
+                        <div class="d-flex gap-2 mb-2 flex-wrap" id="posReturnMethodBtnGroup">
+                            <button type="button" class="btn btn-outline-danger flex-fill py-2 fw-bold text-nowrap return-method-btn" id="posReturnBtnCash" onclick="setReturnRefundMethod('cash')" style="border-radius:8px; font-size:12.5px;">
+                                💵 Cash Refund (Drawer)
+                            </button>
+                            <button type="button" class="btn btn-outline-primary flex-fill py-2 fw-bold text-nowrap return-method-btn" id="posReturnBtnCard" onclick="setReturnRefundMethod('card')" style="border-radius:8px; font-size:12.5px;">
+                                💳 Card / Bank Refund
+                            </button>
+                            <button type="button" class="btn btn-outline-success flex-fill py-2 fw-bold text-nowrap return-method-btn" id="posReturnBtnCreditAdj" onclick="setReturnRefundMethod('credit_adjustment')" style="border-radius:8px; font-size:12.5px; display:none;">
+                                💼 Adjust Customer Due
+                            </button>
+                        </div>
+
+                        {{-- Dropdown Select (Synced with Buttons) --}}
+                        <div class="row g-2 align-items-center">
+                            <div class="col-12">
+                                <select id="posReturnRefundMethod" class="form-select fw-bold" style="height:42px; border-radius:10px; border-color:#fca5a5; background-color:#fff;" required onchange="setReturnRefundMethod(this.value)">
+                                    <option value="" selected disabled>⚠️ -- Must Select Refund Method (Required) --</option>
+                                    <option value="cash">💵 Cash Refund (Counter Drawer)</option>
+                                    <option value="card">💳 Card / Bank Transfer</option>
+                                    <option value="credit_adjustment" id="posReturnOptionCreditAdj" style="display:none;">💼 Adjust Customer Credit Due</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div id="posReturnRefundMethodAlert" class="mt-2 text-danger fw-bold small" style="display:none;">
+                            <span class="material-symbols-outlined align-middle" style="font-size:16px;">error</span>
+                            Please choose how this refund is given (Cash, Card, or Adjust Credit) before proceeding!
+                        </div>
+                    </div>
+
+                    {{-- Return Reason & Notes --}}
+                    <div class="row g-2 mb-3">
                         <div class="col-md-6">
                             <label class="form-label fw-bold small text-secondary">Return Reason</label>
                             <select id="posReturnReason" class="form-select" style="height:42px; border-radius:10px;">
@@ -1939,12 +1983,10 @@
                                 <option value="Other">Other</option>
                             </select>
                         </div>
-                    </div>
-
-                    {{-- Notes --}}
-                    <div class="mb-3">
-                        <label class="form-label fw-bold small text-secondary">Notes / Remarks</label>
-                        <input type="text" id="posReturnNotes" class="form-control" style="border-radius:10px;" placeholder="Optional notes about the return condition...">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-secondary">Notes / Remarks</label>
+                            <input type="text" id="posReturnNotes" class="form-control" style="height:42px; border-radius:10px;" placeholder="Optional notes about return condition...">
+                        </div>
                     </div>
 
                     {{-- Total Refund Callout --}}
@@ -1963,6 +2005,57 @@
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- ══════════ PROMPT MODAL: ASK REFUND METHOD ══════════ --}}
+<div class="modal fade" id="posReturnAskMethodModal" tabindex="-1" style="z-index: 1080;">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 440px;">
+        <div class="modal-content shadow-lg" style="border-radius:18px; border:2px solid #ef4444; overflow:hidden;">
+            <div class="modal-header py-3 px-4 bg-danger text-white border-0">
+                <h6 class="modal-title fw-bold d-flex align-items-center gap-2 mb-0">
+                    <span class="material-symbols-outlined" style="font-size:22px;">help_outline</span>
+                    Select Refund Method
+                </h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <div class="text-secondary small fw-semibold mb-1">Total Refund to be Paid:</div>
+                <div class="fs-2 fw-bold text-danger mb-3" id="posAskMethodTotalDisplay">PKR 0.00</div>
+                <div class="alert alert-warning py-2 px-3 small text-start mb-3 d-flex align-items-center gap-2" style="border-radius:10px;">
+                    <span class="material-symbols-outlined text-warning" style="font-size:22px;">warning</span>
+                    <span>Refund method is <strong>required manually</strong> for every return before proceeding.</span>
+                </div>
+                <p class="text-dark small fw-bold mb-2 text-start">How is this refund being issued?</p>
+
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-outline-danger py-2 px-3 fw-bold text-start d-flex align-items-center justify-content-between" onclick="chooseRefundMethodFromPrompt('cash')" style="border-radius:10px; font-size:13.5px;">
+                        <span class="d-flex align-items-center gap-2">
+                            <span class="fs-5">💵</span>
+                            <span>Cash Refund</span>
+                        </span>
+                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1" style="font-size:11px;">Counter Drawer</span>
+                    </button>
+                    <button type="button" class="btn btn-outline-primary py-2 px-3 fw-bold text-start d-flex align-items-center justify-content-between" onclick="chooseRefundMethodFromPrompt('card')" style="border-radius:10px; font-size:13.5px;">
+                        <span class="d-flex align-items-center gap-2">
+                            <span class="fs-5">💳</span>
+                            <span>Card / Bank Transfer</span>
+                        </span>
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1" style="font-size:11px;">Bank / Card</span>
+                    </button>
+                    <button type="button" class="btn btn-outline-success py-2 px-3 fw-bold text-start d-flex align-items-center justify-content-between" id="posAskBtnCreditAdj" style="display:none; border-radius:10px; font-size:13.5px;" onclick="chooseRefundMethodFromPrompt('credit_adjustment')">
+                        <span class="d-flex align-items-center gap-2">
+                            <span class="fs-5">💼</span>
+                            <span>Adjust Customer Credit</span>
+                        </span>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1" style="font-size:11px;">Khata / Due Balance</span>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer py-2 px-4 bg-light border-0 justify-content-end">
+                <button type="button" class="btn btn-secondary btn-sm fw-bold px-3" data-bs-dismiss="modal" style="border-radius:8px;">Cancel / Do Not Proceed</button>
             </div>
         </div>
     </div>
@@ -3344,6 +3437,7 @@ let returnSearchTimeout = null;
 let currentReturnSearchResults = [];
 
 function openCustomerReturnModal() {
+    resetReturnRefundMethod();
     posCustomerReturnModal.show();
     setTimeout(() => {
         const directInput = document.getElementById('posReturnProductSearchInput');
@@ -3420,9 +3514,6 @@ function renderReturnSaleDetails(sale) {
         if (empSelect) {
             empSelect.value = sale.employee_id;
             onReturnEmployeeChange(empSelect);
-        }
-        if (sale.payment_method === 'credit') {
-            document.getElementById('posReturnRefundMethod').value = 'credit_adjustment';
         }
     }
 
@@ -3750,22 +3841,177 @@ function updateReturnGrandTotal() {
     document.getElementById('posReturnTotalDisplay').textContent = 'PKR ' + grandTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
 }
 
+function resetReturnRefundMethod() {
+    const sel = document.getElementById('posReturnRefundMethod');
+    if (sel) sel.value = '';
+
+    const badge = document.getElementById('posReturnSelectedMethodBadge');
+    if (badge) {
+        badge.className = 'badge bg-white text-secondary border px-2 py-1';
+        badge.textContent = '⚠️ Not Selected';
+    }
+
+    const container = document.getElementById('posReturnRefundMethodContainer');
+    if (container) {
+        container.style.borderColor = '#fecaca';
+        container.style.backgroundColor = '#fef2f2';
+        container.classList.remove('shake-alert');
+    }
+
+    const alertEl = document.getElementById('posReturnRefundMethodAlert');
+    if (alertEl) alertEl.style.display = 'none';
+
+    document.querySelectorAll('.return-method-btn').forEach(btn => {
+        btn.classList.remove('active', 'btn-danger', 'btn-primary', 'btn-success');
+        if (btn.id === 'posReturnBtnCash') btn.classList.add('btn-outline-danger');
+        if (btn.id === 'posReturnBtnCard') btn.classList.add('btn-outline-primary');
+        if (btn.id === 'posReturnBtnCreditAdj') btn.classList.add('btn-outline-success');
+    });
+}
+
+function setReturnRefundMethod(method) {
+    if (!method) return;
+
+    const sel = document.getElementById('posReturnRefundMethod');
+    if (sel) sel.value = method;
+
+    const badge = document.getElementById('posReturnSelectedMethodBadge');
+    const container = document.getElementById('posReturnRefundMethodContainer');
+    const alertEl = document.getElementById('posReturnRefundMethodAlert');
+    if (alertEl) alertEl.style.display = 'none';
+
+    document.querySelectorAll('.return-method-btn').forEach(btn => {
+        btn.classList.remove('active', 'btn-danger', 'btn-primary', 'btn-success');
+        if (btn.id === 'posReturnBtnCash') btn.classList.add('btn-outline-danger');
+        if (btn.id === 'posReturnBtnCard') btn.classList.add('btn-outline-primary');
+        if (btn.id === 'posReturnBtnCreditAdj') btn.classList.add('btn-outline-success');
+    });
+
+    if (method === 'cash') {
+        const btn = document.getElementById('posReturnBtnCash');
+        if (btn) {
+            btn.classList.remove('btn-outline-danger');
+            btn.classList.add('active', 'btn-danger');
+        }
+        if (badge) {
+            badge.className = 'badge bg-danger text-white px-2 py-1';
+            badge.textContent = '💵 Cash Refund Selected';
+        }
+        if (container) {
+            container.style.borderColor = '#bbf7d0';
+            container.style.backgroundColor = '#f0fdf4';
+        }
+    } else if (method === 'card') {
+        const btn = document.getElementById('posReturnBtnCard');
+        if (btn) {
+            btn.classList.remove('btn-outline-primary');
+            btn.classList.add('active', 'btn-primary');
+        }
+        if (badge) {
+            badge.className = 'badge bg-primary text-white px-2 py-1';
+            badge.textContent = '💳 Card Refund Selected';
+        }
+        if (container) {
+            container.style.borderColor = '#bfdbfe';
+            container.style.backgroundColor = '#eff6ff';
+        }
+    } else if (method === 'credit_adjustment') {
+        const btn = document.getElementById('posReturnBtnCreditAdj');
+        if (btn) {
+            btn.classList.remove('btn-outline-success');
+            btn.classList.add('active', 'btn-success');
+        }
+        if (badge) {
+            badge.className = 'badge bg-success text-white px-2 py-1';
+            badge.textContent = '💼 Khata Adjustment Selected';
+        }
+        if (container) {
+            container.style.borderColor = '#bbf7d0';
+            container.style.backgroundColor = '#f0fdf4';
+        }
+    }
+}
+
+function openSelectRefundMethodPrompt() {
+    let grandTotal = 0;
+    returnItemsList.forEach(item => {
+        grandTotal += (item.quantity * item.unit_price);
+    });
+    const totalEl = document.getElementById('posAskMethodTotalDisplay');
+    if (totalEl) {
+        totalEl.textContent = 'PKR ' + grandTotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+
+    const empId = document.getElementById('posReturnEmployeeSelect').value;
+    const askCreditBtn = document.getElementById('posAskBtnCreditAdj');
+    if (askCreditBtn) {
+        askCreditBtn.style.display = empId ? 'flex' : 'none';
+    }
+
+    const promptModalEl = document.getElementById('posReturnAskMethodModal');
+    if (promptModalEl) {
+        const promptModal = bootstrap.Modal.getInstance(promptModalEl) || new bootstrap.Modal(promptModalEl);
+        promptModal.show();
+    }
+}
+
+function chooseRefundMethodFromPrompt(method) {
+    const promptModalEl = document.getElementById('posReturnAskMethodModal');
+    if (promptModalEl) {
+        const promptModal = bootstrap.Modal.getInstance(promptModalEl);
+        if (promptModal) promptModal.hide();
+    }
+
+    setReturnRefundMethod(method);
+
+    // Automatically resume submit now that cashier has manually specified the refund method
+    submitCustomerReturn();
+}
+
 function onReturnEmployeeChange(sel) {
     const creditOption = document.getElementById('posReturnOptionCreditAdj');
-    if (sel.value) {
-        creditOption.style.display = 'block';
-        creditOption.selected = true;
+    const creditBtn = document.getElementById('posReturnBtnCreditAdj');
+    const promptCreditBtn = document.getElementById('posAskBtnCreditAdj');
+    if (sel && sel.value) {
+        if (creditOption) creditOption.style.display = 'block';
+        if (creditBtn) creditBtn.style.display = 'inline-block';
+        if (promptCreditBtn) promptCreditBtn.style.display = 'flex';
     } else {
-        creditOption.style.display = 'none';
-        document.getElementById('posReturnRefundMethod').value = 'cash';
+        if (creditOption) creditOption.style.display = 'none';
+        if (creditBtn) creditBtn.style.display = 'none';
+        if (promptCreditBtn) promptCreditBtn.style.display = 'none';
+        const currentMethod = (document.getElementById('posReturnRefundMethod').value || '').trim();
+        if (currentMethod === 'credit_adjustment') {
+            resetReturnRefundMethod();
+        }
     }
 }
 
 async function submitCustomerReturn(e) {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
 
     if (returnItemsList.length === 0) {
         toast('Please add at least one product to return!', 'w');
+        return;
+    }
+
+    const refundMethodInput = document.getElementById('posReturnRefundMethod');
+    const refundMethod = refundMethodInput ? refundMethodInput.value.trim() : '';
+
+    if (!refundMethod) {
+        const alertEl = document.getElementById('posReturnRefundMethodAlert');
+        if (alertEl) alertEl.style.display = 'block';
+
+        const container = document.getElementById('posReturnRefundMethodContainer');
+        if (container) {
+            container.classList.remove('shake-alert');
+            void container.offsetWidth; // re-flow
+            container.classList.add('shake-alert');
+            container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        toast('Refund method is required! Please select refund method to proceed.', 'e');
+        openSelectRefundMethodPrompt();
         return;
     }
 
@@ -3788,7 +4034,7 @@ async function submitCustomerReturn(e) {
                 customer_name:  document.getElementById('posReturnCustomerName').value.trim() || 'Walk-in Customer',
                 customer_phone: document.getElementById('posReturnCustomerPhone').value.trim() || null,
                 employee_id:    empId ? parseInt(empId) : null,
-                refund_method:  document.getElementById('posReturnRefundMethod').value,
+                refund_method:  refundMethod,
                 reason:         document.getElementById('posReturnReason').value,
                 notes:          document.getElementById('posReturnNotes').value.trim() || null,
                 items: returnItemsList.map(item => ({
@@ -3829,6 +4075,7 @@ async function submitCustomerReturn(e) {
             currentReturnSale = null;
             renderReturnItemsTable();
             document.getElementById('posCustomerReturnForm').reset();
+            resetReturnRefundMethod();
             document.getElementById('posReturnCustomerName').value = 'Walk-in Customer';
             const invDetails = document.getElementById('posReturnInvoiceDetailsCard');
             if (invDetails) invDetails.style.display = 'none';

@@ -204,4 +204,25 @@ class PosReturnTest extends TestCase
             ->assertSee('Chrome Basin Mixer')
             ->assertSee('Hassan Corporation');
     }
+
+    public function test_return_fails_when_refund_method_is_missing_or_empty(): void
+    {
+        $payload = [
+            'refund_amount'  => 3500.00,
+            'customer_name'  => 'Customer ABC',
+            'items'          => [
+                [
+                    'product_id' => $this->product->id,
+                    'quantity'   => 1,
+                    'unit_price' => 3500.00,
+                ],
+            ],
+        ];
+
+        $response = $this->actingAs($this->cashier)
+            ->postJson(route('cashier.pos.process-return'), $payload);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['refund_method']);
+    }
 }
