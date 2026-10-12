@@ -28,13 +28,33 @@ class PosController extends Controller
     /**
      * Show a printable receipt for a completed sale.
      */
-    public function receipt(Sale $sale)
+    public function receipt(Sale $sale, Request $request)
     {
         // Only allow viewing receipts for valid (non-voided) sales
         abort_if($sale->status === 'voided', 404);
 
         $sale->load(['items', 'user', 'employee']);
-        return view('cashier.receipt', compact('sale'));
+
+        $currentInvoicedBill   = (float) $sale->total_amount;
+        $totalOutstanding      = 0.0;
+        $previousRemainingBill = 0.0;
+
+        if ($sale->payment_method === 'credit' && $sale->employee) {
+            $totalOutstanding = (float) $sale->employee->pending_payment;
+            $previousRemainingBill = max(0, round($totalOutstanding - $currentInvoicedBill, 2));
+        }
+
+        $withPrevious = $request->has('with_previous')
+            ? $request->boolean('with_previous')
+            : null;
+
+        return view('cashier.receipt', compact(
+            'sale',
+            'currentInvoicedBill',
+            'previousRemainingBill',
+            'totalOutstanding',
+            'withPrevious'
+        ));
     }
 
     /**
@@ -171,6 +191,7 @@ class PosController extends Controller
                 'success'        => true,
                 'sale_id'        => $sale->id,
                 'invoice_number' => $sale->invoice_number,
+                'payment_method' => $sale->payment_method,
                 'total_amount'   => number_format($sale->total_amount, 2),
                 'paid_amount'    => number_format($sale->paid_amount, 2),
                 'change_amount'  => number_format($sale->change_amount, 2),

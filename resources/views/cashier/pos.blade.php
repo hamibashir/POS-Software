@@ -1487,6 +1487,33 @@
             </div>
             <p style="font-size:13px; color:#64748b; margin-top:12px;" id="receiptItems">—</p>
 
+            {{-- Credit Sale Previous Balance Prompt Option --}}
+            <div id="creditReceiptPromptBox" style="display:none; background:#f0fdf4; border:1.5px solid #86efac; border-radius:12px; padding:12px 14px; margin-top:12px; text-align:start;">
+                <div style="font-size:12.5px; font-weight:800; color:#166534; display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+                    <span class="material-symbols-outlined" style="font-size:18px;">account_balance_wallet</span>
+                    Add Previous Remaining Balance to Bill?
+                </div>
+                <div style="font-size:11.5px; color:#475569; margin-bottom:8px;">
+                    Do you want to show the customer's previous ledger balance on this bill?
+                </div>
+                <div class="d-flex gap-2">
+                    <label class="d-flex align-items-center gap-2 p-2 rounded" style="background:#fff; border:1.5px solid #86efac; cursor:pointer; flex:1;">
+                        <input type="radio" name="creditWithPrevOption" value="1" checked onchange="updateReceiptPrintUrl()">
+                        <div>
+                            <div style="font-size:12px; font-weight:700; color:#14532d;">Yes (With Previous)</div>
+                            <div style="font-size:10px; color:#64748b;">Current + Previous = Total Outstanding</div>
+                        </div>
+                    </label>
+                    <label class="d-flex align-items-center gap-2 p-2 rounded" style="background:#fff; border:1px solid #cbd5e1; cursor:pointer; flex:1;">
+                        <input type="radio" name="creditWithPrevOption" value="0" onchange="updateReceiptPrintUrl()">
+                        <div>
+                            <div style="font-size:12px; font-weight:700; color:#1e293b;">No (Current Only)</div>
+                            <div style="font-size:10px; color:#64748b;">Total Amount of this bill only</div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
             <div style="display:flex; gap:10px; margin-top:14px;">
                 <a id="printReceiptBtn" href="#" target="_blank" rel="noopener"
                    style="flex:1; background:#f8fafc; color:#334155; border:1.5px solid #cbd5e1; border-radius:10px;
@@ -2862,14 +2889,37 @@ async function completeSale() {
 /* ── Receipt Modal Handling ──────────────────── */
 const receiptModal = new bootstrap.Modal(document.getElementById('receiptModal'));
 
+let currentReceiptBaseUrl = '';
+
 function showReceipt(data) {
+    currentReceiptBaseUrl = data.receipt_url;
     document.getElementById('receiptInvoice').textContent = data.invoice_number;
     document.getElementById('receiptTotal').textContent   = 'Rs. ' + data.total_amount;
     document.getElementById('receiptPaid').textContent    = 'Rs. ' + data.paid_amount;
     document.getElementById('receiptChange').textContent  = 'Rs. ' + data.change_amount;
     document.getElementById('receiptItems').textContent   = data.items_count + ' item(s) in this transaction';
-    document.getElementById('printReceiptBtn').href       = data.receipt_url + '?print=1';
+
+    const promptBox = document.getElementById('creditReceiptPromptBox');
+    const isCredit = (data.payment_method === 'credit') || (paymentMethod === 'credit');
+
+    if (isCredit && promptBox) {
+        promptBox.style.display = 'block';
+        const radioYes = document.querySelector('input[name="creditWithPrevOption"][value="1"]');
+        if (radioYes) radioYes.checked = true;
+        updateReceiptPrintUrl();
+    } else {
+        if (promptBox) promptBox.style.display = 'none';
+        document.getElementById('printReceiptBtn').href = data.receipt_url + '?print=1';
+    }
+
     receiptModal.show();
+}
+
+function updateReceiptPrintUrl() {
+    if (!currentReceiptBaseUrl) return;
+    const selected = document.querySelector('input[name="creditWithPrevOption"]:checked');
+    const withPrev = selected ? selected.value : '1';
+    document.getElementById('printReceiptBtn').href = `${currentReceiptBaseUrl}?print=1&with_previous=${withPrev}`;
 }
 
 function closeReceipt() {

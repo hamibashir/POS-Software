@@ -275,6 +275,82 @@ class PosSaleTest extends TestCase
             ->assertDontSee($this->productA->sku);
     }
 
+    public function test_credit_receipt_renders_with_previous_balance(): void
+    {
+        $employee = Employee::create([
+            'name'            => 'Tariq Mehmood',
+            'phone'           => '03215556677',
+            'address'         => 'Rawalpindi',
+            'opening_balance' => 3500.00,
+            'is_active'       => true,
+        ]);
+
+        $sale = Sale::create([
+            'invoice_number'  => 'INV-CREDIT-TEST-01',
+            'user_id'         => $this->cashier->id,
+            'employee_id'     => $employee->id,
+            'customer_name'   => $employee->name,
+            'customer_phone'  => $employee->phone,
+            'subtotal'        => 5000.00,
+            'discount_amount' => 0.00,
+            'tax_amount'      => 0.00,
+            'total_amount'    => 5000.00,
+            'paid_amount'     => 0.00,
+            'change_amount'   => 0.00,
+            'payment_method'  => 'credit',
+            'status'          => 'completed',
+        ]);
+
+        // With previous balance requested
+        $response = $this->actingAs($this->cashier)
+            ->get(route('cashier.pos.receipt', ['sale' => $sale->id, 'with_previous' => 1]));
+
+        $response->assertOk()
+            ->assertSee('Customer Ledger Status')
+            ->assertSee('Current Invoiced Bill')
+            ->assertSee('5,000') // current bill
+            ->assertSee('Previous Remaining Bill')
+            ->assertSee('3,500') // previous balance
+            ->assertSee('OUTSTANDING BALANCE')
+            ->assertSee('8,500'); // total outstanding (5000 + 3500)
+    }
+
+    public function test_credit_receipt_renders_without_previous_balance(): void
+    {
+        $employee = Employee::create([
+            'name'            => 'Rashid Ali',
+            'phone'           => '03335557788',
+            'address'         => 'Islamabad',
+            'opening_balance' => 4000.00,
+            'is_active'       => true,
+        ]);
+
+        $sale = Sale::create([
+            'invoice_number'  => 'INV-CREDIT-TEST-02',
+            'user_id'         => $this->cashier->id,
+            'employee_id'     => $employee->id,
+            'customer_name'   => $employee->name,
+            'customer_phone'  => $employee->phone,
+            'subtotal'        => 6000.00,
+            'discount_amount' => 0.00,
+            'tax_amount'      => 0.00,
+            'total_amount'    => 6000.00,
+            'paid_amount'     => 0.00,
+            'change_amount'   => 0.00,
+            'payment_method'  => 'credit',
+            'status'          => 'completed',
+        ]);
+
+        // Without previous balance requested
+        $response = $this->actingAs($this->cashier)
+            ->get(route('cashier.pos.receipt', ['sale' => $sale->id, 'with_previous' => 0]));
+
+        $response->assertOk()
+            ->assertSee('TOTAL AMOUNT')
+            ->assertSee('6,000')
+            ->assertSee('display:none', false); // with_previous box is hidden
+    }
+
     public function test_sales_listing_can_filter_by_credit_payment_method(): void
     {
         $admin = User::factory()->create(['role' => 'admin', 'is_active' => true]);

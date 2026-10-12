@@ -118,6 +118,105 @@
             color: #ffffff;
         }
 
+        .credit-toggle-bar {
+            width: 100%;
+            max-width: 360px;
+            margin-bottom: 12px;
+            background: #ffffff;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            padding: 8px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            gap: 8px;
+        }
+        .credit-btn-group {
+            display: flex;
+            background: #f1f5f9;
+            border-radius: 6px;
+            padding: 2px;
+            gap: 2px;
+        }
+        .credit-btn-group button {
+            border: none;
+            background: transparent;
+            padding: 4px 8px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #64748b;
+            border-radius: 4px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .credit-btn-group button.active {
+            background: #000000;
+            color: #ffffff;
+        }
+
+        .credit-prompt-banner {
+            width: 100%;
+            max-width: 360px;
+            background: #f0fdf4;
+            border: 1.5px solid #22c55e;
+            border-radius: 8px;
+            padding: 10px 12px;
+            margin-bottom: 12px;
+            font-size: 12px;
+            text-align: left;
+        }
+        .btn-prompt-yes {
+            background: #15803d;
+            color: #ffffff;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 11.5px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .btn-prompt-no {
+            background: #ffffff;
+            color: #334155;
+            border: 1px solid #cbd5e1;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 11.5px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .credit-ledger-summary {
+            border-top: 1px dashed #000000;
+            margin-top: 6px;
+            padding-top: 6px;
+        }
+        .credit-ledger-title {
+            text-align: center;
+            font-weight: 800;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        .calc-row.outstanding-total {
+            border-top: 2px solid #000000;
+            border-bottom: 2px solid #000000;
+            margin: 6px 0;
+            padding: 6px 0;
+            font-size: 15px;
+            font-weight: 800;
+        }
+
         /* ═══════════════════════════════════════════════════════
            THERMAL RECEIPT MONOCHROME BLACK & WHITE DESIGN
         ═══════════════════════════════════════════════════════ */
@@ -430,7 +529,9 @@
             }
 
             .action-bar,
-            .preview-controls {
+            .preview-controls,
+            .credit-toggle-bar,
+            .credit-prompt-banner {
                 display: none !important;
             }
 
@@ -499,6 +600,42 @@
     </div>
 </div>
 
+@if($sale->payment_method === 'credit' && $sale->employee)
+{{-- ── CREDIT SALE PREVIOUS BALANCE CONTROLS (Screen Only) ─────── --}}
+<div class="credit-toggle-bar">
+    <span style="font-weight:700; font-size:11.5px; color:#1e293b;">
+        <i class="bi bi-wallet2 me-1"></i> Previous Balance on Bill:
+    </span>
+    <div class="credit-btn-group">
+        <button type="button" class="{{ $withPrevious !== false ? 'active' : '' }}" id="btnWithPrev" onclick="setPreviousBalanceMode(true)">
+            <i class="bi bi-check2-circle"></i> With Previous
+        </button>
+        <button type="button" class="{{ $withPrevious === false ? 'active' : '' }}" id="btnWithoutPrev" onclick="setPreviousBalanceMode(false)">
+            <i class="bi bi-dash-circle"></i> Current Only
+        </button>
+    </div>
+</div>
+
+@if($withPrevious === null)
+<div class="credit-prompt-banner" id="creditPromptBanner">
+    <div style="font-weight:800; font-size:12.5px; color:#14532d; margin-bottom:2px;">
+        <i class="bi bi-question-circle-fill me-1"></i> Add Previous Remaining Balance to this Bill?
+    </div>
+    <div style="font-size:11px; color:#475569; margin-bottom:8px;">
+        Customer: <strong>{{ $sale->employee->name }}</strong> &bull; Previous Remaining: <strong>{{ pkr($previousRemainingBill, 0) }}</strong>
+    </div>
+    <div style="display:flex; gap:8px;">
+        <button type="button" class="btn-prompt-yes" onclick="setPreviousBalanceMode(true, true)">
+            <i class="bi bi-check-lg"></i> Yes, Show With Previous Bill
+        </button>
+        <button type="button" class="btn-prompt-no" onclick="setPreviousBalanceMode(false, true)">
+            <i class="bi bi-x-lg"></i> No, Current Bill Only
+        </button>
+    </div>
+</div>
+@endif
+@endif
+
 {{-- ── MONOCHROME THERMAL RECEIPT ─────────────────────────────── --}}
 <div class="receipt" id="receiptCard">
 
@@ -557,21 +694,6 @@
         </tbody>
     </table>
 
-    {{-- Credit Customer Balance Info if Credit Sale --}}
-    @if($sale->payment_method === 'credit' && $sale->employee)
-    <div class="credit-customer-box">
-        <div class="credit-customer-title">Customer Ledger Status</div>
-        <div style="display:flex; justify-content:space-between; padding:0 4px;">
-            <span>Current Invoice Billed:</span>
-            <strong>{{ pkr($sale->total_amount, 0) }}</strong>
-        </div>
-        <div style="display:flex; justify-content:space-between; padding:0 4px; margin-top:2px;">
-            <span>Total Outstanding Due:</span>
-            <strong>{{ pkr($sale->employee->pending_payment, 0) }}</strong>
-        </div>
-    </div>
-    @endif
-
     {{-- Purchased Items Table (Clean, NO decimal points, NO product ID, NO unit/type) --}}
     <table class="items-table">
         <thead>
@@ -620,28 +742,58 @@
         </div>
         @endif
 
-        <div class="calc-row grand-total">
-            <span>TOTAL AMOUNT:</span>
-            <span>{{ pkr($sale->total_amount, 0) }}</span>
-        </div>
+        @if($sale->payment_method === 'credit' && $sale->employee)
+            {{-- OPTION 1: WITH PREVIOUS BILL (Customer Ledger Status at the end) --}}
+            <div id="creditTotalsWithPrev" style="{{ $withPrevious === false ? 'display:none;' : '' }}">
+                <div class="credit-ledger-summary">
+                    <div class="credit-ledger-title">*** Customer Ledger Status ***</div>
+                    <div class="calc-row">
+                        <span>Current Invoiced Bill:</span>
+                        <span>{{ pkr($currentInvoicedBill, 0) }}</span>
+                    </div>
+                    <div class="calc-row">
+                        <span>Previous Remaining Bill:</span>
+                        <span>+ {{ pkr($previousRemainingBill, 0) }}</span>
+                    </div>
+                    <div class="calc-row grand-total outstanding-total">
+                        <span>OUTSTANDING BALANCE:</span>
+                        <span>{{ pkr($totalOutstanding, 0) }}</span>
+                    </div>
+                    <div class="calc-row paid-line">
+                        <span>Billed on Credit (Unpaid):</span>
+                        <span>{{ pkr($sale->total_amount, 0) }}</span>
+                    </div>
+                </div>
+            </div>
 
-        @if($sale->payment_method === 'credit')
-        <div class="calc-row paid-line">
-            <span>Billed on Credit (Unpaid):</span>
-            <span>{{ pkr($sale->total_amount, 0) }}</span>
-        </div>
+            {{-- OPTION 2: WITHOUT PREVIOUS BILL (Current Bill Only) --}}
+            <div id="creditTotalsWithoutPrev" style="{{ $withPrevious === false ? '' : 'display:none;' }}">
+                <div class="calc-row grand-total">
+                    <span>TOTAL AMOUNT:</span>
+                    <span>{{ pkr($sale->total_amount, 0) }}</span>
+                </div>
+                <div class="calc-row paid-line">
+                    <span>Billed on Credit (Unpaid):</span>
+                    <span>{{ pkr($sale->total_amount, 0) }}</span>
+                </div>
+            </div>
         @else
-        <div class="calc-row paid-line">
-            <span>Amount Paid ({{ strtoupper($sale->payment_method) }}):</span>
-            <span>{{ pkr($sale->paid_amount, 0) }}</span>
-        </div>
+            <div class="calc-row grand-total">
+                <span>TOTAL AMOUNT:</span>
+                <span>{{ pkr($sale->total_amount, 0) }}</span>
+            </div>
 
-        @if($sale->change_amount > 0)
-        <div class="calc-row change-line">
-            <span>Change Returned:</span>
-            <span>{{ pkr($sale->change_amount, 0) }}</span>
-        </div>
-        @endif
+            <div class="calc-row paid-line">
+                <span>Amount Paid ({{ strtoupper($sale->payment_method) }}):</span>
+                <span>{{ pkr($sale->paid_amount, 0) }}</span>
+            </div>
+
+            @if($sale->change_amount > 0)
+            <div class="calc-row change-line">
+                <span>Change Returned:</span>
+                <span>{{ pkr($sale->change_amount, 0) }}</span>
+            </div>
+            @endif
         @endif
     </div>
 
@@ -673,17 +825,53 @@
         }
     }
 
+    // ── Credit Previous Balance Switcher ──────────────────────────
+    function setPreviousBalanceMode(withPrev, triggerPrint = false) {
+        const withBox    = document.getElementById('creditTotalsWithPrev');
+        const withoutBox = document.getElementById('creditTotalsWithoutPrev');
+        const btnWith    = document.getElementById('btnWithPrev');
+        const btnWithout = document.getElementById('btnWithoutPrev');
+        const banner     = document.getElementById('creditPromptBanner');
+
+        if (banner) banner.style.display = 'none';
+
+        if (withPrev) {
+            if (withBox) withBox.style.display = 'block';
+            if (withoutBox) withoutBox.style.display = 'none';
+            if (btnWith) btnWith.classList.add('active');
+            if (btnWithout) btnWithout.classList.remove('active');
+        } else {
+            if (withBox) withBox.style.display = 'none';
+            if (withoutBox) withoutBox.style.display = 'block';
+            if (btnWith) btnWith.classList.remove('active');
+            if (btnWithout) btnWithout.classList.add('active');
+        }
+
+        const url = new URL(window.location.href);
+        url.searchParams.set('with_previous', withPrev ? '1' : '0');
+        history.replaceState({}, '', url.toString());
+
+        if (triggerPrint && autoPrint) {
+            setTimeout(() => window.print(), 350);
+        }
+    }
+
     // ── Auto-print handling (?print=1) ───────────────────────────
-    const params    = new URLSearchParams(window.location.search);
-    const autoPrint = params.get('print') === '1';
-    const toggle    = document.getElementById('autoPrintToggle');
+    const params          = new URLSearchParams(window.location.search);
+    const autoPrint       = params.get('print') === '1';
+    const hasWithPrev     = params.has('with_previous');
+    const isCreditWithEmp = {{ ($sale->payment_method === 'credit' && $sale->employee) ? 'true' : 'false' }};
+    const toggle          = document.getElementById('autoPrintToggle');
 
     toggle.checked = autoPrint;
 
     if (autoPrint) {
-        window.addEventListener('load', () => {
-            setTimeout(() => window.print(), 500);
-        });
+        // If it's a credit sale and the cashier has not chosen with_previous in URL, wait for banner answer
+        if (!isCreditWithEmp || hasWithPrev) {
+            window.addEventListener('load', () => {
+                setTimeout(() => window.print(), 500);
+            });
+        }
     }
 
     toggle.addEventListener('change', function () {
