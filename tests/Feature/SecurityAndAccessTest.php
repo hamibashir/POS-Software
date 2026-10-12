@@ -85,6 +85,8 @@ class SecurityAndAccessTest extends TestCase
         $response->assertOk()
             ->assertSee('Hassan Corporation')
             ->assertSee('051-8891930')
+            ->assertSee('03325131930')
+            ->assertSee('923325131930')
             ->assertSee('Order by Phone');
     }
 
@@ -95,6 +97,8 @@ class SecurityAndAccessTest extends TestCase
         $response->assertOk()
             ->assertSee('Luxury Sink Tap')
             ->assertSee('051-8891930')
+            ->assertSee('0332-5131930')
+            ->assertSee('923325131930')
             ->assertSee('Call to Order (051-8891930)');
     }
 

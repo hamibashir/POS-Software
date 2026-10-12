@@ -712,7 +712,7 @@
                     <p class="story-desc">Browse our full live inventory below or place your order directly via phone or WhatsApp.</p>
                     <div class="story-actions">
                         <a href="#products" class="btn-story-primary"><i class="bi bi-grid-fill"></i> View Live Stock</a>
-                        <a href="https://wa.me/923000000000" target="_blank" class="btn-story-whatsapp"><i class="bi bi-whatsapp"></i> WhatsApp Order</a>
+                        <a href="https://wa.me/923325131930" target="_blank" class="btn-story-whatsapp"><i class="bi bi-whatsapp"></i> WhatsApp Order (0332-5131930)</a>
                     </div>
                 </div>
 
@@ -773,7 +773,7 @@
             </div>
             <div>
                 <div class="pillar-title">Direct Phone &amp; WhatsApp</div>
-                <div class="pillar-desc">Order on 051-8891930 with instant confirmation.</div>
+                <div class="pillar-desc">Call 051-8891930 or WhatsApp 0332-5131930 with instant confirmation.</div>
             </div>
         </div>
     </section>

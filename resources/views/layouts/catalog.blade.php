@@ -994,9 +994,13 @@
                     </a>
                 </div>
                 @if(config('store.whatsapp'))
+                @php
+                    $waRaw = preg_replace('/[^0-9]/', '', config('store.whatsapp', '03325131930'));
+                    $waClean = str_starts_with($waRaw, '0') ? '92' . substr($waRaw, 1) : $waRaw;
+                @endphp
                 <div class="contact-item">
                     <span class="material-symbols-outlined ms-icon">chat</span>
-                    <a href="https://wa.me/{{ config('store.whatsapp') }}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">{{ config('store.whatsapp') }}</a>
+                    <a href="https://wa.me/{{ $waClean }}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none;">{{ config('store.whatsapp', '03325131930') }} (WhatsApp)</a>
                 </div>
                 @endif
                 @if(config('store.address'))
@@ -1061,6 +1065,12 @@
                 <button type="button" class="btn-copy-number" id="btnCopyPhone" onclick="copyPhoneNumber('051-8891930')">
                     <i class="bi bi-clipboard" id="copyIcon"></i> <span id="copyText">Copy Number</span>
                 </button>
+            </div>
+            <div style="margin-top:10px;">
+                <a href="javascript:void(0)" onclick="openWhatsAppStore(document.getElementById('modalProdName').textContent, document.getElementById('modalProdSku').textContent, document.getElementById('modalProdPrice').textContent)"
+                   class="btn-call-direct" style="background:#25D366; color:#fff !important; width:100%; justify-content:center; text-decoration:none; font-weight:700;">
+                    <i class="bi bi-whatsapp"></i> Order via WhatsApp (0332-5131930)
+                </a>
             </div>
         </div>
 
@@ -1260,7 +1270,7 @@
 
     // Direct WhatsApp Ordering Helper
     function openWhatsAppStore(productName = '', productSku = '', productPrice = '') {
-        const whatsappNumber = "923005086055"; // Store WhatsApp
+        const whatsappNumber = "923325131930"; // Store WhatsApp: 03325131930
         let message = "Assalam o Alaikum Hassan Corporation!\nI am visiting your website (hassanandsonscorp.com)";
         if (productName) {
             message += "\n\nI want to order / check details for this product:\n- Product: " + productName;

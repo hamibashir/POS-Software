@@ -359,7 +359,7 @@
         <div class="store-title">{{ config('store.name', 'Hassan Corporation') }}</div>
         <div class="store-info">
             {{ config('store.address', 'Rafi Commercial, Bahria Town Phase 8, Rawalpindi.') }}<br>
-            Phone: {{ config('store.phone', '051-8891930') }}
+            Phone: {{ config('store.phone', '051-8891930') }} | WhatsApp: {{ config('store.whatsapp', '03325131930') }}
         </div>
     </div>
 
