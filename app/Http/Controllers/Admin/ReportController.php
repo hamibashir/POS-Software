@@ -734,24 +734,45 @@ class ReportController extends Controller
     /* ── Supplier Payments & Purchases Report ─────────────── */
     private function supplierPayments(Request $request): array
     {
-        $from       = $request->get('from', now()->startOfMonth()->toDateString());
-        $to         = $request->get('to',   now()->toDateString());
+        // By default show only today's supplier payments unless a date/range or all_dates is explicitly requested
+        $isDefaultView = !$request->has('from') && !$request->has('to') && !$request->boolean('all_dates');
+
+        if ($isDefaultView) {
+            $from = today()->toDateString();
+            $to   = today()->toDateString();
+        } else {
+            $from = $request->filled('from') ? $request->get('from') : null;
+            $to   = $request->filled('to')   ? $request->get('to')   : null;
+        }
+
         $supplierId = $request->filled('supplier_id') ? (int) $request->get('supplier_id') : null;
         $method     = $request->get('payment_method');
 
         $suppliersList = \App\Models\Supplier::orderBy('name')->get();
 
         // 1. Summary Stats in Date Range
-        $purchasesQuery = DB::table('purchases')
-            ->whereBetween(DB::raw('DATE(COALESCE(received_at, created_at))'), [$from, $to]);
+        $purchasesQuery = DB::table('purchases');
+        if ($from && $to) {
+            $purchasesQuery->whereBetween(DB::raw('DATE(COALESCE(received_at, created_at))'), [$from, $to]);
+        } elseif ($from) {
+            $purchasesQuery->whereDate(DB::raw('COALESCE(received_at, created_at)'), '>=', $from);
+        } elseif ($to) {
+            $purchasesQuery->whereDate(DB::raw('COALESCE(received_at, created_at)'), '<=', $to);
+        }
         if ($supplierId) {
             $purchasesQuery->where('supplier_id', $supplierId);
         }
         $totalPurchases = (float) $purchasesQuery->sum('total_amount');
         $purchaseCount  = (int) $purchasesQuery->count();
 
-        $paymentsQuery = DB::table('supplier_payments')
-            ->whereBetween(DB::raw('DATE(COALESCE(payment_date, created_at))'), [$from, $to]);
+        $paymentsQuery = DB::table('supplier_payments');
+        if ($from && $to) {
+            $paymentsQuery->whereBetween(DB::raw('DATE(COALESCE(payment_date, created_at))'), [$from, $to]);
+        } elseif ($from) {
+            $paymentsQuery->whereDate(DB::raw('COALESCE(payment_date, created_at)'), '>=', $from);
+        } elseif ($to) {
+            $paymentsQuery->whereDate(DB::raw('COALESCE(payment_date, created_at)'), '<=', $to);
+        }
         if ($supplierId) {
             $paymentsQuery->where('supplier_id', $supplierId);
         }
@@ -761,8 +782,14 @@ class ReportController extends Controller
         $totalPaidAmount = (float) $paymentsQuery->sum('amount');
         $paymentCount    = (int) $paymentsQuery->count();
 
-        $returnsQuery = DB::table('purchase_returns')
-            ->whereBetween(DB::raw('DATE(COALESCE(returned_at, created_at))'), [$from, $to]);
+        $returnsQuery = DB::table('purchase_returns');
+        if ($from && $to) {
+            $returnsQuery->whereBetween(DB::raw('DATE(COALESCE(returned_at, created_at))'), [$from, $to]);
+        } elseif ($from) {
+            $returnsQuery->whereDate(DB::raw('COALESCE(returned_at, created_at)'), '>=', $from);
+        } elseif ($to) {
+            $returnsQuery->whereDate(DB::raw('COALESCE(returned_at, created_at)'), '<=', $to);
+        }
         if ($supplierId) {
             $returnsQuery->where('supplier_id', $supplierId);
         }
@@ -776,17 +803,35 @@ class ReportController extends Controller
         $supplierBreakdown = $allSuppliers
             ->when($supplierId, fn($c) => $c->where('id', $supplierId))
             ->map(function ($s) use ($from, $to) {
-                $periodPurchases = (float) $s->purchases()
-                    ->whereBetween(DB::raw('DATE(COALESCE(received_at, created_at))'), [$from, $to])
-                    ->sum('total_amount');
+                $pQuery = $s->purchases();
+                if ($from && $to) {
+                    $pQuery->whereBetween(DB::raw('DATE(COALESCE(received_at, created_at))'), [$from, $to]);
+                } elseif ($from) {
+                    $pQuery->whereDate(DB::raw('COALESCE(received_at, created_at)'), '>=', $from);
+                } elseif ($to) {
+                    $pQuery->whereDate(DB::raw('COALESCE(received_at, created_at)'), '<=', $to);
+                }
+                $periodPurchases = (float) $pQuery->sum('total_amount');
 
-                $periodPaid = (float) $s->payments()
-                    ->whereBetween(DB::raw('DATE(COALESCE(payment_date, created_at))'), [$from, $to])
-                    ->sum('amount');
+                $pmQuery = $s->payments();
+                if ($from && $to) {
+                    $pmQuery->whereBetween(DB::raw('DATE(COALESCE(payment_date, created_at))'), [$from, $to]);
+                } elseif ($from) {
+                    $pmQuery->whereDate(DB::raw('COALESCE(payment_date, created_at)'), '>=', $from);
+                } elseif ($to) {
+                    $pmQuery->whereDate(DB::raw('COALESCE(payment_date, created_at)'), '<=', $to);
+                }
+                $periodPaid = (float) $pmQuery->sum('amount');
 
-                $periodReturns = (float) $s->returns()
-                    ->whereBetween(DB::raw('DATE(COALESCE(returned_at, created_at))'), [$from, $to])
-                    ->sum('total_return_amount');
+                $rQuery = $s->returns();
+                if ($from && $to) {
+                    $rQuery->whereBetween(DB::raw('DATE(COALESCE(returned_at, created_at))'), [$from, $to]);
+                } elseif ($from) {
+                    $rQuery->whereDate(DB::raw('COALESCE(returned_at, created_at)'), '>=', $from);
+                } elseif ($to) {
+                    $rQuery->whereDate(DB::raw('COALESCE(returned_at, created_at)'), '<=', $to);
+                }
+                $periodReturns = (float) $rQuery->sum('total_return_amount');
 
                 $lastPayment = $s->payments()->first(); // latest payment due to model relationship ordering
 
@@ -810,8 +855,15 @@ class ReportController extends Controller
             ->values();
 
         // 3. Payment Transactions Log in Period
-        $paymentLogs = \App\Models\SupplierPayment::with(['supplier', 'user', 'purchase'])
-            ->whereBetween(DB::raw('DATE(COALESCE(payment_date, created_at))'), [$from, $to])
+        $paymentLogsQuery = \App\Models\SupplierPayment::with(['supplier', 'user', 'purchase']);
+        if ($from && $to) {
+            $paymentLogsQuery->whereBetween(DB::raw('DATE(COALESCE(payment_date, created_at))'), [$from, $to]);
+        } elseif ($from) {
+            $paymentLogsQuery->whereDate(DB::raw('COALESCE(payment_date, created_at)'), '>=', $from);
+        } elseif ($to) {
+            $paymentLogsQuery->whereDate(DB::raw('COALESCE(payment_date, created_at)'), '<=', $to);
+        }
+        $paymentLogs = $paymentLogsQuery
             ->when($supplierId, fn($q) => $q->where('supplier_id', $supplierId))
             ->when($method, fn($q) => $q->where('payment_method', $method))
             ->orderByDesc('payment_date')
@@ -819,9 +871,16 @@ class ReportController extends Controller
             ->get();
 
         // 4. Payment Method Breakdown (Cash, Bank, Cheque, Online)
-        $methodBreakdown = DB::table('supplier_payments')
-            ->select('payment_method', DB::raw('SUM(amount) as total_amount'), DB::raw('COUNT(id) as count'))
-            ->whereBetween(DB::raw('DATE(COALESCE(payment_date, created_at))'), [$from, $to])
+        $methodBreakdownQuery = DB::table('supplier_payments')
+            ->select('payment_method', DB::raw('SUM(amount) as total_amount'), DB::raw('COUNT(id) as count'));
+        if ($from && $to) {
+            $methodBreakdownQuery->whereBetween(DB::raw('DATE(COALESCE(payment_date, created_at))'), [$from, $to]);
+        } elseif ($from) {
+            $methodBreakdownQuery->whereDate(DB::raw('COALESCE(payment_date, created_at)'), '>=', $from);
+        } elseif ($to) {
+            $methodBreakdownQuery->whereDate(DB::raw('COALESCE(payment_date, created_at)'), '<=', $to);
+        }
+        $methodBreakdown = $methodBreakdownQuery
             ->when($supplierId, fn($q) => $q->where('supplier_id', $supplierId))
             ->groupBy('payment_method')
             ->get();
@@ -830,7 +889,7 @@ class ReportController extends Controller
             'from', 'to', 'supplierId', 'method', 'suppliersList',
             'totalPurchases', 'purchaseCount', 'totalPaidAmount', 'paymentCount',
             'totalReturns', 'totalOutstandingPayables', 'supplierBreakdown',
-            'paymentLogs', 'methodBreakdown'
+            'paymentLogs', 'methodBreakdown', 'isDefaultView'
         );
     }
 }

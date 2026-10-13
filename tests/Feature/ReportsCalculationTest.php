@@ -358,4 +358,96 @@ class ReportsCalculationTest extends TestCase
             ->assertSee('Supplier Paid Amount')
             ->assertSee('8,500.00');
     }
+
+    public function test_supplier_payments_report_defaults_to_todays_payments(): void
+    {
+        $supplier = \App\Models\Supplier::create([
+            'name'            => 'Daily Mill Corp',
+            'opening_balance' => 0,
+            'is_active'       => true,
+        ]);
+
+        // Payment made yesterday
+        \App\Models\SupplierPayment::create([
+            'supplier_id'      => $supplier->id,
+            'user_id'          => $this->admin->id,
+            'amount'           => 14000.00,
+            'payment_method'   => 'cash',
+            'reference_number' => 'VCH-YESTERDAY',
+            'payment_date'     => today()->subDay()->toDateString(),
+            'notes'            => 'Old payment yesterday',
+        ]);
+
+        // Payment made today
+        \App\Models\SupplierPayment::create([
+            'supplier_id'      => $supplier->id,
+            'user_id'          => $this->admin->id,
+            'amount'           => 6500.00,
+            'payment_method'   => 'bank',
+            'reference_number' => 'VCH-TODAY-001',
+            'payment_date'     => today()->toDateString(),
+            'notes'            => 'Fresh payment today',
+        ]);
+
+        // Access tab=suppliers with no date parameters (default view)
+        $response = $this->actingAs($this->admin)
+            ->get(route('admin.reports.index', ['tab' => 'suppliers']));
+
+        $response->assertOk()
+            ->assertSee("Today's Payments", false)
+            ->assertSee('VCH-TODAY-001')
+            ->assertSee('6,500.00')
+            ->assertSee('Fresh payment today')
+            ->assertDontSee('VCH-YESTERDAY')
+            ->assertDontSee('Old payment yesterday');
+    }
+
+    public function test_supplier_payments_report_can_filter_previous_dates_and_all_dates(): void
+    {
+        $supplier = \App\Models\Supplier::create([
+            'name'            => 'Vintage Supplies',
+            'opening_balance' => 0,
+            'is_active'       => true,
+        ]);
+
+        $yesterday = today()->subDay()->toDateString();
+
+        // Payment made yesterday
+        \App\Models\SupplierPayment::create([
+            'supplier_id'      => $supplier->id,
+            'user_id'          => $this->admin->id,
+            'amount'           => 22000.00,
+            'payment_method'   => 'cash',
+            'reference_number' => 'VCH-HISTORIC-99',
+            'payment_date'     => $yesterday,
+            'notes'            => 'Past date cleared voucher',
+        ]);
+
+        // Filter by yesterday's date
+        $filteredResponse = $this->actingAs($this->admin)
+            ->get(route('admin.reports.index', [
+                'tab'  => 'suppliers',
+                'from' => $yesterday,
+                'to'   => $yesterday,
+            ]));
+
+        $filteredResponse->assertOk()
+            ->assertSee('VCH-HISTORIC-99')
+            ->assertSee('22,000.00')
+            ->assertSee('Past date cleared voucher')
+            ->assertSee('Reset to Today');
+
+        // Filter with all_dates
+        $allDatesResponse = $this->actingAs($this->admin)
+            ->get(route('admin.reports.index', [
+                'tab'       => 'suppliers',
+                'all_dates' => 1,
+            ]));
+
+        $allDatesResponse->assertOk()
+            ->assertSee('VCH-HISTORIC-99')
+            ->assertSee('22,000.00')
+            ->assertSee('All Time');
+    }
 }
+

@@ -1080,51 +1080,139 @@
     @endif
 
 @elseif($tab === 'suppliers')
-    {{-- Supplier Payments & Purchases Filter Bar --}}
-    <form method="GET" action="{{ route('admin.reports.index') }}" class="rpt-filter-bar">
-        <input type="hidden" name="tab" value="suppliers">
-        <div class="fg">
-            <label>From Date</label>
-            <input type="date" name="from" value="{{ $from }}" class="pos-input">
+    @php
+        $isToday = (($isDefaultView ?? false) || ($from === today()->toDateString() && $to === today()->toDateString()));
+        $dateLabel = $from && $to 
+            ? ($from === $to ? \Carbon\Carbon::parse($from)->format('M d, Y') : \Carbon\Carbon::parse($from)->format('M d, Y') . ' — ' . \Carbon\Carbon::parse($to)->format('M d, Y'))
+            : ($from ? 'From ' . \Carbon\Carbon::parse($from)->format('M d, Y') : ($to ? 'Up to ' . \Carbon\Carbon::parse($to)->format('M d, Y') : 'All Time'));
+    @endphp
+
+    {{-- Header & Active Scope Badge --}}
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <h5 class="mb-0 fw-bold" style="color:#1e293b;">
+                <i class="bi bi-truck me-2 text-primary"></i>Supplier Payments & Purchases
+            </h5>
+            @if($isToday)
+                <span class="badge bg-primary text-white" style="font-size:12px; font-weight:700; border-radius:8px; padding:4px 10px;">
+                    <i class="bi bi-calendar-check me-1"></i> Today's Payments
+                </span>
+            @elseif($from && $to && $from === $to)
+                <span class="badge bg-secondary text-white" style="font-size:12px; font-weight:700; border-radius:8px; padding:4px 10px;">
+                    <i class="bi bi-calendar-date me-1"></i> Single Day: {{ \Carbon\Carbon::parse($from)->format('d M, Y') }}
+                </span>
+            @elseif($from || $to)
+                <span class="badge bg-secondary text-white" style="font-size:12px; font-weight:700; border-radius:8px; padding:4px 10px;">
+                    <i class="bi bi-calendar-range me-1"></i> Filtered Date Range
+                </span>
+            @else
+                <span class="badge bg-dark text-white" style="font-size:12px; font-weight:700; border-radius:8px; padding:4px 10px;">
+                    <i class="bi bi-infinity me-1"></i> All Time
+                </span>
+            @endif
         </div>
-        <div class="fg">
-            <label>To Date</label>
-            <input type="date" name="to" value="{{ $to }}" class="pos-input">
-        </div>
-        <div class="fg">
-            <label>Supplier</label>
-            <select name="supplier_id" class="pos-input searchable-select" style="min-width:200px;" placeholder="All Suppliers / Search...">
-                <option value="">All Suppliers</option>
-                @foreach($suppliersList as $sup)
-                    @php
-                        $compName = !empty($sup->company_name) && strcasecmp(trim($sup->company_name), trim($sup->name)) !== 0 ? " ({$sup->company_name})" : '';
-                    @endphp
-                    <option value="{{ $sup->id }}" {{ (string)$supplierId === (string)$sup->id ? 'selected' : '' }}>
-                        {{ $sup->name }}{{ $compName }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
-        <div class="fg">
-            <label>Payment Method</label>
-            <select name="payment_method" class="pos-input" style="min-width:140px;">
-                <option value="">All Methods</option>
-                <option value="cash" {{ $method === 'cash' ? 'selected' : '' }}>Cash</option>
-                <option value="bank" {{ $method === 'bank' ? 'selected' : '' }}>Bank Transfer</option>
-                <option value="cheque" {{ $method === 'cheque' ? 'selected' : '' }}>Cheque</option>
-                <option value="online" {{ $method === 'online' ? 'selected' : '' }}>Online</option>
-            </select>
-        </div>
-        <div class="fg">
-            <label>&nbsp;</label>
-            <div style="display:flex; gap:6px;">
-                <button type="submit" class="btn-pos"><i class="bi bi-funnel"></i> Filter</button>
-                <a href="{{ route('admin.reports.index', ['tab' => 'suppliers']) }}" class="btn-pos btn-pos-secondary" style="text-decoration:none; display:inline-flex; align-items:center;">
-                    <i class="bi bi-arrow-counterclockwise"></i> Reset
+        <p class="text-muted mb-0 w-100" style="font-size:12.5px;">
+            @if($isToday)
+                Showing supplier payment vouchers and transactions for <strong>today ({{ today()->format('d M, Y') }})</strong>. Use the date filters below to search previous dates or all historical records.
+            @elseif($from && $to && $from === $to)
+                Showing supplier payment activity for <strong>{{ \Carbon\Carbon::parse($from)->format('d M, Y') }}</strong>.
+            @elseif($from && $to)
+                Showing supplier payment activity from <strong>{{ \Carbon\Carbon::parse($from)->format('d M, Y') }}</strong> to <strong>{{ \Carbon\Carbon::parse($to)->format('d M, Y') }}</strong>.
+            @elseif($from)
+                Showing supplier payment activity from <strong>{{ \Carbon\Carbon::parse($from)->format('d M, Y') }}</strong> onwards.
+            @elseif($to)
+                Showing supplier payment activity up to <strong>{{ \Carbon\Carbon::parse($to)->format('d M, Y') }}</strong>.
+            @else
+                Showing all historical supplier payment transactions and activity.
+            @endif
+        </p>
+    </div>
+
+    {{-- Filter Card with Quick Date Presets and Form --}}
+    <div style="background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:16px; margin-bottom:20px;">
+        {{-- Quick Date Presets --}}
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3 pb-2 border-bottom">
+            <div class="d-flex align-items-center gap-1 flex-wrap">
+                <span style="font-size:11.5px; font-weight:700; color:#6b7280; text-transform:uppercase; letter-spacing:0.5px; margin-right:4px;">Quick Dates:</span>
+                <a href="{{ route('admin.reports.index', ['tab' => 'suppliers']) }}" 
+                   class="btn btn-sm {{ $isToday ? 'btn-primary' : 'btn-outline-secondary' }}" 
+                   style="border-radius:6px; font-size:12px; font-weight:600; padding:3px 10px;">
+                    <i class="bi bi-calendar-day me-1"></i> Today
+                </a>
+                <a href="{{ route('admin.reports.index', ['tab' => 'suppliers', 'from' => today()->subDay()->toDateString(), 'to' => today()->subDay()->toDateString()]) }}" 
+                   class="btn btn-sm {{ ($from === today()->subDay()->toDateString() && $to === today()->subDay()->toDateString()) ? 'btn-primary' : 'btn-outline-secondary' }}" 
+                   style="border-radius:6px; font-size:12px; font-weight:600; padding:3px 10px;">
+                    Yesterday
+                </a>
+                <a href="{{ route('admin.reports.index', ['tab' => 'suppliers', 'from' => today()->startOfWeek()->toDateString(), 'to' => today()->toDateString()]) }}" 
+                   class="btn btn-sm {{ ($from === today()->startOfWeek()->toDateString() && $to === today()->toDateString()) ? 'btn-primary' : 'btn-outline-secondary' }}" 
+                   style="border-radius:6px; font-size:12px; font-weight:600; padding:3px 10px;">
+                    This Week
+                </a>
+                <a href="{{ route('admin.reports.index', ['tab' => 'suppliers', 'from' => today()->startOfMonth()->toDateString(), 'to' => today()->toDateString()]) }}" 
+                   class="btn btn-sm {{ ($from === today()->startOfMonth()->toDateString() && $to === today()->toDateString()) ? 'btn-primary' : 'btn-outline-secondary' }}" 
+                   style="border-radius:6px; font-size:12px; font-weight:600; padding:3px 10px;">
+                    This Month
+                </a>
+                <a href="{{ route('admin.reports.index', ['tab' => 'suppliers', 'all_dates' => 1]) }}" 
+                   class="btn btn-sm {{ (!$from && !$to && !($isDefaultView ?? false)) ? 'btn-primary' : 'btn-outline-secondary' }}" 
+                   style="border-radius:6px; font-size:12px; font-weight:600; padding:3px 10px;">
+                    All Dates
                 </a>
             </div>
+            @if(!$isToday)
+                <a href="{{ route('admin.reports.index', ['tab' => 'suppliers']) }}" class="btn btn-sm btn-link text-decoration-none text-danger p-0 fw-bold" style="font-size:12px;">
+                    <i class="bi bi-arrow-counterclockwise"></i> Reset to Today's Payments
+                </a>
+            @endif
         </div>
-    </form>
+
+        {{-- Supplier Payments Filter Bar --}}
+        <form method="GET" action="{{ route('admin.reports.index') }}" class="rfilter" style="margin-bottom:0;">
+            <input type="hidden" name="tab" value="suppliers">
+            <div class="fg">
+                <label>From Date</label>
+                <input type="date" name="from" value="{{ $from }}" class="pos-input" style="width:150px;">
+            </div>
+            <div class="fg">
+                <label>To Date</label>
+                <input type="date" name="to" value="{{ $to }}" class="pos-input" style="width:150px;">
+            </div>
+            <div class="fg">
+                <label>Supplier</label>
+                <select name="supplier_id" class="pos-input searchable-select" style="min-width:200px;" placeholder="All Suppliers / Search...">
+                    <option value="">All Suppliers</option>
+                    @foreach($suppliersList as $sup)
+                        @php
+                            $compName = !empty($sup->company_name) && strcasecmp(trim($sup->company_name), trim($sup->name)) !== 0 ? " ({$sup->company_name})" : '';
+                        @endphp
+                        <option value="{{ $sup->id }}" {{ (string)$supplierId === (string)$sup->id ? 'selected' : '' }}>
+                            {{ $sup->name }}{{ $compName }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="fg">
+                <label>Payment Method</label>
+                <select name="payment_method" class="pos-input" style="min-width:140px;">
+                    <option value="">All Methods</option>
+                    <option value="cash" {{ $method === 'cash' ? 'selected' : '' }}>Cash</option>
+                    <option value="bank" {{ $method === 'bank' ? 'selected' : '' }}>Bank Transfer</option>
+                    <option value="cheque" {{ $method === 'cheque' ? 'selected' : '' }}>Cheque</option>
+                    <option value="online" {{ $method === 'online' ? 'selected' : '' }}>Online</option>
+                </select>
+            </div>
+            <div class="fg">
+                <label>&nbsp;</label>
+                <div style="display:flex; gap:6px;">
+                    <button type="submit" class="btn-pos"><i class="bi bi-funnel"></i> Filter</button>
+                    <a href="{{ route('admin.reports.index', ['tab' => 'suppliers']) }}" class="btn-pos btn-pos-secondary" style="text-decoration:none; display:inline-flex; align-items:center;">
+                        <i class="bi bi-arrow-counterclockwise"></i> Reset
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
 
     {{-- Supplier KPI Stat Cards --}}
     <div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom:20px;">
@@ -1154,7 +1242,7 @@
     @if(isset($methodBreakdown) && $methodBreakdown->isNotEmpty())
     <div class="report-card" style="margin-bottom:20px; padding:12px 16px;">
         <div style="font-size:12px; font-weight:700; color:#64748b; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px;">
-            <i class="bi bi-credit-card-2-front me-1 text-primary"></i> Payment Methods Summary ({{ $from }} &mdash; {{ $to }})
+            <i class="bi bi-credit-card-2-front me-1 text-primary"></i> Payment Methods Summary ({{ $dateLabel }})
         </div>
         <div style="display:flex; flex-wrap:wrap; gap:12px;">
             @foreach($methodBreakdown as $mb)
@@ -1174,7 +1262,7 @@
     <div class="report-card" style="margin-bottom:24px;">
         <div class="report-card-header">
             <span><i class="bi bi-receipt me-1 text-success"></i> Supplier Payment Transactions Log</span>
-            <span style="color:#9ca3af;">{{ $from }} &mdash; {{ $to }} ({{ $paymentLogs->count() }} records)</span>
+            <span style="color:#9ca3af;">{{ $dateLabel }} ({{ $paymentLogs->count() }} records)</span>
         </div>
         @if($paymentLogs->isEmpty())
             <div style="padding:40px;text-align:center;color:#9ca3af;">No payment transactions recorded in this period.</div>
@@ -1244,7 +1332,7 @@
     <div class="report-card" style="margin-bottom:20px;">
         <div class="report-card-header">
             <span><i class="bi bi-buildings me-1 text-primary"></i> Supplier Summary Breakdown & Balances</span>
-            <span style="color:#9ca3af;">{{ $from }} &mdash; {{ $to }}</span>
+            <span style="color:#9ca3af;">{{ $dateLabel }}</span>
         </div>
         @if($supplierBreakdown->isEmpty())
             <div style="padding:40px;text-align:center;color:#9ca3af;">No supplier transactions found for this selection.</div>
