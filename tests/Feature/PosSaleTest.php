@@ -622,5 +622,63 @@ class PosSaleTest extends TestCase
                 'stock_quantity' => $this->productA->stock_quantity,
             ]);
     }
+
+    public function test_admin_sales_index_shows_only_todays_sales_by_default_and_allows_previous_dates_filtering(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin', 'is_active' => true]);
+
+        // Sale from yesterday
+        $yesterdaySale = Sale::create([
+            'invoice_number'  => 'INV-YESTERDAY-999',
+            'user_id'         => $admin->id,
+            'subtotal'        => 1200,
+            'discount_amount' => 0,
+            'tax_amount'      => 0,
+            'total_amount'    => 1200,
+            'paid_amount'     => 1200,
+            'change_amount'   => 0,
+            'payment_method'  => 'cash',
+            'status'          => 'completed',
+        ]);
+        Sale::where('id', $yesterdaySale->id)->update(['created_at' => now()->subDay()]);
+
+        // Sale from today
+        $todaySale = Sale::create([
+            'invoice_number'  => 'INV-TODAY-999',
+            'user_id'         => $admin->id,
+            'subtotal'        => 2200,
+            'discount_amount' => 0,
+            'tax_amount'      => 0,
+            'total_amount'    => 2200,
+            'paid_amount'     => 2200,
+            'change_amount'   => 0,
+            'payment_method'  => 'cash',
+            'status'          => 'completed',
+            'created_at'      => now(),
+        ]);
+
+        // 1. Default request: should only show today's sale and NOT yesterday's sale
+        $defaultResponse = $this->actingAs($admin)->get(route('admin.sales.index'));
+        $defaultResponse->assertOk()
+            ->assertSee('INV-TODAY-999')
+            ->assertDontSee('INV-YESTERDAY-999');
+
+        // 2. Filter for yesterday's date: should show yesterday's sale and NOT today's sale
+        $yesterdayResponse = $this->actingAs($admin)->get(route('admin.sales.index', [
+            'date_from' => now()->subDay()->toDateString(),
+            'date_to'   => now()->subDay()->toDateString(),
+        ]));
+        $yesterdayResponse->assertOk()
+            ->assertSee('INV-YESTERDAY-999')
+            ->assertDontSee('INV-TODAY-999');
+
+        // 3. Request all dates: should show both sales
+        $allDatesResponse = $this->actingAs($admin)->get(route('admin.sales.index', [
+            'all_dates' => 1,
+        ]));
+        $allDatesResponse->assertOk()
+            ->assertSee('INV-TODAY-999')
+            ->assertSee('INV-YESTERDAY-999');
+    }
 }
 

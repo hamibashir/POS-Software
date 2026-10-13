@@ -19,21 +19,32 @@ class SalesController extends Controller
             ->latest();
 
         // — Search by invoice number or customer
+        $searchClosure = null;
         if ($search = $request->get('search')) {
-            $query->where(function($q) use ($search) {
+            $searchClosure = function($q) use ($search) {
                 $q->where('invoice_number', 'like', "%{$search}%")
                   ->orWhere('customer_name', 'like', "%{$search}%")
                   ->orWhere('customer_phone', 'like', "%{$search}%");
-            });
+            };
+            $query->where($searchClosure);
         }
 
-        // — Filter by date (from)
-        if ($from = $request->get('date_from')) {
+        // — Filter by date: By default show only today's sales unless a date/range or all_dates is explicitly requested
+        $isDefaultView = !$request->has('date_from') && !$request->has('date_to') && !$request->boolean('all_dates');
+
+        if ($isDefaultView) {
+            $from = today()->toDateString();
+            $to   = today()->toDateString();
+        } else {
+            $from = $request->filled('date_from') ? $request->get('date_from') : null;
+            $to   = $request->filled('date_to') ? $request->get('date_to') : null;
+        }
+
+        if ($from) {
             $query->whereDate('created_at', '>=', $from);
         }
 
-        // — Filter by date (to)
-        if ($to = $request->get('date_to')) {
+        if ($to) {
             $query->whereDate('created_at', '<=', $to);
         }
 
@@ -53,10 +64,10 @@ class SalesController extends Controller
                 });
             } elseif ($status === 'completed') {
                 $query->where('status', 'completed')
-                      ->where(function($sub) {
-                          $sub->where('payment_method', '!=', 'credit')
-                              ->orWhereColumn('paid_amount', '>=', 'total_amount');
-                      });
+                       ->where(function($sub) {
+                           $sub->where('payment_method', '!=', 'credit')
+                               ->orWhereColumn('paid_amount', '>=', 'total_amount');
+                       });
             } else {
                 $query->where('status', $status);
             }
@@ -66,10 +77,11 @@ class SalesController extends Controller
 
         // Summary stats (for the filtered query — without pagination)
         $statsQuery = Sale::where('status', '!=', 'voided');
-        if ($from)    { $statsQuery->whereDate('created_at', '>=', $from); }
-        if ($to)      { $statsQuery->whereDate('created_at', '<=', $to); }
-        if ($payment) { $statsQuery->where('payment_method', $payment); }
-        if ($status)  {
+        if ($searchClosure) { $statsQuery->where($searchClosure); }
+        if ($from)          { $statsQuery->whereDate('created_at', '>=', $from); }
+        if ($to)            { $statsQuery->whereDate('created_at', '<=', $to); }
+        if ($payment)       { $statsQuery->where('payment_method', $payment); }
+        if ($status)        {
             if ($status === 'pending') {
                 $statsQuery->where(function($q) {
                     $q->where('status', 'pending')
@@ -149,7 +161,7 @@ class SalesController extends Controller
             'today_returns'    => $todayReturns,
         ];
 
-        return view('admin.sales.index', compact('sales', 'stats'));
+        return view('admin.sales.index', compact('sales', 'stats', 'from', 'to', 'isDefaultView'));
     }
 
     /**

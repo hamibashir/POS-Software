@@ -55,10 +55,43 @@
 @section('content')
 
 {{-- Page header --}}
-<div class="page-hero d-flex align-items-center justify-content-between">
+<div class="page-hero d-flex align-items-center justify-content-between flex-wrap gap-2">
     <div>
-        <h1><i class="bi bi-receipt me-2" style="color:var(--pos-primary)"></i>Sales History</h1>
-        <p>All completed transactions and sales records.</p>
+        <div class="d-flex align-items-center gap-2">
+            <h1 class="mb-0"><i class="bi bi-receipt me-2" style="color:var(--pos-primary)"></i>Sales History</h1>
+            @if($isDefaultView || ($from === today()->toDateString() && $to === today()->toDateString()))
+                <span class="badge bg-primary text-white" style="font-size:12px; font-weight:700; border-radius:8px; padding:4px 10px;">
+                    <i class="bi bi-calendar-check me-1"></i> Today's Sales
+                </span>
+            @elseif($from && $to && $from === $to)
+                <span class="badge bg-secondary text-white" style="font-size:12px; font-weight:700; border-radius:8px; padding:4px 10px;">
+                    <i class="bi bi-calendar-date me-1"></i> Single Day: {{ \Carbon\Carbon::parse($from)->format('d M, Y') }}
+                </span>
+            @elseif($from || $to)
+                <span class="badge bg-secondary text-white" style="font-size:12px; font-weight:700; border-radius:8px; padding:4px 10px;">
+                    <i class="bi bi-calendar-range me-1"></i> Filtered Date Range
+                </span>
+            @else
+                <span class="badge bg-dark text-white" style="font-size:12px; font-weight:700; border-radius:8px; padding:4px 10px;">
+                    <i class="bi bi-infinity me-1"></i> All Time
+                </span>
+            @endif
+        </div>
+        <p class="text-muted mt-1 mb-0" style="font-size:13px;">
+            @if($isDefaultView || ($from === today()->toDateString() && $to === today()->toDateString()))
+                Showing transactions for today ({{ today()->format('d M, Y') }}). Use the date filters below to search previous dates or all records.
+            @elseif($from && $to && $from === $to)
+                Showing sales for {{ \Carbon\Carbon::parse($from)->format('d M, Y') }}.
+            @elseif($from && $to)
+                Showing sales from {{ \Carbon\Carbon::parse($from)->format('d M, Y') }} to {{ \Carbon\Carbon::parse($to)->format('d M, Y') }}.
+            @elseif($from)
+                Showing sales from {{ \Carbon\Carbon::parse($from)->format('d M, Y') }} onwards.
+            @elseif($to)
+                Showing sales up to {{ \Carbon\Carbon::parse($to)->format('d M, Y') }}.
+            @else
+                Showing all historical sales records.
+            @endif
+        </p>
     </div>
     <a href="{{ route('cashier.pos') }}" class="btn-pos text-decoration-none">
         <i class="bi bi-plus-circle"></i> New Sale (POS)
@@ -73,7 +106,7 @@
             <div>
                 <div class="stat-label">Today's Sales</div>
                 <div class="stat-value">{{ $stats['today_sales'] }}</div>
-                <div class="stat-sub">transactions</div>
+                <div class="stat-sub">transactions today</div>
             </div>
         </div>
     </div>
@@ -83,7 +116,7 @@
             <div>
                 <div class="stat-label">Today's Revenue</div>
                 <div class="stat-value">{{ pkr($stats['today_revenue'], 2) }}</div>
-                <div class="stat-sub">cash, card & credit</div>
+                <div class="stat-sub">collected today</div>
             </div>
         </div>
     </div>
@@ -93,7 +126,7 @@
             <div>
                 <div class="stat-label">Filtered Sales</div>
                 <div class="stat-value">{{ $stats['total_sales'] }}</div>
-                <div class="stat-sub">in selected period</div>
+                <div class="stat-sub">in displayed period</div>
             </div>
         </div>
     </div>
@@ -103,7 +136,7 @@
             <div>
                 <div class="stat-label">Filtered Revenue</div>
                 <div class="stat-value">{{ pkr($stats['total_revenue'], 2) }}</div>
-                <div class="stat-sub">in selected period</div>
+                <div class="stat-sub">in displayed period</div>
             </div>
         </div>
     </div>
@@ -111,6 +144,42 @@
 
 {{-- ── Filters ────────────────────────────────────────────── --}}
 <div class="filter-card">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3 pb-2 border-bottom">
+        <div class="d-flex align-items-center gap-1 flex-wrap">
+            <span style="font-size:11.5px; font-weight:700; color:#6b7280; text-transform:uppercase; letter-spacing:0.5px; margin-right:4px;">Quick Dates:</span>
+            <a href="{{ route('admin.sales.index') }}" 
+               class="btn btn-sm {{ ($isDefaultView || ($from === today()->toDateString() && $to === today()->toDateString())) ? 'btn-primary' : 'btn-outline-secondary' }}" 
+               style="border-radius:6px; font-size:12px; font-weight:600; padding:3px 10px;">
+                <i class="bi bi-calendar-day me-1"></i> Today
+            </a>
+            <a href="{{ route('admin.sales.index', ['date_from' => today()->subDay()->toDateString(), 'date_to' => today()->subDay()->toDateString()]) }}" 
+               class="btn btn-sm {{ ($from === today()->subDay()->toDateString() && $to === today()->subDay()->toDateString()) ? 'btn-primary' : 'btn-outline-secondary' }}" 
+               style="border-radius:6px; font-size:12px; font-weight:600; padding:3px 10px;">
+                Yesterday
+            </a>
+            <a href="{{ route('admin.sales.index', ['date_from' => today()->startOfWeek()->toDateString(), 'date_to' => today()->toDateString()]) }}" 
+               class="btn btn-sm {{ ($from === today()->startOfWeek()->toDateString() && $to === today()->toDateString()) ? 'btn-primary' : 'btn-outline-secondary' }}" 
+               style="border-radius:6px; font-size:12px; font-weight:600; padding:3px 10px;">
+                This Week
+            </a>
+            <a href="{{ route('admin.sales.index', ['date_from' => today()->startOfMonth()->toDateString(), 'date_to' => today()->toDateString()]) }}" 
+               class="btn btn-sm {{ ($from === today()->startOfMonth()->toDateString() && $to === today()->toDateString()) ? 'btn-primary' : 'btn-outline-secondary' }}" 
+               style="border-radius:6px; font-size:12px; font-weight:600; padding:3px 10px;">
+                This Month
+            </a>
+            <a href="{{ route('admin.sales.index', ['all_dates' => 1]) }}" 
+               class="btn btn-sm {{ (!$from && !$to && !$isDefaultView) ? 'btn-primary' : 'btn-outline-secondary' }}" 
+               style="border-radius:6px; font-size:12px; font-weight:600; padding:3px 10px;">
+                All Dates
+            </a>
+        </div>
+        @if(!$isDefaultView && ($from !== today()->toDateString() || $to !== today()->toDateString()))
+            <a href="{{ route('admin.sales.index') }}" class="btn btn-sm btn-link text-decoration-none text-danger p-0 fw-bold" style="font-size:12px;">
+                <i class="bi bi-arrow-counterclockwise"></i> Reset to Today's Sales
+            </a>
+        @endif
+    </div>
+
     <form method="GET" action="{{ route('admin.sales.index') }}">
         {{-- Invoice / customer search --}}
         <div class="fg" style="flex:2; min-width:200px;">
@@ -126,14 +195,14 @@
         <div class="fg">
             <label for="date_from">From Date</label>
             <input type="date" id="date_from" name="date_from" class="pos-input"
-                value="{{ request('date_from') }}" style="width:160px;">
+                value="{{ $from }}" style="width:160px;">
         </div>
 
         {{-- Date to --}}
         <div class="fg">
             <label for="date_to">To Date</label>
             <input type="date" id="date_to" name="date_to" class="pos-input"
-                value="{{ request('date_to') }}" style="width:160px;">
+                value="{{ $to }}" style="width:160px;">
         </div>
 
         {{-- Payment method --}}
@@ -164,8 +233,8 @@
                 <button type="submit" class="btn-pos">
                     <i class="bi bi-funnel"></i> Filter
                 </button>
-                <a href="{{ route('admin.sales.index') }}" class="btn-pos-outline text-decoration-none">
-                    <i class="bi bi-x"></i>
+                <a href="{{ route('admin.sales.index') }}" class="btn-pos-outline text-decoration-none" title="Reset to Today's Sales">
+                    <i class="bi bi-arrow-counterclockwise"></i>
                 </a>
             </div>
         </div>
@@ -177,8 +246,18 @@
     @if($sales->isEmpty())
         <div style="padding:60px 24px; text-align:center; color:#9ca3af;">
             <i class="bi bi-receipt" style="font-size:48px; display:block; margin-bottom:12px;"></i>
-            <p style="font-size:15px; font-weight:600;">No sales found</p>
-            <p style="font-size:13px;">Try adjusting your filters, or <a href="{{ route('cashier.pos') }}" style="color:var(--pos-primary);">make a sale</a>.</p>
+            <p style="font-size:15px; font-weight:600; color:#374151;">No sales found</p>
+            @if($isDefaultView || ($from === today()->toDateString() && $to === today()->toDateString()))
+                <p style="font-size:13px; color:#6b7280; max-width:420px; margin:0 auto 16px;">No transactions recorded yet today. You can search previous dates using the filters above or view all historical records.</p>
+                <a href="{{ route('admin.sales.index', ['all_dates' => 1]) }}" class="btn-pos-outline text-decoration-none d-inline-flex align-items-center gap-1 me-2" style="font-size:12.5px;">
+                    <i class="bi bi-clock-history"></i> View All Dates
+                </a>
+            @else
+                <p style="font-size:13px; color:#6b7280; max-width:420px; margin:0 auto 16px;">No sales found matching your current filter criteria. Try adjusting the date range or clearing filters.</p>
+            @endif
+            <a href="{{ route('cashier.pos') }}" class="btn-pos text-decoration-none d-inline-flex align-items-center gap-1" style="font-size:12.5px;">
+                <i class="bi bi-plus-circle"></i> New Sale (POS)
+            </a>
         </div>
     @else
     <table class="pos-table w-100">
