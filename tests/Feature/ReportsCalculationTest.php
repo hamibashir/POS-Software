@@ -487,6 +487,22 @@ class ReportsCalculationTest extends TestCase
 
         $this->assertEquals(7000.00, $todayCreditUnpaid);
         $this->assertEquals(3000.00, $todayCreditUpfrontCash);
+
+        // Now customer clears remaining 7,000 credit
+        \App\Models\EmployeePayment::create([
+            'employee_id'    => $customer->id,
+            'amount'         => 7000.00,
+            'payment_method' => 'cash',
+            'payment_date'   => today(),
+            'user_id'        => $this->admin->id,
+        ]);
+        $customer->reconcileCreditSales();
+
+        $clearedResponse = $this->actingAs($this->admin)
+            ->get(route('admin.dashboard'));
+        $clearedResponse->assertOk();
+
+        $this->assertEquals(0.00, (float) $clearedResponse->viewData('todayCreditUnpaid'));
     }
 }
 

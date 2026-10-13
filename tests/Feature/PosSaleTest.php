@@ -476,6 +476,18 @@ class PosSaleTest extends TestCase
 
         $afterPaymentResponse->assertOk()
             ->assertSee('Completed');
+
+        // Filter by pending: cleared credit sale must NOT appear in pending filter
+        $afterPendingFilter = $this->actingAs($admin)
+            ->get(route('admin.sales.index', ['status' => 'pending']));
+        $afterPendingFilter->assertOk()
+            ->assertDontSee('INV-CREDIT-PENDING-001');
+
+        // Filter by completed: cleared credit sale MUST appear in completed filter
+        $afterCompletedFilter = $this->actingAs($admin)
+            ->get(route('admin.sales.index', ['status' => 'completed']));
+        $afterCompletedFilter->assertOk()
+            ->assertSee('INV-CREDIT-PENDING-001');
     }
 
     public function test_sales_window_today_revenue_and_filtered_revenue_align_on_same_day(): void

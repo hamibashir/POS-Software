@@ -177,6 +177,8 @@ class StaffController extends Controller
     {
         $this->authorizeAdmin();
 
+        $employee->reconcileCreditSales();
+
         $creditSales = $employee->sales()
             ->where('payment_method', 'credit')
             ->where('status', '!=', 'voided')

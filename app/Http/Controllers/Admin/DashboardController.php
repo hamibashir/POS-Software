@@ -105,10 +105,34 @@ class DashboardController extends Controller
             ->where('payment_method', 'card')
             ->sum('total_amount');
 
-        $todayCreditUnpaid = (float) Sale::whereDate('created_at', $today)
+        $todayCreditUnpaidSales = Sale::whereDate('created_at', $today)
             ->where('status', '!=', 'voided')
             ->where('payment_method', 'credit')
-            ->sum(DB::raw('total_amount - paid_amount'));
+            ->with(['employee', 'returns'])
+            ->get();
+
+        $todayCreditUnpaid = 0.0;
+        foreach ($todayCreditUnpaidSales as $creditSale) {
+            if ($creditSale->employee) {
+                if ((float) $creditSale->employee->pending_payment <= 0) {
+                    if ($creditSale->status !== 'completed') {
+                        $creditSale->update(['status' => 'completed']);
+                    }
+                    continue;
+                }
+                $creditSale->employee->reconcileCreditSales();
+                $creditSale->refresh();
+                if ($creditSale->status === 'completed') {
+                    continue;
+                }
+            } elseif ($creditSale->status === 'completed') {
+                continue;
+            }
+
+            $returned = (float) $creditSale->returns->sum('total_return_amount');
+            $due = max(0, (float) $creditSale->total_amount - (float) ($creditSale->paid_amount ?? 0) - $returned);
+            $todayCreditUnpaid += $due;
+        }
 
         $thisMonthExpenses = (float) Expense::whereMonth('expense_date', $today->month)
             ->whereYear('expense_date', $today->year)

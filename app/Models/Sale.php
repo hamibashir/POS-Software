@@ -75,6 +75,12 @@ class Sale extends Model
             if ($this->status === 'completed' || (float)$this->paid_amount >= (float)$this->total_amount) {
                 return 'completed';
             }
+            if ($this->employee && (float)$this->employee->pending_payment <= 0) {
+                if ($this->status !== 'completed') {
+                    $this->update(['status' => 'completed']);
+                }
+                return 'completed';
+            }
             return 'pending';
         }
 

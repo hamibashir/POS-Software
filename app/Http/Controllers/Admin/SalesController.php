@@ -14,7 +14,7 @@ class SalesController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Sale::with(['user:id,name', 'items', 'returns', 'employee:id,name'])
+        $query = Sale::with(['user:id,name', 'items', 'returns', 'employee'])
             ->withCount('items')
             ->latest();
 
@@ -55,22 +55,7 @@ class SalesController extends Controller
 
         // — Filter by status
         if ($status = $request->get('status')) {
-            if ($status === 'pending') {
-                $query->where(function($q) {
-                    $q->where('status', 'pending')
-                      ->orWhere(function($sub) {
-                          $sub->where('payment_method', 'credit')->whereColumn('paid_amount', '<', 'total_amount');
-                      });
-                });
-            } elseif ($status === 'completed') {
-                $query->where('status', 'completed')
-                       ->where(function($sub) {
-                           $sub->where('payment_method', '!=', 'credit')
-                               ->orWhereColumn('paid_amount', '>=', 'total_amount');
-                       });
-            } else {
-                $query->where('status', $status);
-            }
+            $query->where('status', $status);
         }
 
         $sales = $query->paginate(20)->withQueryString();
@@ -82,22 +67,7 @@ class SalesController extends Controller
         if ($to)            { $statsQuery->whereDate('created_at', '<=', $to); }
         if ($payment)       { $statsQuery->where('payment_method', $payment); }
         if ($status)        {
-            if ($status === 'pending') {
-                $statsQuery->where(function($q) {
-                    $q->where('status', 'pending')
-                      ->orWhere(function($sub) {
-                          $sub->where('payment_method', 'credit')->whereColumn('paid_amount', '<', 'total_amount');
-                      });
-                });
-            } elseif ($status === 'completed') {
-                $statsQuery->where('status', 'completed')
-                           ->where(function($sub) {
-                               $sub->where('payment_method', '!=', 'credit')
-                                   ->orWhereColumn('paid_amount', '>=', 'total_amount');
-                           });
-            } else {
-                $statsQuery->where('status', $status);
-            }
+            $statsQuery->where('status', $status);
         }
 
         // Filtered revenue calculation (Direct Cash/Card + Upfront Credit + Cleared Credit Payments - Returns)

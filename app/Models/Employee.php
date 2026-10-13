@@ -81,20 +81,33 @@ class Employee extends Model
      */
     public function reconcileCreditSales(): void
     {
+        // If employee has cleared all balance, mark all valid credit sales as completed
+        if ($this->pending_payment <= 0) {
+            $this->sales()
+                ->where('payment_method', 'credit')
+                ->where('status', '!=', 'voided')
+                ->where('status', '!=', 'completed')
+                ->update(['status' => 'completed']);
+            return;
+        }
+
         $creditSales = $this->sales()
             ->where('payment_method', 'credit')
             ->where('status', '!=', 'voided')
+            ->with('returns')
             ->orderBy('created_at', 'asc')
             ->orderBy('id', 'asc')
             ->get();
 
         $totalPayments = (float) $this->payments()->sum('amount');
-        $remainingPayment = $totalPayments;
+        // Payments first clear historical opening balance if any
+        $remainingPayment = max(0, $totalPayments - (float) ($this->opening_balance ?? 0));
 
         foreach ($creditSales as $sale) {
             $total = (float) $sale->total_amount;
             $upfront = (float) ($sale->paid_amount ?? 0);
-            $dueOnInvoice = max(0, $total - $upfront);
+            $returned = (float) $sale->returns->sum('total_return_amount');
+            $dueOnInvoice = max(0, $total - $upfront - $returned);
 
             if ($dueOnInvoice <= 0) {
                 if ($sale->status !== 'completed') {
