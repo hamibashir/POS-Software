@@ -449,5 +449,45 @@ class ReportsCalculationTest extends TestCase
             ->assertSee('22,000.00')
             ->assertSee('All Time');
     }
+
+    public function test_pending_credit_sales_are_accounted_for_in_dashboard_and_drawer(): void
+    {
+        $customer = \App\Models\Employee::create([
+            'name'      => 'Pending Credit Customer',
+            'phone'     => '03009998877',
+            'address'   => 'Customer Address',
+            'is_active' => true,
+        ]);
+
+        // Sale with pending status: Total 10,000, Upfront Cash 3,000, Unpaid 7,000
+        $sale = \App\Models\Sale::create([
+            'invoice_number'  => 'INV-PENDING-001',
+            'user_id'         => $this->admin->id,
+            'employee_id'     => $customer->id,
+            'customer_name'   => 'Pending Credit Customer',
+            'subtotal'        => 10000.00,
+            'discount_amount' => 0.00,
+            'tax_amount'      => 0.00,
+            'total_amount'    => 10000.00,
+            'paid_amount'     => 3000.00,
+            'change_amount'   => 0.00,
+            'payment_method'  => 'credit',
+            'status'          => 'pending',
+            'created_at'      => today(),
+        ]);
+
+        $response = $this->actingAs($this->admin)
+            ->get(route('admin.dashboard'));
+
+        $response->assertOk();
+
+        // Check view data
+        $todayCreditUnpaid = $response->viewData('todayCreditUnpaid');
+        $todayCreditUpfrontCash = $response->viewData('todayCreditUpfrontCash');
+
+        $this->assertEquals(7000.00, $todayCreditUnpaid);
+        $this->assertEquals(3000.00, $todayCreditUpfrontCash);
+    }
 }
+
 

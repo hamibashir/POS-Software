@@ -53,7 +53,7 @@ class ReportController extends Controller
                 DB::raw('AVG(sales.total_amount) as avg_sale'),
                 DB::raw('SUM(COALESCE(cogs_table.cogs, 0)) as cogs')
             )
-            ->where('sales.status', 'completed')
+            ->where('sales.status', '!=', 'voided')
             ->where('sales.created_at', '>=', $startDate)
             ->groupBy('date')
             ->get()
@@ -218,7 +218,7 @@ class ReportController extends Controller
                 DB::raw("SUM(CASE WHEN sales.payment_method='card' THEN sales.total_amount ELSE 0 END) as card_revenue"),
                 DB::raw("SUM(CASE WHEN sales.payment_method='credit' THEN sales.paid_amount ELSE 0 END) as credit_upfront")
             )
-            ->where('sales.status', 'completed')
+            ->where('sales.status', '!=', 'voided')
             ->whereBetween(DB::raw('DATE(sales.created_at)'), [$from, $to])
             ->first();
 
@@ -305,7 +305,7 @@ class ReportController extends Controller
                 DB::raw("SUM(CASE WHEN sales.payment_method != 'credit' THEN sales.total_amount ELSE sales.paid_amount END) as direct_revenue"),
                 DB::raw('SUM(COALESCE(cogs_table.cogs, 0)) as cogs')
             )
-            ->where('sales.status', 'completed')
+            ->where('sales.status', '!=', 'voided')
             ->whereBetween(DB::raw('DATE(sales.created_at)'), [$from, $to])
             ->groupBy('date')
             ->get()
@@ -631,7 +631,7 @@ class ReportController extends Controller
                 DB::raw('AVG(sale_items.unit_price) as avg_price'),
                 DB::raw('AVG(sale_items.cost_price) as avg_cost')
             )
-            ->where('sales.status', 'completed')
+            ->where('sales.status', '!=', 'voided')
             ->whereBetween(DB::raw('DATE(sales.created_at)'), [$from, $to])
             ->when($categoryId, fn($q) => $q->where('products.category_id', $categoryId))
             ->groupBy(
@@ -675,7 +675,7 @@ class ReportController extends Controller
                 DB::raw('COUNT(DISTINCT sales.id) as order_count'),
                 DB::raw('COUNT(DISTINCT sale_items.product_id) as total_products_sold')
             )
-            ->where('sales.status', 'completed')
+            ->where('sales.status', '!=', 'voided')
             ->whereBetween(DB::raw('DATE(sales.created_at)'), [$from, $to])
             ->when($categoryId, fn($q) => $q->where('products.category_id', $categoryId))
             ->groupBy('categories.id', 'categories.name')
@@ -707,7 +707,7 @@ class ReportController extends Controller
                 DB::raw('COUNT(DISTINCT sales.id) as order_count'),
                 DB::raw('AVG(sale_items.unit_price) as avg_price')
             )
-            ->where('sales.status', 'completed')
+            ->where('sales.status', '!=', 'voided')
             ->whereBetween(DB::raw('DATE(sales.created_at)'), [$from, $to])
             ->when($categoryId, fn($q) => $q->where('products.category_id', $categoryId))
             ->groupBy(

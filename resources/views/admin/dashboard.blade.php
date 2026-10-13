@@ -167,8 +167,13 @@
                 </span>
                 @endif
             </div>
-            <div style="font-size:11.5px; color:#64748b; margin-top:6px;">
-                COGS: <span class="fw-semibold">Rs. {{ number_format($todayCogs, 0) }}</span>
+            <div style="font-size:11.5px; color:#64748b; margin-top:6px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px;">
+                <span>COGS: <span class="fw-semibold">Rs. {{ number_format($todayCogs, 0) }}</span></span>
+                @if($todayCreditUnpaid > 0)
+                <span class="badge bg-warning-subtle text-warning border border-warning-subtle" style="font-size:10px; font-weight:700;" title="Unpaid Credit Given Today">
+                    <i class="bi bi-clock-history me-1"></i>Credit: Rs. {{ number_format($todayCreditUnpaid, 0) }}
+                </span>
+                @endif
             </div>
         </div>
     </div>

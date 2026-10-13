@@ -23,7 +23,7 @@ class DashboardController extends Controller
 
         // ── KPI Cards: Today ──────────────────────────────────────
         $todayDirectSales = (float) Sale::whereDate('created_at', $today)
-            ->where('status', 'completed')
+            ->where('status', '!=', 'voided')
             ->sum(DB::raw("CASE WHEN payment_method != 'credit' THEN total_amount ELSE paid_amount END"));
 
         $todayCreditCleared = (float) DB::table('employee_payments')
@@ -38,7 +38,7 @@ class DashboardController extends Controller
 
         $todayGrossCogs = (float) DB::table('sale_items')
             ->join('sales', 'sales.id', '=', 'sale_items.sale_id')
-            ->where('sales.status', 'completed')
+            ->where('sales.status', '!=', 'voided')
             ->whereDate('sales.created_at', $today)
             ->sum(DB::raw('sale_items.quantity * sale_items.cost_price'));
 
@@ -58,12 +58,12 @@ class DashboardController extends Controller
 
         // ── Cash Drawer Today Calculation (Physical Cash In Hand) ────
         $todayCashSales = (float) Sale::whereDate('created_at', $today)
-            ->where('status', 'completed')
+            ->where('status', '!=', 'voided')
             ->where('payment_method', 'cash')
             ->sum('total_amount');
 
         $todayCreditUpfrontCash = (float) Sale::whereDate('created_at', $today)
-            ->where('status', 'completed')
+            ->where('status', '!=', 'voided')
             ->where('payment_method', 'credit')
             ->sum('paid_amount');
 
@@ -101,12 +101,12 @@ class DashboardController extends Controller
         $todayDrawerCash = $todayOpeningCash + $todayCashInflow - $todayCashOutflow;
 
         $todayCardSales = (float) Sale::whereDate('created_at', $today)
-            ->where('status', 'completed')
+            ->where('status', '!=', 'voided')
             ->where('payment_method', 'card')
             ->sum('total_amount');
 
         $todayCreditUnpaid = (float) Sale::whereDate('created_at', $today)
-            ->where('status', 'completed')
+            ->where('status', '!=', 'voided')
             ->where('payment_method', 'credit')
             ->sum(DB::raw('total_amount - paid_amount'));
 
@@ -117,7 +117,7 @@ class DashboardController extends Controller
         // ── Yesterday ─────────────────────────────────────────────
         $yesterday = $today->copy()->subDay();
         $yesterdayDirectSales = (float) Sale::whereDate('created_at', $yesterday)
-            ->where('status', 'completed')
+            ->where('status', '!=', 'voided')
             ->sum(DB::raw("CASE WHEN payment_method != 'credit' THEN total_amount ELSE paid_amount END"));
         $yesterdayCreditCleared = (float) DB::table('employee_payments')
             ->whereDate(DB::raw('COALESCE(payment_date, created_at)'), $yesterday)
@@ -130,7 +130,7 @@ class DashboardController extends Controller
 
         $yesterdayGrossCogs = (float) DB::table('sale_items')
             ->join('sales', 'sales.id', '=', 'sale_items.sale_id')
-            ->where('sales.status', 'completed')
+            ->where('sales.status', '!=', 'voided')
             ->whereDate('sales.created_at', $yesterday)
             ->sum(DB::raw('sale_items.quantity * sale_items.cost_price'));
 
@@ -162,7 +162,7 @@ class DashboardController extends Controller
         // ── This Month ────────────────────────────────────────────
         $thisMonthDirectRevenue = (float) Sale::whereMonth('created_at', $today->month)
             ->whereYear('created_at', $today->year)
-            ->where('status', 'completed')
+            ->where('status', '!=', 'voided')
             ->sum(DB::raw("CASE WHEN payment_method != 'credit' THEN total_amount ELSE paid_amount END"));
         $thisMonthCreditCleared = (float) DB::table('employee_payments')
             ->whereMonth(DB::raw('COALESCE(payment_date, created_at)'), $today->month)
@@ -177,7 +177,7 @@ class DashboardController extends Controller
 
         $thisMonthGrossCogs = (float) DB::table('sale_items')
             ->join('sales', 'sales.id', '=', 'sale_items.sale_id')
-            ->where('sales.status', 'completed')
+            ->where('sales.status', '!=', 'voided')
             ->whereMonth('sales.created_at', $today->month)
             ->whereYear('sales.created_at', $today->year)
             ->sum(DB::raw('sale_items.quantity * sale_items.cost_price'));
@@ -200,7 +200,7 @@ class DashboardController extends Controller
         $lastMonth = $today->copy()->subMonth();
         $lastMonthDirectRevenue = (float) Sale::whereMonth('created_at', $lastMonth->month)
             ->whereYear('created_at', $lastMonth->year)
-            ->where('status', 'completed')
+            ->where('status', '!=', 'voided')
             ->sum(DB::raw("CASE WHEN payment_method != 'credit' THEN total_amount ELSE paid_amount END"));
         $lastMonthCreditCleared = (float) DB::table('employee_payments')
             ->whereMonth(DB::raw('COALESCE(payment_date, created_at)'), $lastMonth->month)
@@ -215,7 +215,7 @@ class DashboardController extends Controller
 
         $lastMonthGrossCogs = (float) DB::table('sale_items')
             ->join('sales', 'sales.id', '=', 'sale_items.sale_id')
-            ->where('sales.status', 'completed')
+            ->where('sales.status', '!=', 'voided')
             ->whereMonth('sales.created_at', $lastMonth->month)
             ->whereYear('sales.created_at', $lastMonth->year)
             ->sum(DB::raw('sale_items.quantity * sale_items.cost_price'));
@@ -249,7 +249,7 @@ class DashboardController extends Controller
                 $today->copy()->subDays(6)->startOfDay(),
                 $today->copy()->endOfDay(),
             ])
-            ->where('status', 'completed')
+            ->where('status', '!=', 'voided')
             ->groupBy('date')
             ->pluck('total', 'date');
 
@@ -285,7 +285,7 @@ class DashboardController extends Controller
         $prevWeekDirect = (float) Sale::whereBetween('created_at', [
             $today->copy()->subDays(13)->startOfDay(),
             $today->copy()->subDays(7)->endOfDay(),
-        ])->where('status', 'completed')
+        ])->where('status', '!=', 'voided')
           ->sum(DB::raw("CASE WHEN payment_method != 'credit' THEN total_amount ELSE paid_amount END"));
 
         $prevWeekCredit = (float) DB::table('employee_payments')
