@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Employee;
+use App\Models\EmployeeAdjustment;
 use App\Models\EmployeePayment;
 use App\Models\Sale;
 use App\Models\User;
@@ -30,7 +31,11 @@ class StaffController extends Controller
 
         $search = trim($request->get('search', ''));
 
-        $employeesQuery = Employee::with(['sales' => fn($q) => $q->where('payment_method', 'credit')->where('status', '!=', 'voided'), 'payments']);
+        $employeesQuery = Employee::with([
+            'sales' => fn($q) => $q->where('payment_method', 'credit')->where('status', '!=', 'voided'),
+            'payments',
+            'adjustments' => fn($q) => $q->with('user:id,name')->latest(),
+        ]);
         $cashiersQuery  = User::where('role', 'cashier');
         $adminsQuery    = User::where('role', 'admin');
 
@@ -58,10 +63,14 @@ class StaffController extends Controller
         $admins    = $adminsQuery->latest()->get();
 
         // Calculate overall store stats
-        $allEmployees = Employee::with(['sales' => fn($q) => $q->where('payment_method', 'credit')->where('status', '!=', 'voided'), 'payments'])->get();
+        $allEmployees = Employee::with([
+            'sales' => fn($q) => $q->where('payment_method', 'credit')->where('status', '!=', 'voided'),
+            'payments',
+            'adjustments',
+        ])->get();
         $totalCredit  = $allEmployees->sum(fn($e) => $e->total_credit);
         $totalPaid    = $allEmployees->sum(fn($e) => $e->total_paid);
-        $totalPending = max(0, $totalCredit - $totalPaid);
+        $totalPending = $allEmployees->sum(fn($e) => $e->pending_payment);
 
         $stats = [
             'total_employees' => $allEmployees->count(),
@@ -171,6 +180,143 @@ class StaffController extends Controller
     }
 
     /**
+     * Update an existing customer payment record.
+     */
+    public function updatePayment(Request $request, EmployeePayment $payment)
+    {
+        $this->authorizeAdmin();
+
+        $data = $request->validate([
+            'amount'         => ['required', 'numeric', 'min:0.01'],
+            'payment_method' => ['required', 'in:cash,bank,salary_deduction'],
+            'payment_date'   => ['required', 'date'],
+            'notes'          => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $payment->update([
+            'amount'         => $data['amount'],
+            'payment_method' => $data['payment_method'],
+            'payment_date'   => $data['payment_date'],
+            'notes'          => $data['notes'] ?? null,
+        ]);
+
+        $payment->employee?->reconcileCreditSales();
+
+        return back()->with('success', "Payment record updated successfully.");
+    }
+
+    /**
+     * Delete / undo a customer payment.
+     */
+    public function destroyPayment(EmployeePayment $payment)
+    {
+        $this->authorizeAdmin();
+
+        $employee = $payment->employee;
+        $amount = number_format($payment->amount, 2);
+        $empName = $employee?->name ?? 'Customer';
+
+        $payment->delete();
+
+        if ($employee) {
+            $employee->refresh();
+            $employee->reconcileCreditSales();
+        }
+
+        return back()->with('success', "Payment of PKR {$amount} for {$empName} has been deleted and due restored.");
+    }
+
+    /**
+     * Adjust/correct a customer's credit due balance directly (e.g. for mistakes/waivers)
+     * with an option not to affect store sales and ledgers.
+     */
+    public function adjustDue(Request $request, Employee $employee)
+    {
+        $this->authorizeAdmin();
+
+        $data = $request->validate([
+            'new_due'      => ['required', 'numeric', 'min:0'],
+            'reason'       => ['required', 'string', 'max:500'],
+            'affect_sales' => ['nullable', 'boolean'],
+        ]);
+
+        $previousDue = (float) $employee->pending_payment;
+        $newDue      = (float) $data['new_due'];
+        $delta       = round($newDue - $previousDue, 2);
+
+        if (abs($delta) < 0.001) {
+            return back()->withErrors(['error' => "New due (PKR " . number_format($newDue, 2) . ") is identical to current due. No adjustment needed."]);
+        }
+
+        $adjustment = EmployeeAdjustment::create([
+            'employee_id'  => $employee->id,
+            'user_id'      => auth()->id(),
+            'previous_due' => $previousDue,
+            'new_due'      => $newDue,
+            'amount'       => $delta,
+            'reason'       => $data['reason'],
+            'affect_sales' => $request->boolean('affect_sales', false),
+            'is_active'    => true,
+        ]);
+
+        $employee->refresh();
+        $employee->reconcileCreditSales();
+
+        $actionWord = $delta < 0 ? 'reduced' : 'increased';
+        $deltaFormatted = number_format(abs($delta), 2);
+        $storeImpactMsg = $adjustment->affect_sales ? 'Store sales updated.' : 'Store sales and ledgers were not affected.';
+
+        return back()->with('success', "Due balance for {$employee->name} {$actionWord} by PKR {$deltaFormatted} (New Due: PKR " . number_format($newDue, 2) . "). {$storeImpactMsg}");
+    }
+
+    /**
+     * Undo or Redo a previously recorded customer due adjustment.
+     */
+    public function toggleUndoAdjustment(EmployeeAdjustment $adjustment)
+    {
+        $this->authorizeAdmin();
+
+        $employee = $adjustment->employee;
+        $currentlyActive = $adjustment->is_active;
+
+        $adjustment->update([
+            'is_active' => !$currentlyActive,
+        ]);
+
+        if ($employee) {
+            $employee->refresh();
+            $employee->reconcileCreditSales();
+        }
+
+        $amountFormatted = number_format(abs($adjustment->amount), 2);
+        $empName = $employee?->name ?? 'Customer';
+
+        if ($currentlyActive) {
+            return back()->with('success', "Adjustment of PKR {$amountFormatted} for {$empName} has been UNDONE. Balance restored to PKR " . number_format($employee->pending_payment, 2) . ".");
+        } else {
+            return back()->with('success', "Adjustment of PKR {$amountFormatted} for {$empName} has been REDONE. Balance updated to PKR " . number_format($employee->pending_payment, 2) . ".");
+        }
+    }
+
+    /**
+     * Permanently delete an adjustment record.
+     */
+    public function destroyAdjustment(EmployeeAdjustment $adjustment)
+    {
+        $this->authorizeAdmin();
+
+        $employee = $adjustment->employee;
+        $adjustment->delete();
+
+        if ($employee) {
+            $employee->refresh();
+            $employee->reconcileCreditSales();
+        }
+
+        return back()->with('success', "Due adjustment record deleted.");
+    }
+
+    /**
      * View employee credit statement & ledger.
      */
     public function employeeLedger(Employee $employee)
@@ -191,7 +337,12 @@ class StaffController extends Controller
             ->latest()
             ->get();
 
-        return view('admin.staff.ledger', compact('employee', 'creditSales', 'payments'));
+        $adjustments = $employee->adjustments()
+            ->with('user:id,name')
+            ->latest()
+            ->get();
+
+        return view('admin.staff.ledger', compact('employee', 'creditSales', 'payments', 'adjustments'));
     }
 
     /**

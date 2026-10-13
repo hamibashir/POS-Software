@@ -39,6 +39,11 @@ class Employee extends Model
         return $this->hasMany(SaleReturn::class);
     }
 
+    public function adjustments(): HasMany
+    {
+        return $this->hasMany(EmployeeAdjustment::class);
+    }
+
     /**
      * Total amount of items returned on credit.
      */
@@ -69,11 +74,23 @@ class Employee extends Model
     }
 
     /**
+     * Net active balance adjustments applied to this employee's dues.
+     */
+    public function getTotalAdjustmentsAttribute(): float
+    {
+        if ($this->relationLoaded('adjustments')) {
+            return (float) $this->adjustments->where('is_active', true)->sum('amount');
+        }
+        return (float) $this->adjustments()->where('is_active', true)->sum('amount');
+    }
+
+    /**
      * Current pending payment that needs to be cleared.
+     * Incorporates total credit, total payments, and active adjustments (delta).
      */
     public function getPendingPaymentAttribute(): float
     {
-        return max(0, round($this->total_credit - $this->total_paid, 2));
+        return max(0, round($this->total_credit - $this->total_paid + $this->total_adjustments, 2));
     }
 
     /**
@@ -100,8 +117,10 @@ class Employee extends Model
             ->get();
 
         $totalPayments = (float) $this->payments()->sum('amount');
-        // Payments first clear historical opening balance if any
-        $remainingPayment = max(0, $totalPayments - (float) ($this->opening_balance ?? 0));
+        $netAdjustments = $this->total_adjustments;
+        // Payments and waivers (net adjustments reducing balance) first clear opening balance
+        $effectiveCreditsCleared = $totalPayments - $netAdjustments;
+        $remainingPayment = max(0, $effectiveCreditsCleared - (float) ($this->opening_balance ?? 0));
 
         foreach ($creditSales as $sale) {
             $total = (float) $sale->total_amount;

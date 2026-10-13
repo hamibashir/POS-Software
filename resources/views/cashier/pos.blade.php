@@ -1340,11 +1340,13 @@
                     </div>
                 </div>
 
-                {{-- Customer Credit Controls --}}
-                <div id="creditControls" style="display:none; margin-top:10px;">
+                {{-- Customer Controls (Available across all payment methods) --}}
+                <div id="customerControls" style="margin-top:10px;">
                     <label style="font-size:12px; font-weight:700; color:#374151; display:flex; align-items:center; gap:4px; margin-bottom:6px;">
                         <span class="material-symbols-outlined" style="font-size:16px; color:#0f766e;">person</span>
-                        Authorized Customer <span style="color:#ef4444;">*</span>
+                        Authorized Customer
+                        <span style="color:#ef4444; display:none;" id="custRequiredStar">*</span>
+                        <span style="font-size:11px; font-weight:500; color:#64748b;" id="custOptionalHint">(Optional for Cash/Card, Required for Credit)</span>
                     </label>
                     <input type="hidden" id="employeeSelect" value="">
                     
@@ -1387,7 +1389,7 @@
                             </div>
                         </div>
                         <div style="border-top:1px dashed #fecaca; margin-top:6px; padding-top:6px; font-size:12px; color:#991b1b; font-weight:700; display:flex; justify-content:space-between;">
-                            <span>New Ledger Balance:</span>
+                            <span id="cardEmpLedgerLabel">New Ledger Balance:</span>
                             <span id="cardEmpNewTotal" style="font-size:13px;">Rs. 0.00</span>
                         </div>
                         <div id="cardEmpPayAction" style="margin-top:8px; text-align:right;">
@@ -2858,7 +2860,12 @@ function renderSelectedCustomerCard() {
     }
 
     const pending = parseCleanNumber(selectedCustomer.pending_payment);
-    const newTotal = pending + currentGrandTotal;
+    const isCredit = paymentMethod === 'credit';
+    const newTotal = isCredit ? (pending + currentGrandTotal) : pending;
+    const labelEl = document.getElementById('cardEmpLedgerLabel');
+    if (labelEl) {
+        labelEl.textContent = isCredit ? 'New Ledger Balance:' : 'Ledger Balance (No Change):';
+    }
 
     document.getElementById('cardEmpName').textContent    = selectedCustomer.name || '—';
     document.getElementById('cardEmpPhone').textContent   = selectedCustomer.phone ? '📞 ' + selectedCustomer.phone : '';
@@ -2874,7 +2881,7 @@ function onEmployeeSelect() {
 
 // Click outside listener for customer search dropdown
 document.addEventListener('click', (e) => {
-    const wrap = e.target.closest('#creditControls');
+    const wrap = e.target.closest('#customerControls');
     if (!wrap) {
         hideCustomerResults();
     }
@@ -2885,23 +2892,29 @@ function selectPayment(method) {
     paymentMethod = method;
     document.querySelectorAll('.pay-tab-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.method === method));
 
-    const cashControls   = document.getElementById('cashControls');
-    const creditControls = document.getElementById('creditControls');
-    const cardControls   = document.getElementById('cardControls');
+    const cashControls = document.getElementById('cashControls');
+    const cardControls = document.getElementById('cardControls');
+    const star         = document.getElementById('custRequiredStar');
+    const hint         = document.getElementById('custOptionalHint');
 
-    cashControls.style.display   = method === 'cash' ? 'block' : 'none';
-    creditControls.style.display = method === 'credit' ? 'block' : 'none';
-    cardControls.style.display   = method === 'card' ? 'block' : 'none';
+    cashControls.style.display = method === 'cash' ? 'block' : 'none';
+    cardControls.style.display = method === 'card' ? 'block' : 'none';
+
+    if (star) star.style.display = method === 'credit' ? 'inline' : 'none';
+    if (hint) hint.textContent   = method === 'credit' ? '(Required for Credit Sale)' : '(Optional for ' + (method === 'card' ? 'Card' : 'Cash') + ' Sale)';
 
     if (method === 'credit') {
         paidInput.value = '0.00';
         renderSelectedCustomerCard();
         setTimeout(() => {
             const input = document.getElementById('customerSearchInput');
-            if (input) input.focus();
+            if (input && !selectedCustomer) input.focus();
         }, 50);
     } else if (method === 'card') {
         paidInput.value = currentGrandTotal.toFixed(2);
+        renderSelectedCustomerCard();
+    } else {
+        renderSelectedCustomerCard();
     }
     updateChange();
 }
@@ -2927,11 +2940,14 @@ async function completeSale() {
         return;
     }
 
+    const empSelect = document.getElementById('employeeSelect');
+    const selectedEmpId = selectedCustomer ? selectedCustomer.id : (empSelect && empSelect.value ? parseInt(empSelect.value) : null);
+
     if (paymentMethod === 'credit') {
-        const empSelect = document.getElementById('employeeSelect');
-        if (!empSelect || !empSelect.value) {
+        if (!selectedEmpId) {
             toast('Please select an authorized customer for credit sale!', 'w');
-            empSelect.focus();
+            const custInput = document.getElementById('customerSearchInput');
+            if (custInput) custInput.focus();
             return;
         }
     }
@@ -2956,11 +2972,11 @@ async function completeSale() {
                     discount_amount: 0
                 })),
                 payment_method: paymentMethod,
-                paid_amount:    paymentMethod === 'card' ? currentGrandTotal : (paymentMethod === 'credit' ? 0 : paid),
+                paid_amount:    paymentMethod === 'card' ? currentGrandTotal : (paymentMethod === 'credit' ? parseCleanNumber(paidInput.value || 0) : paid),
                 discount_amount: discount,
-                employee_id:    paymentMethod === 'credit' ? parseInt(document.getElementById('employeeSelect').value) : null,
-                customer_name:  document.getElementById('customerName').value.trim() || 'Walk-in Customer',
-                customer_phone: document.getElementById('customerPhone').value.trim() || null,
+                employee_id:    selectedEmpId,
+                customer_name:  selectedCustomer ? selectedCustomer.name : (document.getElementById('customerName').value.trim() || 'Walk-in Customer'),
+                customer_phone: selectedCustomer ? selectedCustomer.phone : (document.getElementById('customerPhone').value.trim() || null),
             }),
         });
 

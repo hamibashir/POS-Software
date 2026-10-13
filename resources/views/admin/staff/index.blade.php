@@ -213,6 +213,11 @@
                             <i class="bi bi-check2"></i> Cleared
                         </span>
                         @endif
+                        @if($emp->adjustments->where('is_active', true)->count() > 0)
+                        <div style="font-size:11px; color:#d97706; margin-top:3px; font-weight:600;">
+                            <i class="bi bi-sliders"></i> Adjusted ({{ $emp->adjustments->where('is_active', true)->count() }})
+                        </div>
+                        @endif
                     </td>
                     <td style="text-align:center;">
                         <span class="{{ $emp->is_active ? 'badge-active' : 'badge-inactive' }}">
@@ -227,6 +232,22 @@
                                 <i class="bi bi-cash"></i> Clear Due
                             </button>
                             @endif
+
+                            <button type="button" class="btn-pos-outline" style="padding:4px 8px; font-size:12px; color:#b45309; border-color:#fde68a; background:#fffbeb;"
+                                onclick="openAdjustDueModal({{ $emp->id }}, '{{ addslashes($emp->name) }}', {{ $emp->pending_payment }}, {{ json_encode($emp->adjustments->map(fn($a) => [
+                                    'id' => $a->id,
+                                    'date' => $a->created_at->format('d M Y, g:i A'),
+                                    'admin' => $a->user?->name ?? 'Admin',
+                                    'prev' => (float)$a->previous_due,
+                                    'new' => (float)$a->new_due,
+                                    'amount' => (float)$a->amount,
+                                    'reason' => $a->reason,
+                                    'is_active' => (bool)$a->is_active,
+                                    'undo_url' => route('admin.staff.adjustments.toggle-undo', $a),
+                                ])) }})"
+                                title="Edit / Correct Dues (Undo/Redo Supported)">
+                                <i class="bi bi-sliders"></i> Edit Due
+                            </button>
 
                             <a href="{{ route('admin.staff.employees.ledger', $emp) }}" class="btn-pos-outline" style="padding:4px 8px; font-size:12px; text-decoration:none;" title="View Statement">
                                 <i class="bi bi-journal-text"></i>
@@ -572,6 +593,94 @@
     </div>
 </div>
 
+{{-- 3b. Adjust / Edit Customer Due Modal (Undo/Redo Supported) --}}
+<div class="modal fade" id="adjustDueModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form method="POST" id="adjustDueForm">
+                @csrf
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-sliders me-2 text-warning"></i>Edit / Adjust Customer Due</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body d-flex flex-column gap-3">
+                    <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:10px; padding:14px 18px;">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div style="font-size:12px; color:#92400e; font-weight:700; text-transform:uppercase; letter-spacing:0.5px;">Customer Name</div>
+                                <div style="font-size:16px; font-weight:800; color:#1f2937;" id="adjModalEmpName">—</div>
+                            </div>
+                            <div class="text-end">
+                                <div style="font-size:12px; color:#92400e; font-weight:700; text-transform:uppercase; letter-spacing:0.5px;">Current Pending Due</div>
+                                <div style="font-size:20px; font-weight:800; color:#b91c1c;" id="adjModalCurrentDue">PKR 0.00</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label" style="font-size:13px; font-weight:600;">New Correct Due (PKR) <span class="text-danger">*</span></label>
+                            <input type="number" step="0.01" min="0" name="new_due" id="adjModalNewDue" class="pos-input" required placeholder="0.00">
+                            <div id="adjModalDeltaPreview" style="font-size:12px; font-weight:600; margin-top:4px; color:#4b5563;">
+                                Adjustment change: <span id="adjModalDeltaText">0.00</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="font-size:13px; font-weight:600;">Reason for Adjustment / Correction <span class="text-danger">*</span></label>
+                            <input type="text" name="reason" id="adjModalReason" class="pos-input" required placeholder="e.g. Due entered by mistake, wrong customer chosen on bill">
+                        </div>
+                    </div>
+
+                    <div class="p-3 rounded" style="background:#f0fdf4; border:1px solid #bbf7d0;">
+                        <div class="form-check m-0">
+                            <input class="form-check-input" type="checkbox" id="safeAdjustCheck" checked disabled>
+                            <label class="form-check-label" for="safeAdjustCheck" style="font-size:13px; font-weight:700; color:#166534;">
+                                <i class="bi bi-shield-check me-1"></i> Balance Correction Only: Do not impact store sales, revenue, or ledgers
+                            </label>
+                        </div>
+                        <input type="hidden" name="affect_sales" value="0">
+                        <div style="font-size:12px; color:#15803d; margin-top:4px;">
+                            This adjustment will directly update this customer's due balance. Daily drawer, sales revenue, COGS, and general profit ledgers will remain 100% unaffected. You can <strong>Undo</strong> or <strong>Redo</strong> this edit at any time.
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn-pos-outline" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn-pos" style="background:#d97706; border-color:#d97706;"><i class="bi bi-check2-circle"></i> Save Due Adjustment</button>
+                    </div>
+                </div>
+            </form>
+
+            {{-- Adjustment History with 1-click Undo / Redo --}}
+            <div style="border-top:1px solid #e5e7eb; padding:16px 20px; background:#f9fafb; border-bottom-left-radius:12px; border-bottom-right-radius:12px;">
+                <h6 style="font-size:13px; font-weight:700; color:#374151; margin-bottom:10px; display:flex; align-items:center; gap:6px;">
+                    <i class="bi bi-clock-history text-secondary"></i> Adjustment History & Undo / Redo
+                </h6>
+                <div id="adjHistoryEmpty" style="font-size:12px; color:#9ca3af; font-style:italic;">
+                    No past adjustments recorded for this customer.
+                </div>
+                <div id="adjHistoryTableWrapper" style="display:none; max-height:220px; overflow-y:auto;">
+                    <table class="pos-table w-100" style="font-size:12px;">
+                        <thead>
+                            <tr>
+                                <th>Date & Time</th>
+                                <th>Recorded By</th>
+                                <th>Change</th>
+                                <th>Reason</th>
+                                <th>Status</th>
+                                <th style="text-align:right;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adjHistoryTableBody">
+                            {{-- Injected dynamically by JS --}}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 {{-- 4. Add Employee Modal --}}
 <div class="modal fade" id="addCashierModal" tabindex="-1">
     <div class="modal-dialog">
@@ -878,6 +987,92 @@
         document.getElementById('payModalAmount').max = pendingAmount.toFixed(2);
         new bootstrap.Modal(document.getElementById('paymentModal')).show();
     }
+
+    let currentAdjPending = 0;
+    function openAdjustDueModal(id, name, pendingAmount, history) {
+        currentAdjPending = pendingAmount;
+        document.getElementById('adjustDueForm').action = `{{ url('admin/staff/employees') }}/${id}/adjust-due`;
+        document.getElementById('adjModalEmpName').innerText = name;
+        document.getElementById('adjModalCurrentDue').innerText = 'PKR ' + pendingAmount.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+        const newDueInput = document.getElementById('adjModalNewDue');
+        newDueInput.value = pendingAmount.toFixed(2);
+        document.getElementById('adjModalReason').value = '';
+        updateAdjDeltaPreview(pendingAmount);
+
+        // Populate history
+        const emptyEl = document.getElementById('adjHistoryEmpty');
+        const wrapperEl = document.getElementById('adjHistoryTableWrapper');
+        const tbody = document.getElementById('adjHistoryTableBody');
+        tbody.innerHTML = '';
+
+        if (!history || history.length === 0) {
+            emptyEl.style.display = 'block';
+            wrapperEl.style.display = 'none';
+        } else {
+            emptyEl.style.display = 'none';
+            wrapperEl.style.display = 'block';
+            history.forEach(item => {
+                const tr = document.createElement('tr');
+                const deltaColor = item.amount < 0 ? '#059669' : '#dc2626';
+                const deltaSign = item.amount > 0 ? '+' : '';
+                const statusBadge = item.is_active 
+                    ? '<span class="badge" style="background:#d1fae5; color:#065f46; font-size:11px;">Active</span>' 
+                    : '<span class="badge" style="background:#fee2e2; color:#991b1b; font-size:11px;">Undone</span>';
+
+                const btnClass = item.is_active ? 'btn-pos-outline' : 'btn-pos';
+                const btnStyle = item.is_active 
+                    ? 'padding:2px 8px; font-size:11px; border-color:#fca5a5; color:#dc2626;' 
+                    : 'padding:2px 8px; font-size:11px; background:#059669; border-color:#059669;';
+                const btnIcon = item.is_active ? 'bi-arrow-counterclockwise' : 'bi-arrow-clockwise';
+                const btnText = item.is_active ? 'Undo' : 'Redo';
+                const confirmPrompt = item.is_active 
+                    ? 'Undo this adjustment and restore previous due?' 
+                    : 'Redo this adjustment and re-apply due change?';
+
+                tr.innerHTML = `
+                    <td style="white-space:nowrap;">${item.date}</td>
+                    <td>${item.admin}</td>
+                    <td style="white-space:nowrap; font-weight:700; color:${deltaColor};">
+                        PKR ${item.prev.toFixed(2)} → ${item.new.toFixed(2)} (${deltaSign}${item.amount.toFixed(2)})
+                    </td>
+                    <td style="max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${item.reason}">${item.reason}</td>
+                    <td>${statusBadge}</td>
+                    <td style="text-align:right;">
+                        <form method="POST" action="${item.undo_url}" style="display:inline;" onsubmit="return confirm('${confirmPrompt}');">
+                            <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="${btnClass}" style="${btnStyle}">
+                                <i class="bi ${btnIcon}"></i> ${btnText}
+                            </button>
+                        </form>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        new bootstrap.Modal(document.getElementById('adjustDueModal')).show();
+    }
+
+    function updateAdjDeltaPreview(newVal) {
+        const delta = newVal - currentAdjPending;
+        const textEl = document.getElementById('adjModalDeltaText');
+        if (Math.abs(delta) < 0.001) {
+            textEl.innerHTML = '<span style="color:#6b7280;">No change (PKR 0.00)</span>';
+        } else if (delta < 0) {
+            textEl.innerHTML = `<span style="color:#059669; font-weight:700;">-PKR ${Math.abs(delta).toFixed(2)} (Reduction)</span>`;
+        } else {
+            textEl.innerHTML = `<span style="color:#dc2626; font-weight:700;">+PKR ${delta.toFixed(2)} (Increase)</span>`;
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const newDueInput = document.getElementById('adjModalNewDue');
+        if (newDueInput) {
+            newDueInput.addEventListener('input', function() {
+                updateAdjDeltaPreview(parseFloat(this.value) || 0);
+            });
+        }
+    });
 
     function openEditCashierModal(id, name, email, isActive, salary, allowedLeaves, phone, designation) {
         document.getElementById('editCashierForm').action = `{{ url('admin/staff/cashiers') }}/${id}`;

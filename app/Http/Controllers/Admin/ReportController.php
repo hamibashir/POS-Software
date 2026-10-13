@@ -47,7 +47,7 @@ class ReportController extends Controller
             ->select(
                 DB::raw('DATE(sales.created_at) as date'),
                 DB::raw('COUNT(sales.id) as transactions'),
-                DB::raw("SUM(CASE WHEN sales.payment_method != 'credit' THEN sales.total_amount ELSE sales.paid_amount END) as direct_revenue"),
+                DB::raw('SUM(sales.total_amount) as direct_revenue'),
                 DB::raw('SUM(sales.paid_amount) as collected'),
                 DB::raw('SUM(sales.discount_amount) as discounts'),
                 DB::raw('AVG(sales.total_amount) as avg_sale'),
@@ -136,9 +136,9 @@ class ReportController extends Controller
             $supplierPaid  = $supplierRow ? (float) $supplierRow->supplier_paid : 0.0;
             $supplierCount = $supplierRow ? (int) $supplierRow->payment_count : 0;
 
-            $grossRevenue  = $directRevenue + $creditCleared;
-            $revenue       = $grossRevenue - $returnedAmt;
-            $transactions  = ($saleRow ? (int) $saleRow->transactions : 0) + ($creditRow ? (int) $creditRow->payment_count : 0) + $returnCount;
+            $grossRevenue  = $directRevenue;
+            $revenue       = max(0, $grossRevenue - $returnedAmt);
+            $transactions  = ($saleRow ? (int) $saleRow->transactions : 0) + $returnCount;
             $grossCogs     = $saleRow ? (float) $saleRow->cogs : 0.0;
             $cogs          = max(0, $grossCogs - $returnedCogs);
             $expense       = (float) ($expensesData[$date] ?? 0);
@@ -208,7 +208,7 @@ class ReportController extends Controller
             ) as cogs_table'), 'cogs_table.sale_id', '=', 'sales.id')
             ->select(
                 DB::raw('COUNT(sales.id) as transactions'),
-                DB::raw("SUM(CASE WHEN sales.payment_method != 'credit' THEN sales.total_amount ELSE sales.paid_amount END) as direct_revenue"),
+                DB::raw('SUM(sales.total_amount) as direct_revenue'),
                 DB::raw('SUM(sales.discount_amount) as discounts'),
                 DB::raw('SUM(sales.tax_amount) as taxes'),
                 DB::raw('SUM(sales.change_amount) as change_given'),
@@ -216,7 +216,7 @@ class ReportController extends Controller
                 DB::raw('SUM(COALESCE(cogs_table.cogs, 0)) as cogs'),
                 DB::raw("SUM(CASE WHEN sales.payment_method='cash' THEN sales.total_amount ELSE 0 END) as cash_revenue"),
                 DB::raw("SUM(CASE WHEN sales.payment_method='card' THEN sales.total_amount ELSE 0 END) as card_revenue"),
-                DB::raw("SUM(CASE WHEN sales.payment_method='credit' THEN sales.paid_amount ELSE 0 END) as credit_upfront")
+                DB::raw("SUM(CASE WHEN sales.payment_method='credit' THEN sales.total_amount ELSE 0 END) as credit_revenue")
             )
             ->where('sales.status', '!=', 'voided')
             ->whereBetween(DB::raw('DATE(sales.created_at)'), [$from, $to])
@@ -259,9 +259,9 @@ class ReportController extends Controller
         if ($summary) {
             $directRevenue               = (float) ($summary->direct_revenue ?? 0);
             $summary->returns            = $returnsTotal;
-            $summary->revenue            = ($directRevenue + $creditClearedTotal) - $returnsTotal;
-            $summary->credit_revenue     = (float) ($summary->credit_upfront ?? 0) + $creditClearedTotal;
-            $summary->transactions       = (int) ($summary->transactions ?? 0) + $creditClearedCount + $returnsCount;
+            $summary->revenue            = max(0, $directRevenue - $returnsTotal);
+            $summary->credit_revenue     = (float) ($summary->credit_revenue ?? 0);
+            $summary->transactions       = (int) ($summary->transactions ?? 0) + $returnsCount;
             $grossCogs                   = (float) ($summary->cogs ?? 0);
             $summary->cogs               = max(0, $grossCogs - $returnedCogsTotal);
             $summary->expense            = $totalExpenses;

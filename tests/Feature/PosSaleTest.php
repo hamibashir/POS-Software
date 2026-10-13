@@ -549,10 +549,10 @@ class PosSaleTest extends TestCase
 
         $response->assertOk();
 
-        // Expected collected revenue today: 1000 (cash) + 1500 (credit cleared) = 2500
+        // Expected total sales revenue today: 1000 (cash) + 3000 (credit) = 4000
         $stats = $response->viewData('stats');
-        $this->assertEquals(2500.00, (float) $stats['today_revenue']);
-        $this->assertEquals(2500.00, (float) $stats['total_revenue']);
+        $this->assertEquals(4000.00, (float) $stats['today_revenue']);
+        $this->assertEquals(4000.00, (float) $stats['total_revenue']);
         $this->assertEquals($stats['today_revenue'], $stats['total_revenue']);
     }
 
@@ -691,6 +691,60 @@ class PosSaleTest extends TestCase
         $allDatesResponse->assertOk()
             ->assertSee('INV-TODAY-999')
             ->assertSee('INV-YESTERDAY-999');
+    }
+
+    public function test_authorized_customer_can_pay_via_card_without_credit_dues(): void
+    {
+        $employee = \App\Models\Employee::create([
+            'name'       => 'Adnan Plumber',
+            'phone'      => '03001234567',
+            'address'    => 'Sector F-7, Islamabad',
+            'is_active'  => true,
+        ]);
+
+        $payload = [
+            'cart' => [
+                [
+                    'product_id' => $this->productA->id,
+                    'quantity'   => 1,
+                    'unit_price' => 500.00,
+                ],
+            ],
+            'payment_method' => 'card',
+            'paid_amount'    => 500.00,
+            'employee_id'    => $employee->id,
+        ];
+
+        $response = $this->actingAs($this->cashier)
+            ->postJson(route('cashier.pos.complete-sale'), $payload);
+
+        $response->assertOk()
+            ->assertJson([
+                'success'        => true,
+                'payment_method' => 'card',
+                'total_amount'   => '500.00',
+                'paid_amount'    => '500.00',
+            ]);
+
+        $sale = Sale::latest()->first();
+        $this->assertEquals('card', $sale->payment_method);
+        $this->assertEquals('completed', $sale->status);
+        $this->assertEquals('Adnan Plumber', $sale->customer_name);
+        $this->assertEquals($employee->id, $sale->employee_id);
+        $this->assertEquals(500.00, (float) $sale->paid_amount);
+
+        // Employee pending dues must remain 0
+        $employee->refresh();
+        $this->assertEquals(0.00, (float) $employee->pending_payment);
+
+        // Check dashboard profit: Revenue 500, COGS 300 -> Gross Profit 200, Net Profit 200
+        $admin = User::factory()->create(['role' => 'admin', 'is_active' => true]);
+        $dashResponse = $this->actingAs($admin)->get(route('admin.dashboard'));
+        $dashResponse->assertOk();
+        $this->assertEquals(500.00, (float) $dashResponse->viewData('todaySales'));
+        $this->assertEquals(300.00, (float) $dashResponse->viewData('todayCogs'));
+        $this->assertEquals(200.00, (float) $dashResponse->viewData('todayGrossProfit'));
+        $this->assertEquals(200.00, (float) $dashResponse->viewData('todayNetProfit'));
     }
 }
 

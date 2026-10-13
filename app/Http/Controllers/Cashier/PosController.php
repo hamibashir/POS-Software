@@ -160,11 +160,19 @@ class PosController extends Controller
         ]);
 
         try {
+            if (!empty($data['employee_id'])) {
+                $employee = Employee::where('is_active', true)->find($data['employee_id']);
+                if ($employee) {
+                    $data['customer_name']  = $employee->name;
+                    $data['customer_phone'] = $employee->phone;
+                }
+            }
+
             if ($data['payment_method'] === 'credit') {
                 $employee = Employee::where('is_active', true)->findOrFail($data['employee_id']);
                 $data['customer_name']  = $employee->name;
                 $data['customer_phone'] = $employee->phone;
-                $data['paid_amount']    = 0;
+                $data['paid_amount']    = (float) ($data['paid_amount'] ?? 0);
             }
 
             $sale = $this->saleService->complete(

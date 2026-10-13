@@ -22,9 +22,9 @@ class DashboardController extends Controller
         $todayOpeningCash = $todayRegister ? (float) $todayRegister->opening_cash : 0.0;
 
         // ── KPI Cards: Today ──────────────────────────────────────
-        $todayDirectSales = (float) Sale::whereDate('created_at', $today)
+        $todayGrossSales = (float) Sale::whereDate('created_at', $today)
             ->where('status', '!=', 'voided')
-            ->sum(DB::raw("CASE WHEN payment_method != 'credit' THEN total_amount ELSE paid_amount END"));
+            ->sum('total_amount');
 
         $todayCreditCleared = (float) DB::table('employee_payments')
             ->whereDate(DB::raw('COALESCE(payment_date, created_at)'), $today)
@@ -34,7 +34,7 @@ class DashboardController extends Controller
             ->whereDate(DB::raw('COALESCE(returned_at, created_at)'), $today)
             ->sum('total_return_amount');
 
-        $todaySales = ($todayDirectSales + $todayCreditCleared) - $todayReturns;
+        $todaySales = max(0, $todayGrossSales - $todayReturns);
 
         $todayGrossCogs = (float) DB::table('sale_items')
             ->join('sales', 'sales.id', '=', 'sale_items.sale_id')
@@ -140,9 +140,9 @@ class DashboardController extends Controller
 
         // ── Yesterday ─────────────────────────────────────────────
         $yesterday = $today->copy()->subDay();
-        $yesterdayDirectSales = (float) Sale::whereDate('created_at', $yesterday)
+        $yesterdayGrossSales = (float) Sale::whereDate('created_at', $yesterday)
             ->where('status', '!=', 'voided')
-            ->sum(DB::raw("CASE WHEN payment_method != 'credit' THEN total_amount ELSE paid_amount END"));
+            ->sum('total_amount');
         $yesterdayCreditCleared = (float) DB::table('employee_payments')
             ->whereDate(DB::raw('COALESCE(payment_date, created_at)'), $yesterday)
             ->sum('amount');
@@ -150,7 +150,7 @@ class DashboardController extends Controller
             ->whereDate(DB::raw('COALESCE(returned_at, created_at)'), $yesterday)
             ->sum('total_return_amount');
 
-        $yesterdaySales = ($yesterdayDirectSales + $yesterdayCreditCleared) - $yesterdayReturns;
+        $yesterdaySales = max(0, $yesterdayGrossSales - $yesterdayReturns);
 
         $yesterdayGrossCogs = (float) DB::table('sale_items')
             ->join('sales', 'sales.id', '=', 'sale_items.sale_id')
@@ -184,10 +184,10 @@ class DashboardController extends Controller
             ->count();
 
         // ── This Month ────────────────────────────────────────────
-        $thisMonthDirectRevenue = (float) Sale::whereMonth('created_at', $today->month)
+        $thisMonthGrossSales = (float) Sale::whereMonth('created_at', $today->month)
             ->whereYear('created_at', $today->year)
             ->where('status', '!=', 'voided')
-            ->sum(DB::raw("CASE WHEN payment_method != 'credit' THEN total_amount ELSE paid_amount END"));
+            ->sum('total_amount');
         $thisMonthCreditCleared = (float) DB::table('employee_payments')
             ->whereMonth(DB::raw('COALESCE(payment_date, created_at)'), $today->month)
             ->whereYear(DB::raw('COALESCE(payment_date, created_at)'), $today->year)
@@ -197,7 +197,7 @@ class DashboardController extends Controller
             ->whereYear(DB::raw('COALESCE(returned_at, created_at)'), $today->year)
             ->sum('total_return_amount');
 
-        $thisMonthRevenue = ($thisMonthDirectRevenue + $thisMonthCreditCleared) - $thisMonthReturns;
+        $thisMonthRevenue = max(0, $thisMonthGrossSales - $thisMonthReturns);
 
         $thisMonthGrossCogs = (float) DB::table('sale_items')
             ->join('sales', 'sales.id', '=', 'sale_items.sale_id')
@@ -222,10 +222,10 @@ class DashboardController extends Controller
 
         // ── Last Month ────────────────────────────────────────────
         $lastMonth = $today->copy()->subMonth();
-        $lastMonthDirectRevenue = (float) Sale::whereMonth('created_at', $lastMonth->month)
+        $lastMonthGrossSales = (float) Sale::whereMonth('created_at', $lastMonth->month)
             ->whereYear('created_at', $lastMonth->year)
             ->where('status', '!=', 'voided')
-            ->sum(DB::raw("CASE WHEN payment_method != 'credit' THEN total_amount ELSE paid_amount END"));
+            ->sum('total_amount');
         $lastMonthCreditCleared = (float) DB::table('employee_payments')
             ->whereMonth(DB::raw('COALESCE(payment_date, created_at)'), $lastMonth->month)
             ->whereYear(DB::raw('COALESCE(payment_date, created_at)'), $lastMonth->year)
@@ -235,7 +235,7 @@ class DashboardController extends Controller
             ->whereYear(DB::raw('COALESCE(returned_at, created_at)'), $lastMonth->year)
             ->sum('total_return_amount');
 
-        $lastMonthRevenue = ($lastMonthDirectRevenue + $lastMonthCreditCleared) - $lastMonthReturns;
+        $lastMonthRevenue = max(0, $lastMonthGrossSales - $lastMonthReturns);
 
         $lastMonthGrossCogs = (float) DB::table('sale_items')
             ->join('sales', 'sales.id', '=', 'sale_items.sale_id')
@@ -268,21 +268,12 @@ class DashboardController extends Controller
         // ── 7-Day Sales Chart ──────────────────────────────────────
         $last7Days = collect(range(6, 0))->map(fn($i) => $today->copy()->subDays($i));
 
-        $salesByDay = Sale::selectRaw("DATE(created_at) as date, SUM(CASE WHEN payment_method != 'credit' THEN total_amount ELSE paid_amount END) as total")
+        $salesByDay = Sale::selectRaw("DATE(created_at) as date, SUM(total_amount) as total")
             ->whereBetween('created_at', [
                 $today->copy()->subDays(6)->startOfDay(),
                 $today->copy()->endOfDay(),
             ])
             ->where('status', '!=', 'voided')
-            ->groupBy('date')
-            ->pluck('total', 'date');
-
-        $creditClearedByDay = DB::table('employee_payments')
-            ->selectRaw("DATE(COALESCE(payment_date, created_at)) as date, SUM(amount) as total")
-            ->whereBetween(DB::raw('DATE(COALESCE(payment_date, created_at))'), [
-                $today->copy()->subDays(6)->toDateString(),
-                $today->toDateString(),
-            ])
             ->groupBy('date')
             ->pluck('total', 'date');
 
@@ -296,27 +287,20 @@ class DashboardController extends Controller
             ->pluck('total', 'date');
 
         $chartLabels = $last7Days->map(fn($d) => $d->format('D'))->values();
-        $chartData   = $last7Days->map(function ($d) use ($salesByDay, $creditClearedByDay, $returnsByDay) {
+        $chartData   = $last7Days->map(function ($d) use ($salesByDay, $returnsByDay) {
             $dateStr = $d->toDateString();
             $direct = (float) ($salesByDay[$dateStr] ?? 0);
-            $credit = (float) ($creditClearedByDay[$dateStr] ?? 0);
             $ret    = (float) ($returnsByDay[$dateStr] ?? 0);
-            return max(0, ($direct + $credit) - $ret);
+            return max(0, $direct - $ret);
         })->values();
 
         $weekTotal = $chartData->sum();
 
-        $prevWeekDirect = (float) Sale::whereBetween('created_at', [
+        $prevWeekGross = (float) Sale::whereBetween('created_at', [
             $today->copy()->subDays(13)->startOfDay(),
             $today->copy()->subDays(7)->endOfDay(),
         ])->where('status', '!=', 'voided')
-          ->sum(DB::raw("CASE WHEN payment_method != 'credit' THEN total_amount ELSE paid_amount END"));
-
-        $prevWeekCredit = (float) DB::table('employee_payments')
-            ->whereBetween(DB::raw('DATE(COALESCE(payment_date, created_at))'), [
-                $today->copy()->subDays(13)->toDateString(),
-                $today->copy()->subDays(7)->toDateString(),
-            ])->sum('amount');
+          ->sum('total_amount');
 
         $prevWeekReturns = (float) DB::table('sale_returns')
             ->whereBetween(DB::raw('DATE(COALESCE(returned_at, created_at))'), [
@@ -324,7 +308,7 @@ class DashboardController extends Controller
                 $today->copy()->subDays(7)->toDateString(),
             ])->sum('total_return_amount');
 
-        $prevWeekTotal = max(0, ($prevWeekDirect + $prevWeekCredit) - $prevWeekReturns);
+        $prevWeekTotal = max(0, $prevWeekGross - $prevWeekReturns);
 
         $weekVsPrev = $prevWeekTotal > 0
             ? round((($weekTotal - $prevWeekTotal) / $prevWeekTotal) * 100)

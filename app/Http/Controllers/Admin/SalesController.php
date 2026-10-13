@@ -70,29 +70,8 @@ class SalesController extends Controller
             $statsQuery->where('status', $status);
         }
 
-        // Filtered revenue calculation (Direct Cash/Card + Upfront Credit + Cleared Credit Payments - Returns)
-        $filteredDirectRevenue = (float) (clone $statsQuery)
-            ->sum(DB::raw("CASE WHEN payment_method != 'credit' THEN total_amount ELSE paid_amount END"));
-
-        $filteredCreditCleared = 0.0;
-        if (!$payment || $payment === 'credit') {
-            if (!$status || $status === 'completed') {
-                $creditClearedQuery = \App\Models\EmployeePayment::query();
-                if ($from) {
-                    $creditClearedQuery->whereDate(DB::raw('COALESCE(payment_date, created_at)'), '>=', $from);
-                }
-                if ($to) {
-                    $creditClearedQuery->whereDate(DB::raw('COALESCE(payment_date, created_at)'), '<=', $to);
-                }
-                if ($search) {
-                    $creditClearedQuery->whereHas('employee', function($eq) use ($search) {
-                        $eq->where('name', 'like', "%{$search}%")
-                           ->orWhere('phone', 'like', "%{$search}%");
-                    });
-                }
-                $filteredCreditCleared = (float) $creditClearedQuery->sum('amount');
-            }
-        }
+        // Filtered revenue calculation (Sales total_amount - Returns)
+        $filteredDirectRevenue = (float) (clone $statsQuery)->sum('total_amount');
 
         $filteredReturns = 0.0;
         if (!$payment || $payment !== 'credit') {
@@ -106,21 +85,17 @@ class SalesController extends Controller
             $filteredReturns = (float) $returnsQuery->sum('total_return_amount');
         }
 
-        $filteredRevenue = max(0, ($filteredDirectRevenue + $filteredCreditCleared) - $filteredReturns);
+        $filteredRevenue = max(0, $filteredDirectRevenue - $filteredReturns);
 
         $todayDirectRevenue = (float) Sale::where('status', '!=', 'voided')
             ->whereDate('created_at', today())
-            ->sum(DB::raw("CASE WHEN payment_method != 'credit' THEN total_amount ELSE paid_amount END"));
-
-        $todayCreditCleared = (float) \App\Models\EmployeePayment::whereDate(
-            DB::raw('COALESCE(payment_date, created_at)'), today()
-        )->sum('amount');
+            ->sum('total_amount');
 
         $todayReturns = (float) DB::table('sale_returns')
             ->whereDate(DB::raw('COALESCE(returned_at, created_at)'), today())
             ->sum('total_return_amount');
 
-        $todayRevenue = max(0, ($todayDirectRevenue + $todayCreditCleared) - $todayReturns);
+        $todayRevenue = max(0, $todayDirectRevenue - $todayReturns);
 
         $stats = [
             'total_sales'      => $statsQuery->count(),
