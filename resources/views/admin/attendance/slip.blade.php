@@ -277,6 +277,24 @@
                     - {{ pkr($payment->deduction_amount, 2) }}
                 </td>
             </tr>
+            @if(($payment->advance_deduction ?? 0) > 0)
+            <tr>
+                <td>
+                    <strong>Advance Salary Deductions</strong>
+                    <div style="font-size:11px; color:#6b7280;">
+                        @if($payment->advances && $payment->advances->count() > 0)
+                            Advances: {{ $payment->advances->map(fn($a) => $a->date->format('d M') . ': PKR ' . number_format($a->amount, 2))->join(', ') }}
+                        @else
+                            Recovered from advance salary payouts taken during the month
+                        @endif
+                    </div>
+                </td>
+                <td style="text-align:right; color:#ea580c;">Advance recovered</td>
+                <td style="text-align:right; font-weight:600; color:#ea580c;">
+                    - {{ pkr($payment->advance_deduction, 2) }}
+                </td>
+            </tr>
+            @endif
             @if($payment->bonus_amount > 0)
             <tr>
                 <td><strong>Incentive / Bonus</strong></td>

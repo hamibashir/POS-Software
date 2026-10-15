@@ -20,6 +20,7 @@ class SalaryPayment extends Model
         'allowed_leaves',
         'excess_absences',
         'deduction_amount',
+        'advance_deduction',
         'bonus_amount',
         'net_payable',
         'payment_date',
@@ -32,15 +33,16 @@ class SalaryPayment extends Model
     protected function casts(): array
     {
         return [
-            'base_salary'      => 'decimal:2',
-            'present_days'     => 'decimal:1',
-            'absent_days'      => 'decimal:1',
-            'allowed_leaves'   => 'integer',
-            'excess_absences'  => 'decimal:1',
-            'deduction_amount' => 'decimal:2',
-            'bonus_amount'     => 'decimal:2',
-            'net_payable'      => 'decimal:2',
-            'payment_date'     => 'date',
+            'base_salary'       => 'decimal:2',
+            'present_days'      => 'decimal:1',
+            'absent_days'       => 'decimal:1',
+            'allowed_leaves'    => 'integer',
+            'excess_absences'   => 'decimal:1',
+            'deduction_amount'  => 'decimal:2',
+            'advance_deduction' => 'decimal:2',
+            'bonus_amount'      => 'decimal:2',
+            'net_payable'       => 'decimal:2',
+            'payment_date'      => 'date',
         ];
     }
 
@@ -52,5 +54,10 @@ class SalaryPayment extends Model
     public function paidBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'paid_by');
+    }
+
+    public function advances()
+    {
+        return $this->hasMany(SalaryAdvance::class);
     }
 }

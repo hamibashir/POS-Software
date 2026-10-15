@@ -64,6 +64,11 @@ class User extends Authenticatable
         return $this->hasMany(SalaryPayment::class);
     }
 
+    public function salaryAdvances()
+    {
+        return $this->hasMany(SalaryAdvance::class);
+    }
+
     /**
      * Check if the user is an admin.
      */
@@ -117,34 +122,58 @@ class User extends Authenticatable
         $baseSalary = (float) ($this->salary ?? 0.0);
         $dailyRate  = $totalDaysInMonth > 0 ? round($baseSalary / $totalDaysInMonth, 2) : 0.0;
 
-        // Salary deduction
+        // Salary deduction for excess absences
         $deductionAmount = round($excessAbsences * $dailyRate, 2);
-        $netPayable = max(0.0, round($baseSalary - $deductionAmount, 2));
 
         // Check if salary already paid for this month
         $payment = $this->salaryPayments()
             ->where('month_year', $monthYearStr)
             ->first();
 
+        // Fetch advances for this user in this month
+        $advances = $this->salaryAdvances()
+            ->where(function ($q) use ($year, $month, $payment) {
+                if ($payment) {
+                    $q->where('salary_payment_id', $payment->id)
+                      ->orWhere(function($sub) use ($year, $month) {
+                          $sub->whereYear('date', $year)->whereMonth('date', $month);
+                      });
+                } else {
+                    $q->whereYear('date', $year)->whereMonth('date', $month);
+                }
+            })
+            ->latest('date')
+            ->get();
+
+        $advanceAmount = $payment 
+            ? (float) ($payment->advance_deduction ?? $advances->sum('amount'))
+            : (float) $advances->where('status', 'pending')->sum('amount');
+
+        $bonusAmount = $payment ? (float) $payment->bonus_amount : 0.0;
+        $netPayable  = max(0.0, round($baseSalary - $deductionAmount - $advanceAmount + $bonusAmount, 2));
+
         return [
-            'user'             => $this,
-            'month_year'       => $monthYearStr,
-            'total_days'       => $totalDaysInMonth,
-            'present_count'    => $presentCount,
-            'half_day_count'   => $halfDayCount,
-            'leave_count'      => $leaveCount,
-            'holiday_count'    => $holidayCount,
-            'absent_count'     => $absentCount,
-            'effective_present'=> $effectivePresent,
-            'unpaid_absences'  => $unpaidAbsences,
-            'allowed_leaves'   => $allowedLeaves,
-            'excess_absences'  => $excessAbsences,
-            'base_salary'      => $baseSalary,
-            'daily_rate'       => $dailyRate,
-            'deduction_amount' => $deductionAmount,
-            'net_payable'      => $netPayable,
-            'is_paid'          => $payment !== null && $payment->status === 'paid',
-            'payment'          => $payment,
+            'user'              => $this,
+            'month_year'        => $monthYearStr,
+            'total_days'        => $totalDaysInMonth,
+            'present_count'     => $presentCount,
+            'half_day_count'    => $halfDayCount,
+            'leave_count'       => $leaveCount,
+            'holiday_count'     => $holidayCount,
+            'absent_count'      => $absentCount,
+            'effective_present' => $effectivePresent,
+            'unpaid_absences'   => $unpaidAbsences,
+            'allowed_leaves'    => $allowedLeaves,
+            'excess_absences'   => $excessAbsences,
+            'base_salary'       => $baseSalary,
+            'daily_rate'        => $dailyRate,
+            'deduction_amount'  => $deductionAmount,
+            'advance_amount'    => $advanceAmount,
+            'advances'          => $advances,
+            'bonus_amount'      => $bonusAmount,
+            'net_payable'       => $payment ? (float) $payment->net_payable : $netPayable,
+            'is_paid'           => $payment !== null && $payment->status === 'paid',
+            'payment'           => $payment,
         ];
     }
 }

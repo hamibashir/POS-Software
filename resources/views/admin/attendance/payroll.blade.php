@@ -122,7 +122,7 @@
 
 {{-- Stats --}}
 <div class="row g-3 mb-4">
-    <div class="col-6 col-lg-3">
+    <div class="col-6 col-md-4 col-lg">
         <div class="stat-card">
             <div class="stat-icon" style="background:#e0f2fe; color:#0284c7;"><i class="bi bi-people-fill"></i></div>
             <div>
@@ -132,27 +132,37 @@
             </div>
         </div>
     </div>
-    <div class="col-6 col-lg-3">
+    <div class="col-6 col-md-4 col-lg">
         <div class="stat-card">
             <div class="stat-icon" style="background:#ede9fe; color:#7c3aed;"><i class="bi bi-wallet2"></i></div>
             <div>
-                <div class="stat-label">Total Base Salaries</div>
+                <div class="stat-label">Base Salaries</div>
                 <div class="stat-value">{{ pkr($totals['total_base_salary'], 2) }}</div>
                 <div class="stat-sub">standard monthly sum</div>
             </div>
         </div>
     </div>
-    <div class="col-6 col-lg-3">
+    <div class="col-6 col-md-4 col-lg">
         <div class="stat-card">
             <div class="stat-icon" style="background:#fee2e2; color:#dc2626;"><i class="bi bi-scissors"></i></div>
             <div>
-                <div class="stat-label">Holiday / Absence Deductions</div>
+                <div class="stat-label">Absence Deductions</div>
                 <div class="stat-value" style="color:#b91c1c;">- {{ pkr($totals['total_deductions'], 2) }}</div>
-                <div class="stat-sub">for unapproved absences</div>
+                <div class="stat-sub">unapproved leaves</div>
             </div>
         </div>
     </div>
-    <div class="col-6 col-lg-3">
+    <div class="col-6 col-md-4 col-lg">
+        <div class="stat-card" style="border-color:#ddd6fe; background:#faf5ff;">
+            <div class="stat-icon" style="background:#ede9fe; color:#7c3aed;"><i class="bi bi-cash-stack"></i></div>
+            <div>
+                <div class="stat-label" style="color:#6d28d9;">Advance Deductions</div>
+                <div class="stat-value" style="color:#7c3aed;">- {{ pkr($totals['total_advances'], 2) }}</div>
+                <div class="stat-sub" style="color:#8b5cf6;">advances taken</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-4 col-lg">
         <div class="stat-card">
             <div class="stat-icon" style="background:#d1fae5; color:#059669;"><i class="bi bi-cash-coin"></i></div>
             <div>
@@ -193,7 +203,8 @@
                     <th style="text-align:center;">Attendance Breakdown ({{ $parsedDate->daysInMonth }} Days)</th>
                     <th style="text-align:center;">Excess Absences</th>
                     <th style="text-align:right;">Daily Rate</th>
-                    <th style="text-align:right;">Salary Deduction</th>
+                    <th style="text-align:right;">Absence Deduction</th>
+                    <th style="text-align:right;">Advance Deducted</th>
                     <th style="text-align:right;">Net Payable</th>
                     <th style="text-align:center;">Status</th>
                     <th style="text-align:right;">Actions</th>
@@ -252,6 +263,16 @@
                             PKR 0.00
                         @endif
                     </td>
+                    <td style="text-align:right; font-weight:700; color: {{ $p['advance_amount'] > 0 ? '#7c3aed' : '#6b7280' }};">
+                        @if($p['advance_amount'] > 0)
+                            - {{ pkr($p['advance_amount'], 2) }}
+                            @if($p['advances']->isNotEmpty())
+                                <div style="font-size:10px; color:#8b5cf6;">{{ $p['advances']->count() }} advance(s)</div>
+                            @endif
+                        @else
+                            PKR 0.00
+                        @endif
+                    </td>
                     <td style="text-align:right;">
                         <div style="font-size:16px; font-weight:800; color: #047857;">
                             {{ pkr($p['net_payable'], 2) }}
@@ -275,7 +296,7 @@
                         <div class="d-inline-flex gap-1">
                             @if(!$p['is_paid'])
                                 <button class="btn-pos" style="padding:4px 8px; font-size:12px;"
-                                        onclick="openPaySalaryModal({{ $p['user']->id }}, '{{ addslashes($p['user']->name) }}', {{ $p['base_salary'] }}, {{ $p['deduction_amount'] }}, {{ $p['net_payable'] }}, {{ $p['excess_absences'] }})">
+                                        onclick="openPaySalaryModal({{ $p['user']->id }}, '{{ addslashes($p['user']->name) }}', {{ $p['base_salary'] }}, {{ $p['deduction_amount'] }}, {{ $p['advance_amount'] }}, {{ $p['net_payable'] }}, {{ $p['excess_absences'] }})">
                                     <i class="bi bi-cash"></i> Pay Salary
                                 </button>
                             @else
@@ -288,7 +309,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="10" style="text-align:center; padding:48px; color:#9ca3af;">
+                    <td colspan="11" style="text-align:center; padding:48px; color:#9ca3af;">
                         <i class="bi bi-people" style="font-size:36px; display:block; margin-bottom:8px; opacity:.5;"></i>
                         <p style="font-weight:600; color:#374151; margin-bottom:4px;">No employees registered</p>
                         <p style="font-size:13px; margin:0;">Create employee accounts under Customers & Users Management to start managing attendance and payroll.</p>
@@ -308,6 +329,7 @@
             <input type="hidden" name="month_year" value="{{ $monthYearStr }}">
             <input type="hidden" name="base_salary" id="formBaseSalary">
             <input type="hidden" name="deduction_amount" id="formDeductionAmount">
+            <input type="hidden" name="advance_deduction" id="formAdvanceDeduction">
 
             <div class="modal-header">
                 <h5 class="modal-title"><i class="bi bi-cash-coin me-2 text-success"></i>Disburse Employee Salary</h5>
@@ -333,6 +355,10 @@
                     <div class="d-flex justify-content-between text-muted small mt-1">
                         <span>Absence Deductions (<span id="modalExcessDays">0</span> excess days):</span>
                         <span class="fw-bold text-danger" id="modalDeduction">- PKR 0.00</span>
+                    </div>
+                    <div class="d-flex justify-content-between text-muted small mt-1">
+                        <span>Advance Salary Deductions:</span>
+                        <span class="fw-bold" style="color:#7c3aed;" id="modalAdvance">- PKR 0.00</span>
                     </div>
                     <div class="d-flex justify-content-between align-items-center mt-2 pt-2" style="border-top:1px dashed #86efac;">
                         <span class="fw-bold" style="color:#166534;">Net Calculated Salary:</span>
@@ -377,14 +403,16 @@
 <script>
     let currentNetPayable = 0;
 
-    function openPaySalaryModal(userId, name, baseSalary, deduction, netPayable, excessDays) {
+    function openPaySalaryModal(userId, name, baseSalary, deduction, advance, netPayable, excessDays) {
         document.getElementById('paySalaryForm').action = `{{ url('admin/attendance/payroll') }}/${userId}/pay`;
         document.getElementById('modalEmpName').innerText = name;
         document.getElementById('modalBaseSalary').innerText = 'PKR ' + baseSalary.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
         document.getElementById('modalDeduction').innerText = '- PKR ' + deduction.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+        document.getElementById('modalAdvance').innerText = '- PKR ' + advance.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
         document.getElementById('modalNetCalculated').innerText = 'PKR ' + netPayable.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
         document.getElementById('formBaseSalary').value = baseSalary;
         document.getElementById('formDeductionAmount').value = deduction;
+        document.getElementById('formAdvanceDeduction').value = advance;
         document.getElementById('modalExcessDays').innerText = excessDays;
         document.getElementById('modalBonus').value = '0.00';
         currentNetPayable = netPayable;
@@ -394,7 +422,7 @@
 
     function updateNetSalaryPreview() {
         const bonus = parseFloat(document.getElementById('modalBonus').value) || 0;
-        const total = currentNetPayable + bonus;
+        const total = Math.max(0, currentNetPayable + bonus);
         document.getElementById('modalNetCalculated').innerText = 'PKR ' + total.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
     }
 </script>

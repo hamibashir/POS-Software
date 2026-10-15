@@ -124,9 +124,12 @@ Route::middleware(['auth', 'admin'])
         Route::put('staff/admins/{user}',                      [StaffController::class, 'updateAdmin'])->name('staff.admins.update');
         Route::delete('staff/admins/{user}',                   [StaffController::class, 'destroyAdmin'])->name('staff.admins.destroy');
 
-        // Attendance & Monthly Payroll - Admin only
+        // Attendance, Advances & Monthly Payroll - Admin only
         Route::get('attendance',                               [AttendanceController::class, 'index'])->name('attendance.index');
         Route::post('attendance',                              [AttendanceController::class, 'mark'])->name('attendance.mark');
+        Route::post('attendance/advances',                     [AttendanceController::class, 'storeAdvance'])->name('attendance.advances.store');
+        Route::put('attendance/advances/{advance}',            [AttendanceController::class, 'updateAdvance'])->name('attendance.advances.update');
+        Route::delete('attendance/advances/{advance}',         [AttendanceController::class, 'destroyAdvance'])->name('attendance.advances.destroy');
         Route::get('attendance/payroll',                       [AttendanceController::class, 'payroll'])->name('attendance.payroll');
         Route::post('attendance/payroll/{user}/pay',           [AttendanceController::class, 'disburseSalary'])->name('attendance.payroll.pay');
         Route::get('attendance/payroll/slip/{payment}',        [AttendanceController::class, 'salarySlip'])->name('attendance.payroll.slip');
