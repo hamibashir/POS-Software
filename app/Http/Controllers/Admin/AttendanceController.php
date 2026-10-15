@@ -113,26 +113,36 @@ class AttendanceController extends Controller
         $this->authorizeAdmin();
 
         $data = $request->validate([
-            'user_id'        => ['required', 'exists:users,id'],
-            'amount'         => ['required', 'numeric', 'min:0.01'],
-            'date'           => ['required', 'date'],
-            'payment_method' => ['required', 'in:cash,bank,cheque,other'],
-            'notes'          => ['nullable', 'string', 'max:255'],
+            'user_id'            => ['required', 'exists:users,id'],
+            'amount'             => ['required', 'numeric', 'min:0.01'],
+            'date'               => ['required', 'date'],
+            'payment_method'     => ['required', 'in:cash,bank,cheque,other'],
+            'deduct_from_drawer' => ['nullable', 'boolean'],
+            'notes'              => ['nullable', 'string', 'max:255'],
         ]);
 
         $employee = User::findOrFail($data['user_id']);
+        $deductFromDrawer = ($data['payment_method'] === 'cash') && $request->boolean('deduct_from_drawer');
 
         SalaryAdvance::create([
-            'user_id'        => $employee->id,
-            'amount'         => $data['amount'],
-            'date'           => $data['date'],
-            'payment_method' => $data['payment_method'],
-            'notes'          => $data['notes'] ?? null,
-            'status'         => 'pending',
-            'created_by'     => auth()->id(),
+            'user_id'            => $employee->id,
+            'amount'             => $data['amount'],
+            'date'               => $data['date'],
+            'payment_method'     => $data['payment_method'],
+            'deduct_from_drawer' => $deductFromDrawer,
+            'notes'              => $data['notes'] ?? null,
+            'status'             => 'pending',
+            'created_by'         => auth()->id(),
         ]);
 
-        return back()->with('success', "Advance payment of PKR " . number_format($data['amount'], 2) . " recorded for {$employee->name}. It will be automatically deducted from their monthly salary.");
+        $msg = "Advance payment of PKR " . number_format($data['amount'], 2) . " recorded for {$employee->name}.";
+        if ($deductFromDrawer) {
+            $msg .= " Amount deducted from today's Dashboard Cash Drawer and queued for monthly payroll deduction.";
+        } else {
+            $msg .= " It will be automatically deducted from their monthly salary.";
+        }
+
+        return back()->with('success', $msg);
     }
 
     /**
@@ -143,17 +153,21 @@ class AttendanceController extends Controller
         $this->authorizeAdmin();
 
         $data = $request->validate([
-            'amount'         => ['required', 'numeric', 'min:0.01'],
-            'date'           => ['required', 'date'],
-            'payment_method' => ['required', 'in:cash,bank,cheque,other'],
-            'notes'          => ['nullable', 'string', 'max:255'],
+            'amount'             => ['required', 'numeric', 'min:0.01'],
+            'date'               => ['required', 'date'],
+            'payment_method'     => ['required', 'in:cash,bank,cheque,other'],
+            'deduct_from_drawer' => ['nullable', 'boolean'],
+            'notes'              => ['nullable', 'string', 'max:255'],
         ]);
 
+        $deductFromDrawer = ($data['payment_method'] === 'cash') && $request->boolean('deduct_from_drawer');
+
         $advance->update([
-            'amount'         => $data['amount'],
-            'date'           => $data['date'],
-            'payment_method' => $data['payment_method'],
-            'notes'          => $data['notes'] ?? null,
+            'amount'             => $data['amount'],
+            'date'               => $data['date'],
+            'payment_method'     => $data['payment_method'],
+            'deduct_from_drawer' => $deductFromDrawer,
+            'notes'              => $data['notes'] ?? null,
         ]);
 
         return back()->with('success', "Advance record updated successfully.");

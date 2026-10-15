@@ -544,6 +544,12 @@
                                     <span class="text-secondary">Supplier Payments (from Till):</span>
                                     <span class="fw-bold text-danger">-Rs. {{ number_format($todaySupplierCashPaid, 2) }}</span>
                                 </div>
+                                @if(isset($todaySalaryAdvanceCashPaid) && $todaySalaryAdvanceCashPaid > 0)
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="text-secondary">Staff Advances (from Drawer):</span>
+                                    <span class="fw-bold text-danger">-Rs. {{ number_format($todaySalaryAdvanceCashPaid, 2) }}</span>
+                                </div>
+                                @endif
                             </div>
                         </div>
                     </div>

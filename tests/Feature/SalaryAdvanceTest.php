@@ -39,11 +39,12 @@ class SalaryAdvanceTest extends TestCase
     public function test_admin_can_record_salary_advance_for_employee(): void
     {
         $response = $this->actingAs($this->admin)->post(route('admin.attendance.advances.store'), [
-            'user_id'        => $this->cashier->id,
-            'amount'         => 5000.00,
-            'date'           => '2026-03-12',
-            'payment_method' => 'cash',
-            'notes'          => 'Mid-month personal emergency advance',
+            'user_id'            => $this->cashier->id,
+            'amount'             => 5000.00,
+            'date'               => '2026-03-12',
+            'payment_method'     => 'cash',
+            'deduct_from_drawer' => '1',
+            'notes'              => 'Mid-month personal emergency advance',
         ]);
 
         $response->assertRedirect();
@@ -55,8 +56,55 @@ class SalaryAdvanceTest extends TestCase
         $this->assertEquals(5000.00, (float)$advance->amount);
         $this->assertEquals('2026-03-12', $advance->date->format('Y-m-d'));
         $this->assertEquals('cash', $advance->payment_method);
+        $this->assertTrue($advance->deduct_from_drawer);
         $this->assertEquals('pending', $advance->status);
         $this->assertEquals($this->admin->id, $advance->created_by);
+    }
+
+    public function test_salary_advance_deducts_from_dashboard_cash_drawer(): void
+    {
+        // 1. Set morning opening float to 10,000 PKR
+        \App\Models\CashRegister::create([
+            'date'         => today(),
+            'opening_cash' => 10000.00,
+            'user_id'      => $this->admin->id,
+        ]);
+
+        // 2. Before advance, drawer cash should be 10,000
+        $dashBefore = $this->actingAs($this->admin)->get(route('admin.dashboard'));
+        $dashBefore->assertOk();
+        $this->assertEquals(10000.00, $dashBefore->viewData('todayDrawerCash'));
+
+        // 3. Employee takes 2,500 advance in cash paid from drawer today
+        SalaryAdvance::create([
+            'user_id'            => $this->cashier->id,
+            'amount'             => 2500.00,
+            'date'               => today(),
+            'payment_method'     => 'cash',
+            'deduct_from_drawer' => true,
+            'status'             => 'pending',
+            'created_by'         => $this->admin->id,
+        ]);
+
+        // Also create a bank advance of 1,000 (should NOT affect drawer cash)
+        SalaryAdvance::create([
+            'user_id'            => $this->cashier->id,
+            'amount'             => 1000.00,
+            'date'               => today(),
+            'payment_method'     => 'bank',
+            'deduct_from_drawer' => false,
+            'status'             => 'pending',
+            'created_by'         => $this->admin->id,
+        ]);
+
+        // 4. After advance: Drawer Cash = 10,000 - 2,500 = 7,500
+        $dashAfter = $this->actingAs($this->admin)->get(route('admin.dashboard'));
+        $dashAfter->assertOk();
+        $this->assertEquals(2500.00, $dashAfter->viewData('todaySalaryAdvanceCashPaid'));
+        $this->assertEquals(2500.00, $dashAfter->viewData('todayCashOutflow'));
+        $this->assertEquals(7500.00, $dashAfter->viewData('todayDrawerCash'));
+        $dashAfter->assertSee('Staff Advances (from Drawer)');
+        $dashAfter->assertSee('2,500.00');
     }
 
     public function test_advance_appears_in_attendance_index_and_stats(): void

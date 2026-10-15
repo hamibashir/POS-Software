@@ -96,7 +96,12 @@ class DashboardController extends Controller
             ->where('payment_method', 'cash')
             ->sum('amount');
 
-        $todayCashOutflow = $todayCashRefunds + $todayCashExpenses + $todaySupplierCashPaid;
+        $todaySalaryAdvanceCashPaid = (float) DB::table('salary_advances')
+            ->whereDate(DB::raw('COALESCE(date, created_at)'), $today)
+            ->where('deduct_from_drawer', true)
+            ->sum('amount');
+
+        $todayCashOutflow = $todayCashRefunds + $todayCashExpenses + $todaySupplierCashPaid + $todaySalaryAdvanceCashPaid;
 
         $todayDrawerCash = $todayOpeningCash + $todayCashInflow - $todayCashOutflow;
 
@@ -327,7 +332,7 @@ class DashboardController extends Controller
             'todayExpenses', 'todayCogs', 'todayGrossProfit', 'todayNetProfit', 'todayMargin', 'todayNetMargin', 'profitVsYesterday',
             'todayOpeningCash', 'todayRegister', 'todayDrawerCash', 'todayCashInflow', 'todayCashOutflow',
             'todayCashSales', 'todayCreditUpfrontCash', 'todayCustomerCashCleared',
-            'todayCashRefunds', 'todayCashExpenses', 'todaySupplierCashPaid',
+            'todayCashRefunds', 'todayCashExpenses', 'todaySupplierCashPaid', 'todaySalaryAdvanceCashPaid',
             'todayCardSales', 'todayCreditUnpaid',
             'thisMonthExpenses', 'thisMonthCogs', 'thisMonthGrossProfit', 'thisMonthNetProfit', 'thisMonthMargin', 'thisMonthNetMargin', 'monthProfitVsLast',
             'totalProducts',

@@ -12,6 +12,7 @@ class SalaryAdvance extends Model
         'amount',
         'date',
         'payment_method',
+        'deduct_from_drawer',
         'notes',
         'status',
         'salary_payment_id',
@@ -21,8 +22,9 @@ class SalaryAdvance extends Model
     protected function casts(): array
     {
         return [
-            'amount' => 'decimal:2',
-            'date'   => 'date',
+            'amount'             => 'decimal:2',
+            'date'               => 'date',
+            'deduct_from_drawer' => 'boolean',
         ];
     }
 

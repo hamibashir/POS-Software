@@ -406,6 +406,13 @@
                         <span style="background:#f3f4f6; color:#374151; border-radius:12px; padding:2px 8px; font-size:11px; font-weight:600; text-transform:capitalize;">
                             {{ str_replace('_', ' ', $adv->payment_method) }}
                         </span>
+                        @if($adv->deduct_from_drawer)
+                            <div class="mt-1">
+                                <span class="badge" style="background:#dcfce7; color:#15803d; font-size:10px; font-weight:700; border:1px solid #bbf7d0;">
+                                    <i class="bi bi-safe me-1"></i> Cash Drawer Outflow
+                                </span>
+                            </div>
+                        @endif
                     </td>
                     <td style="max-width:240px; font-size:12px; color:#4b5563;">
                         {{ $adv->notes ?: '—' }}
@@ -427,7 +434,7 @@
                     <td style="text-align:right;">
                         <div class="d-inline-flex gap-1">
                             <button type="button" class="btn-pos-outline" style="padding:3px 7px; font-size:11px;"
-                                onclick="openEditAdvanceModal({{ $adv->id }}, '{{ addslashes($adv->employee?->name ?? '') }}', {{ (float)$adv->amount }}, '{{ $adv->date->format('Y-m-d') }}', '{{ $adv->payment_method }}', '{{ addslashes($adv->notes ?? '') }}')"
+                                onclick="openEditAdvanceModal({{ $adv->id }}, '{{ addslashes($adv->employee?->name ?? '') }}', {{ (float)$adv->amount }}, '{{ $adv->date->format('Y-m-d') }}', '{{ $adv->payment_method }}', '{{ addslashes($adv->notes ?? '') }}', {{ $adv->deduct_from_drawer ? 1 : 0 }})"
                                 title="Edit Advance Record">
                                 <i class="bi bi-pencil"></i>
                             </button>
@@ -497,12 +504,25 @@
 
                 <div>
                     <label class="form-label" style="font-size:13px; font-weight:600;">Payment Method <span class="text-danger">*</span></label>
-                    <select name="payment_method" class="pos-input" required>
+                    <select name="payment_method" id="advPaymentMethod" class="pos-input" onchange="toggleDrawerCheckbox('advPaymentMethod', 'advDrawerBlock', 'advDrawerCheck')" required>
                         <option value="cash">💵 Cash in Hand</option>
                         <option value="bank">🏦 Bank Transfer</option>
                         <option value="cheque">📄 Cheque</option>
                         <option value="other">📱 Mobile Wallet / Other</option>
                     </select>
+                </div>
+
+                {{-- Cash Drawer Deduction Choice --}}
+                <div id="advDrawerBlock" class="p-3 rounded" style="background:#f0fdf4; border:1.5px solid #86efac;">
+                    <div class="form-check form-switch mb-1">
+                        <input class="form-check-input" type="checkbox" name="deduct_from_drawer" id="advDrawerCheck" value="1" checked style="cursor:pointer; width:2.2em; height:1.2em;">
+                        <label class="form-check-label fw-bold text-dark ms-1" for="advDrawerCheck" style="font-size:13px; cursor:pointer;">
+                            <i class="bi bi-cash-coin text-success me-1"></i> Paid from Cash Drawer?
+                        </label>
+                    </div>
+                    <div style="font-size:11.5px; color:#166534; line-height:1.4;">
+                        Physical cash given from the till. When enabled, this amount will be immediately deducted from today's <strong>Cash Drawer</strong> on the Main Dashboard as a cash outflow.
+                    </div>
                 </div>
 
                 <div>
@@ -547,12 +567,25 @@
 
                 <div>
                     <label class="form-label" style="font-size:13px; font-weight:600;">Payment Method <span class="text-danger">*</span></label>
-                    <select name="payment_method" id="editAdvMethod" class="pos-input" required>
+                    <select name="payment_method" id="editAdvMethod" class="pos-input" onchange="toggleDrawerCheckbox('editAdvMethod', 'editDrawerBlock', 'editDrawerCheck')" required>
                         <option value="cash">💵 Cash in Hand</option>
                         <option value="bank">🏦 Bank Transfer</option>
                         <option value="cheque">📄 Cheque</option>
                         <option value="other">📱 Mobile Wallet / Other</option>
                     </select>
+                </div>
+
+                {{-- Edit Cash Drawer Deduction Choice --}}
+                <div id="editDrawerBlock" class="p-3 rounded" style="background:#f0fdf4; border:1.5px solid #86efac;">
+                    <div class="form-check form-switch mb-1">
+                        <input class="form-check-input" type="checkbox" name="deduct_from_drawer" id="editDrawerCheck" value="1" style="cursor:pointer; width:2.2em; height:1.2em;">
+                        <label class="form-check-label fw-bold text-dark ms-1" for="editDrawerCheck" style="font-size:13px; cursor:pointer;">
+                            <i class="bi bi-cash-coin text-success me-1"></i> Paid from Cash Drawer?
+                        </label>
+                    </div>
+                    <div style="font-size:11.5px; color:#166534; line-height:1.4;">
+                        Physical cash given from the till. When enabled, this amount will be deducted from today's <strong>Cash Drawer</strong> on the Main Dashboard as a cash outflow.
+                    </div>
                 </div>
 
                 <div>
@@ -590,6 +623,20 @@
         });
     }
 
+    function toggleDrawerCheckbox(methodSelectId, blockId, checkId) {
+        const select = document.getElementById(methodSelectId);
+        const block = document.getElementById(blockId);
+        const check = document.getElementById(checkId);
+        if (select.value === 'cash') {
+            block.style.display = 'block';
+            check.disabled = false;
+        } else {
+            block.style.display = 'none';
+            check.checked = false;
+            check.disabled = true;
+        }
+    }
+
     function openAdvanceModal(userId = null, empName = null) {
         const select = document.getElementById('advModalUserId');
         if (userId) {
@@ -597,16 +644,24 @@
         } else {
             select.value = '';
         }
+        document.getElementById('advPaymentMethod').value = 'cash';
+        document.getElementById('advDrawerCheck').checked = true;
+        toggleDrawerCheckbox('advPaymentMethod', 'advDrawerBlock', 'advDrawerCheck');
         new bootstrap.Modal(document.getElementById('advanceModal')).show();
     }
 
-    function openEditAdvanceModal(id, empName, amount, date, method, notes) {
+    function openEditAdvanceModal(id, empName, amount, date, method, notes, deductFromDrawer = false) {
         document.getElementById('editAdvanceForm').action = `{{ url('admin/attendance/advances') }}/${id}`;
         document.getElementById('editAdvEmpName').innerText = empName;
         document.getElementById('editAdvAmount').value = parseFloat(amount).toFixed(2);
         document.getElementById('editAdvDate').value = date;
         document.getElementById('editAdvMethod').value = method;
         document.getElementById('editAdvNotes').value = notes;
+        
+        const editCheck = document.getElementById('editDrawerCheck');
+        editCheck.checked = Boolean(deductFromDrawer);
+        toggleDrawerCheckbox('editAdvMethod', 'editDrawerBlock', 'editDrawerCheck');
+
         new bootstrap.Modal(document.getElementById('editAdvanceModal')).show();
     }
 </script>
