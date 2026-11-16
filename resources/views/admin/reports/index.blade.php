@@ -160,7 +160,7 @@
                 <thead><tr>
                     <th>Date</th>
                     <th style="text-align:right">Txns</th>
-                    <th style="text-align:right">Gross (Sales+Credit)</th>
+                    <th style="text-align:right">Gross Sales</th>
                     <th style="text-align:right">Returns / Refunds</th>
                     <th style="text-align:right">Net Revenue</th>
                     <th style="text-align:right">COGS</th>
@@ -175,7 +175,14 @@
                     <tr>
                         <td style="font-weight:600;">{{ \Carbon\Carbon::parse($row->date)->format('D, d M Y') }}</td>
                         <td style="text-align:right;color:#6b7280;">{{ $row->transactions }}</td>
-                        <td style="text-align:right;color:#64748b;">{{ pkr($row->direct_revenue + $row->credit_cleared, 2) }}</td>
+                        <td style="text-align:right;color:#64748b;">
+                            {{ pkr($row->direct_revenue, 2) }}
+                            @if(($row->credit_cleared ?? 0) > 0)
+                                <div class="text-muted" style="font-size:10.5px;" title="Customer credit payment collected on this date">
+                                    +{{ pkr($row->credit_cleared, 2) }} credit recvd
+                                </div>
+                            @endif
+                        </td>
                         <td style="text-align:right;color:#b91c1c;font-weight:600;">{{ $row->returns > 0 ? '-' . pkr($row->returns, 2) : '—' }}</td>
                         <td style="text-align:right;font-weight:700;color:#0f766e;">{{ pkr($row->revenue, 2) }}</td>
                         <td style="text-align:right;color:#64748b;">{{ pkr($row->cogs, 2) }}</td>
@@ -285,24 +292,33 @@
                 <thead><tr>
                     <th>Date</th>
                     <th style="text-align:right">Txns</th>
-                    <th style="text-align:right">Returns</th>
+                    <th style="text-align:right">Gross Sales</th>
+                    <th style="text-align:right">Returns / Refunds</th>
                     <th style="text-align:right">Net Revenue</th>
                     <th style="text-align:right">COGS</th>
                     <th style="text-align:right">Expenses</th>
                     <th style="text-align:right">Supplier Paid</th>
                     <th style="text-align:right">Gross Profit</th>
                     <th style="text-align:right">Net Profit</th>
-                    <th style="text-align:right">Margin</th>
+                    <th style="text-align:right">Net Margin</th>
                 </tr></thead>
                 <tbody>
                     @foreach($byDay as $row)
                     <tr>
                         <td style="font-weight:600;">{{ \Carbon\Carbon::parse($row->date)->format('D, d M Y') }}</td>
                         <td style="text-align:right;color:#6b7280;">{{ $row->transactions }}</td>
+                        <td style="text-align:right;color:#64748b;">
+                            {{ pkr($row->direct_revenue, 2) }}
+                            @if(($row->credit_cleared ?? 0) > 0)
+                                <div class="text-muted" style="font-size:10.5px;" title="Customer credit payment collected on this date">
+                                    +{{ pkr($row->credit_cleared, 2) }} credit recvd
+                                </div>
+                            @endif
+                        </td>
                         <td style="text-align:right;color:#b91c1c;font-weight:600;">{{ $row->returns > 0 ? '-' . pkr($row->returns, 2) : '—' }}</td>
-                        <td style="text-align:right;font-weight:700;color:#0f766e;">{{ pkr($row->revenue,2) }}</td>
-                        <td style="text-align:right;color:#64748b;">{{ pkr($row->cogs,2) }}</td>
-                        <td style="text-align:right;color:#ef4444;">{{ $row->expense > 0 ? pkr($row->expense,2) : '—' }}</td>
+                        <td style="text-align:right;font-weight:700;color:#0f766e;">{{ pkr($row->revenue, 2) }}</td>
+                        <td style="text-align:right;color:#64748b;">{{ pkr($row->cogs, 2) }}</td>
+                        <td style="text-align:right;color:#ef4444;">{{ $row->expense > 0 ? pkr($row->expense, 2) : '—' }}</td>
                         <td style="text-align:right;font-weight:600;color:#059669;">
                             @if(($row->supplier_paid ?? 0) > 0)
                                 {{ pkr($row->supplier_paid, 2) }}
@@ -312,10 +328,10 @@
                             @endif
                         </td>
                         <td style="text-align:right;font-weight:700;color:{{ $row->gross_profit >= 0 ? '#0d9488' : '#dc2626' }};">
-                            {{ pkr($row->gross_profit,2) }}
+                            {{ pkr($row->gross_profit, 2) }}
                         </td>
                         <td style="text-align:right;font-weight:800;color:{{ $row->net_profit >= 0 ? '#059669' : '#dc2626' }};">
-                            {{ pkr($row->net_profit,2) }}
+                            {{ pkr($row->net_profit, 2) }}
                         </td>
                         <td style="text-align:right;">
                             <span class="badge {{ $row->net_margin >= 0 ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' }} border" style="font-size:11px; font-weight:700;">
